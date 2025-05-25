@@ -1,4 +1,17 @@
-# OWbN Chronicle Manager
+# OWBN Chronicle Manager
+- Plugin Name: OWBN Chronicle Manager
+- Plugin URI: https://www.owbn.net
+- Description: Manage OWBN Chronicle information using structured custom post types, shortcodes, and approval workflows. Includes support for nested locations, staff roles, genre declarations, and versioned updates via Gravity Forms and Gravity Flow.
+- Version: 1.0.0
+- Author: OWBN Web Coordination Team, Greg Hacke
+- Author URI: https://www.owbn.net
+- Tags: chronicle, nested content, information, custom post types
+- Requires at least: 6.0
+- Tested up to: 6.8
+- Requires PHP: 7.4
+- License: GPL-2.0-or-later
+- License URI: http://www.gnu.org/licenses/gpl-2.0.html
+- Text Domain: owbn-chronicle-manager
 
 The OWbN Chronicle Manager is a custom WordPress plugin designed to store, manage, and display detailed information about OWbN Chronicles in a structured, searchable, and filterable way. It provides a clean interface for public users, Chronicle owners, and administrators to interact with chronicle data, leveraging custom post types and shortcodes, without relying on third-party form field plugins like ACF.
 
@@ -28,6 +41,13 @@ Several Chronicle fields support **multiple entries** to reflect the complex nat
 - Documents, Email Lists, and External Links
 
 #### Field Definitions
+
+- **Chronicle Name**:
+  - The full name of the chronicle as it appears in listings
+  - Example: "US, New York - Kings of New York"
+
+- **Chronicle Plug**:
+  - The chronicle plug, a short name like "kony" for "US, New York - Kings of New York"
 
 - **OOC Location**:
   - One or more entries
@@ -177,15 +197,15 @@ This workflow balances editorial freedom with administrative oversight and ensur
 
 ## Shortcodes
 
-Chronicle lists can be embedded anywhere using shortcode filters.
+Chronicle lists and individual chronicle entries can be embedded anywhere using shortcode filters.
 
-### Basic Usage
+### Basic Listing Usage
 
 [owbn-chronicles]
 
 Renders a complete listing of all approved chronicles.
 
-### Filtered Listings
+### Filtered Listing Usage
 
 Shortcodes accept attributes for field-based filtering:
 
@@ -193,6 +213,7 @@ Shortcodes accept attributes for field-based filtering:
 
 Supported filters (case-insensitive):
 
+- plug (Limits the listing to the specified chronicle using its unique short name)
 - region
 - genre
 - country
@@ -202,7 +223,21 @@ Supported filters (case-insensitive):
 - probationary (yes/no)
 - satellite (yes/no)
 
-Multiple filters can be combined to narrow down the results.
+### Single Chronicle Display
+
+To render a specific chronicle directly, use the `[owbn-chronicle]` shortcode with the `plug` attribute:
+
+[owbn-chronicle plug="kony"]
+
+This will display the full formatted view of the chronicle associated with the plug `kony`.
+
+An optional `view` attribute can be used to control output format:
+
+[owbn-chronicle plug="kony" view="box"]
+
+- **view="full"** (default): Shows the complete chronicle profile in full format.
+- **view="box"**: Displays a condensed view (e.g., sidebar or card) with summary data and a link to the full chronicle profile.
+
 
 ## Installation
 
