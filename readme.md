@@ -1,4 +1,3 @@
-```markdown
 # OWbN Chronicle Manager
 
 The OWbN Chronicle Manager is a custom WordPress plugin designed to store, manage, and display detailed information about OWbN Chronicles in a structured, searchable, and filterable way. It provides a clean interface for public users, Chronicle owners, and administrators to interact with chronicle data, leveraging custom post types and shortcodes, without relying on third-party form field plugins like ACF.
@@ -118,4 +117,3 @@ Want to help? Open a GitHub issue, fork the repo, or submit a pull request.
 ## Maintainers
 
 This plugin is maintained by OWbN.org development volunteers.
-```
