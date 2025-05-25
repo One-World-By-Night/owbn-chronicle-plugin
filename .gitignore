@@ -35,6 +35,17 @@ wp-config.php
 # htaccess
 /.htaccess
 
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Windows Installer files
+*.cab
+*.msi
+*.msp
+
 # All plugins
 #
 # Note: If you wish to whitelist plugins,
