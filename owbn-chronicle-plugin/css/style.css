@@ -1,0 +1,187 @@
+.owbn-error-field {
+    border-left: 4px solid #d63638;
+    background-color: #fbeaea;
+    padding: 6px;
+}
+
+.owbn-error-notice {
+    border-left: 4px solid #d63638;
+    background-color: #fbeaea;
+    padding: 12px;
+    margin-bottom: 20px;
+    color: #111;
+    font-weight: 500;
+}
+
+.owbn-session-block {
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+    background: #f9f9f9;
+    padding: 10px;
+}
+.owbn-session-header {
+    display: flex;
+    justify-content: space-between;
+    background: #eee;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+.owbn-session-body {
+    display: none;
+    margin-top: 10px;
+}
+
+#owbn-cm-info-message {
+    border-left: 2px solid #d4aa00; /* dark yellow */
+    background-color: #fff8dc;      /* pale yellow - cornsilk */
+    padding: 12px 16px;
+    margin-top: 12px;
+    font-style: italic;
+    border-radius: 4px;
+}
+
+.owbn-user-info-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 1em;
+}
+
+.owbn-user-info-field {
+    flex: 1 1 250px;
+    min-width: 200px;
+}
+
+/* Container for the switch row */
+.owbn-boolean-switch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+}
+
+/* Optional labels */
+.switch-label {
+    min-width: 20px;
+    font-size: 14px;
+    user-select: none;
+}
+
+/* Switch container */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+/* Hide default checkbox */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* Switch slider track */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc; /* Grey by default */
+    transition: 0.4s;
+    border-radius: 24px;
+}
+
+/* Switch knob */
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+/* When checked */
+input:checked + .slider {
+    background-color: #007cba; /* WordPress blue */
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.owbn-ast-block {
+    border: 1px solid #ccc;
+    padding: 1em;
+    margin-bottom: 1em;
+    background: #f9f9f9;
+}
+
+.owbn-user-info-field {
+    margin-bottom: 0.75em;
+}
+
+.owbn-session-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 1rem;
+}
+.owbn-session-field {
+    flex: 1;
+    min-width: 200px;
+}
+.owbn-session-row-full .owbn-session-field {
+    width: 100%;
+}
+
+/* Layout rows for location blocks */
+.owbn-location-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 1rem;
+}
+
+.owbn-location-field {
+    flex: 1;
+    min-width: 200px;
+}
+
+/* Full-width row support for things like notes (WYSIWYG/textarea) */
+.owbn-location-row-full .owbn-location-field {
+    width: 100%;
+}
+
+/* Match session header style (optional) */
+.owbn-location-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f0f0f0;
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    font-weight: 600;
+}
+
+.owbn-location-body {
+    border: 1px solid #ccc;
+    border-top: none;
+    padding: 1rem;
+    background: #fff;
+    margin-bottom: 1rem;
+}
+
+/* Optional: Add spacing to Add/Remove buttons */
+.owbn-repeatable-group > .button.add-location,
+.owbn-location-body > .button.remove-location {
+    margin-top: 0.5rem;
+}

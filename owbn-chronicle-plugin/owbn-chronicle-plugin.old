@@ -1,0 +1,1744 @@
+<?php
+/**
+ * Plugin Name: OWBN Chronicle Manager
+ * Text Domain: owbn-chronicle-manager
+ * * Description: Manage OWBN Chronicle information using structured custom post types, shortcodes, and approval workflows.
+ * Version: 1.0.1
+ * Author: greghacke
+ * Author URI: https://www.owbn.net
+ * License: GPL-2.0-or-later
+ * License URI: http://www.gnu.org/licenses/gpl-2.0.html
+ * Domain Path: /languages
+ * GitHub Plugin URI: https://github.com/One-World-By-Night/owbn-chronicle-plugin
+ * GitHub Branch: main
+ */
+
+ // Register Custom Post Type
+function owbn_register_chronicle_cpt() {
+    register_post_type('owbn_chronicle', [
+        'labels' => [
+            'name' => 'Chronicles',
+            'singular_name' => 'Chronicle',
+        ],
+        'public' => true,
+        'has_archive' => true,
+        'rewrite' => [
+            'slug' => 'chronicles',
+            'with_front' => false,
+        ],
+        'supports' => ['title', 'editor', 'author', 'revisions'],
+        'show_in_rest' => true,
+        'menu_icon' => 'dashicons-location-alt',
+    ]);
+}
+add_action('init', 'owbn_register_chronicle_cpt');
+
+function owbn_render_options_page() {
+    if (!current_user_can('manage_options')) return;
+
+    // Process Genre form submission
+    if (isset($_POST['owbn_genres_nonce']) && wp_verify_nonce($_POST['owbn_genres_nonce'], 'save_owbn_genres')) {
+        $raw = stripslashes($_POST['owbn_genres'] ?? '');
+        $lines = array_filter(array_map('trim', explode("\n", $raw)));
+        update_option('owbn_genre_list', $lines);
+        echo '<div class="updated notice is-dismissible"><p>' . esc_html__('Genres updated.', 'owbn-chronicle-manager') . '</p></div>' . "\n";
+    }
+
+    // Process Region form submission
+    if (isset($_POST['owbn_regions_nonce']) && wp_verify_nonce($_POST['owbn_regions_nonce'], 'save_owbn_regions')) {
+        $raw = stripslashes($_POST['owbn_regions'] ?? '');
+        $lines = array_filter(array_map('trim', explode("\n", $raw)));
+        update_option('owbn_region_list', $lines);
+        echo '<div class="updated notice is-dismissible"><p>' . esc_html__('Regions updated.', 'owbn-chronicle-manager') . '</p></div>' . "\n";
+    }
+
+    // Fetch current values
+    $genres = get_option('owbn_genre_list', []);
+    $regions = get_option('owbn_region_list', []);
+
+    $genres_text = implode("\n", $genres);
+    $regions_text = implode("\n", $regions);
+
+    echo '<div class="wrap">' . "\n";
+    echo '<h1>' . esc_html__('Manage OWbN Options', 'owbn-chronicle-manager') . '</h1>' . "\n";
+
+    // GENRES
+    echo '<h2>' . esc_html__('Genre List', 'owbn-chronicle-manager') . '</h2>' . "\n";
+    echo '<form method="post">' . "\n";
+    wp_nonce_field('save_owbn_genres', 'owbn_genres_nonce');
+
+    echo '<table class="form-table">' . "\n";
+    echo "<tr>\n<th scope=\"row\">\n";
+    echo esc_html__('Genres (one per line)', 'owbn-chronicle-manager') . "\n";
+    echo "</th>\n<td>\n";
+    echo '<textarea name="owbn_genres" rows="10" class="large-text code">' . esc_textarea($genres_text) . '</textarea>' . "\n";
+    echo '<p class="description">' . esc_html__('Used as available genre entries for Chronicles.', 'owbn-chronicle-manager') . '</p>' . "\n";
+    echo "</td>\n</tr>\n</table>\n";
+
+    submit_button(__('Save Genres', 'owbn-chronicle-manager'));
+    echo "</form>\n";
+
+    // REGIONS
+    echo '<h2>' . esc_html__('Region List', 'owbn-chronicle-manager') . '</h2>' . "\n";
+    echo '<form method="post">' . "\n";
+    wp_nonce_field('save_owbn_regions', 'owbn_regions_nonce');
+
+    echo '<table class="form-table">' . "\n";
+    echo "<tr>\n<th scope=\"row\">\n";
+    echo esc_html__('Regions (one per line)', 'owbn-chronicle-manager') . "\n";
+    echo "</th>\n<td>\n";
+    echo '<textarea name="owbn_regions" rows="10" class="large-text code">' . esc_textarea($regions_text) . '</textarea>' . "\n";
+    echo '<p class="description">' . esc_html__('Used to populate the Region dropdown for Chronicles.', 'owbn-chronicle-manager') . '</p>' . "\n";
+    echo "</td>\n</tr>\n</table>\n";
+
+    submit_button(__('Save Regions', 'owbn-chronicle-manager'));
+    echo "</form>\n</div>\n";
+}
+
+
+function owbn_register_options_menu() {
+    add_submenu_page(
+        'edit.php?post_type=owbn_chronicle', // Parent menu under your CPT
+        __('OWbN Options', 'owbn-chronicle-manager'), // Page title
+        __('Options', 'owbn-chronicle-manager'),     // Menu title
+        'manage_options',                            // Capability
+        'owbn-options',                              // Menu slug
+        'owbn_render_options_page'                   // Callback function
+    );
+}
+add_action('admin_menu', 'owbn_register_options_menu');
+
+// Filter the permalink structure for owbn_chronicle
+function owbn_custom_chronicle_permalink($post_link, $post) {
+    if ($post->post_type !== 'owbn_chronicle') return $post_link;
+
+    $plug = get_post_meta($post->ID, 'chronicle_slug', true);
+    $plug = $plug ? sanitize_title($plug) : sanitize_title($post->post_title);
+
+    return home_url("/chronicles/{$plug}/");
+}
+add_filter('post_type_link', 'owbn_custom_chronicle_permalink', 10, 2);
+
+// Add custom rewrite rule for owbn_chronicle
+function owbn_custom_chronicle_rewrite_rules() {
+    add_rewrite_rule(
+        '^chronicles/([^/]+)/?$',
+        'index.php?post_type=owbn_chronicle&name=$matches[1]',
+        'top'
+    );
+}
+add_action('init', 'owbn_custom_chronicle_rewrite_rules');
+
+function owbn_activate_plugin() {
+    owbn_register_chronicle_cpt();
+    owbn_custom_chronicle_rewrite_rules();
+    flush_rewrite_rules();
+
+    if (!get_option('owbn_genre_list')) {
+        update_option('owbn_genre_list', [
+            'Vampire - Anarch',
+            'Vampire - Camarilla',
+            'Vampire - Sabbat',
+            'Vampire - Giovanni',
+            'Vampire - Clan Specific',
+            'Changeling',
+            'Changing Breeds',
+            'Demon',
+            'Hunter',
+            'Kuei-Jin',
+            'Mage',
+            'Other',
+            'Wraith'
+        ]);
+    }
+}
+
+function owbn_enqueue_admin_styles($hook) {
+    global $post;
+
+    // Only load on post edit screens and only for owbn_chronicle post type
+    if (!in_array($hook, ['post.php', 'post-new.php'], true)) return;
+    if (!isset($post) || $post->post_type !== 'owbn_chronicle') return;
+
+    wp_enqueue_style(
+        'owbn-chronicle-admin',
+        plugin_dir_url(__FILE__) . 'css/style.css',
+        [],
+        filemtime(plugin_dir_path(__FILE__) . 'css/style.css')
+    );
+
+    // Enqueue admin JS
+    wp_enqueue_script(
+        'owbn-chronicle-admin-js',
+        plugin_dir_url(__FILE__) . 'js/owbn-chronicle-plugin.js',
+        ['jquery'],
+        filemtime(plugin_dir_path(__FILE__) . 'js/owbn-chronicle-plugin.js'),
+        true
+    );
+
+    // Select2 styles and scripts
+    wp_enqueue_style(
+        'select2',
+        plugins_url('css/select2.min.css', __FILE__),
+        [],
+        '4.1.0'
+    );
+
+    wp_enqueue_script(
+        'select2',
+        plugins_url('js/select2.min.js', __FILE__),
+        ['jquery'],
+        '4.1.0',
+        true
+    );
+}
+add_action('admin_enqueue_scripts', 'owbn_enqueue_admin_styles');
+
+// Register chronicle meta fields
+function owbn_register_chronicle_meta() {
+    $complex_fields = [
+        'ooc_locations',
+        'ic_location_list',
+        'game_site_list',
+        'genres',
+        'social_urls',
+        'session_list',
+        'admin_contact',
+        'document_links',
+        'email_lists',
+    ];
+
+    $simple_fields = [
+        'chronicle_slug',
+        'premise',
+        'game_theme',
+        'game_mood',
+        'traveler_info',
+        'active_player_count',
+        'hst_user',
+        'hst_display_name',
+        'hst_email',
+        'cm_user',
+        'cm_display_name',
+        'cm_email',
+        'web_url',
+        'hst_selection',
+        'cm_selection',
+        'ast_selection',
+        'chronicle_start_date',
+        'chronicle_region',
+        'chronicle_probationary',
+        'chronicle_satellite',
+        'chronicle_parent',
+    ];
+
+    foreach ($complex_fields as $field) {
+        register_post_meta('owbn_chronicle', $field, [
+            'type'              => 'object',
+            'single'            => true,
+            'show_in_rest'      => true,
+            'sanitize_callback' => null,
+        ]);
+    }
+
+    foreach ($simple_fields as $field) {
+        register_post_meta('owbn_chronicle', $field, [
+            'type'              => 'string',
+            'single'            => true,
+            'show_in_rest'      => true,
+            'sanitize_callback' => null,
+        ]);
+    }
+}
+add_action('init', 'owbn_register_chronicle_meta');
+
+// Register Chronicle Fields metabox
+function owbn_add_chronicle_meta_box() {
+    add_meta_box(
+        'owbn_chronicle_fields',
+        'Chronicle Fields',
+        'owbn_render_chronicle_fields_metabox',
+        'owbn_chronicle',
+        'normal',
+        'default'
+    );
+}
+add_action('add_meta_boxes', 'owbn_add_chronicle_meta_box');
+
+function owbn_get_chronicle_field_definitions() {
+    return [
+        'Chronicle Details' => [
+            'chronicle_slug' => [
+                'label' => __('Chronicle Slug', 'owbn-chronicle-manager'),
+                'type' => 'slug',
+                'min_length' => 3,
+                'max_length' => 6,
+                'required' => true,
+            ],
+            'genres' => [
+                'label' => __('Genres', 'owbn-chronicle-manager'),
+                'type' => 'multi_select',
+                'source' => 'owbn_genre_list',
+                'required' => true,
+            ],
+            'premise' => ['label' => __('Premise', 'owbn-chronicle-manager'), 'type' => 'wysiwyg'],
+            'game_theme' => ['label' => __('Game Theme', 'owbn-chronicle-manager'), 'type' => 'wysiwyg'],
+            'game_mood' => ['label' => __('Game Mood', 'owbn-chronicle-manager'), 'type' => 'wysiwyg'],
+            'traveler_info' => ['label' => __('Information for Travellers', 'owbn-chronicle-manager'), 'type' => 'wysiwyg'],
+            'active_player_count' => [
+                'label' => __('Active Players', 'owbn-chronicle-manager'),
+                'type' => 'select',
+                'options' => ['1-10', '11-20', '21-30', '31-40', '41-50', '51+']
+            ],
+            'session_list' => [
+                'label' => __('Session List', 'owbn-chronicle-manager'),
+                'type'  => 'session_group',
+                'fields' => [
+                    'session_type' => [
+                        'label' => __('Session Type', 'owbn-chronicle-manager'),
+                        'type' => 'select',
+                        'options' => ['Game', 'OOC Social Meetup', 'Other'],
+                        'required' => true,
+                    ],
+                    'frequency' => [
+                        'label' => __('Frequency', 'owbn-chronicle-manager'),
+                        'type' => 'select',
+                        'options' => ['1st', '2nd', '3rd', '4th', '5th', 'Every', 'Every Other', 'Random', 'Other'],
+                    ],
+                    'day' => [
+                        'label' => __('Day', 'owbn-chronicle-manager'),
+                        'type' => 'select',
+                        'options' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'Week', 'Other'],
+                        'required' => true,
+                    ],
+                    'checkin_time' => [
+                        'label' => __('Check-in Time', 'owbn-chronicle-manager'),
+                        'type' => 'time',
+                    ],
+                    'start_time' => [
+                        'label' => __('Start Time', 'owbn-chronicle-manager'),
+                        'type' => 'time',
+                        'required' => true,
+                    ],
+                    'notes' => [
+                        'label' => __('Game Date Notes', 'owbn-chronicle-manager'),
+                        'type' => 'wysiwyg',
+                    ],
+                    'genres' => [
+                        'label' => __('Genres', 'owbn-chronicle-manager'),
+                        'type' => 'multi_select',
+                        'source' => 'owbn_genre_list',
+                    ],
+                ],
+            ],
+            'web_url' => ['label' => __('Website URL', 'owbn-chronicle-manager'), 'type' => 'url'],
+        ],
+        'Staff Information' => [
+            'hst_selection' => [
+                'label' => __('HST Selection Method', 'owbn-chronicle-manager'),
+                'type' => 'select',
+                'options' => ['--Select Option--','Player Vote', 'HST Appointed', 'Vote/Consensus of Staff', 'Other']
+            ],
+            'cm_selection' => [
+                'label' => __('CM Selection Method', 'owbn-chronicle-manager'),
+                'type' => 'select',
+                'options' => ['--Select Option--','Player Vote', 'HST Appointed', 'Vote/Consensus of Staff', 'Other']
+            ],
+            'ast_selection' => [
+                'label' => __('AST Selection Method', 'owbn-chronicle-manager'),
+                'type' => 'select',
+                'options' => ['--Select Option--','Player Vote', 'HST Appointed', 'Vote/Consensus of Staff', 'Other']
+            ],
+            'hst_info' => [
+                'label' => __('HST Info', 'owbn-chronicle-manager'),
+                'type' => 'user_info',
+                'required' => true,
+            ],
+            'cm_info' => [
+                'label' => __('CM Info', 'owbn-chronicle-manager'),
+                'type' => 'user_info',
+                'conditional_required' => 'chronicle_satellite=0', // custom logic
+            ],
+            'ast_list' => [
+                'label' => __('AST List', 'owbn-chronicle-manager'),
+                'type' => 'ast_group',
+                'fields' => [
+                    'user' => [
+                        'label' => __('User', 'owbn-chronicle-manager'),
+                        'type' => 'user',
+                    ],
+                    'display_name' => [
+                        'label' => __('Display Name', 'owbn-chronicle-manager'),
+                        'type' => 'text',
+                    ],
+                    'email' => [
+                        'label' => __('Email', 'owbn-chronicle-manager'),
+                        'type' => 'email',
+                    ],
+                    'role' => [
+                        'label' => __('Role', 'owbn-chronicle-manager'),
+                        'type' => 'text',
+                    ],
+                ],
+            ],
+            'admin_contact' => [
+                'label' => __('Admin Contact', 'owbn-chronicle-manager'),
+                'type' => 'user_info',
+            ],
+        ],
+        'Locations' => [
+            'ooc_locations' => [
+                'label' => __('OOC Locations', 'owbn-chronicle-manager'),
+                'type'  => 'location_group',
+                'fields' => [
+                    'name' => [
+                        'label' => __('Location Name', 'owbn-chronicle-manager'),
+                        'type' => 'text',
+                        'required' => true,
+                    ],
+                    'online_only' => [
+                        'label' => __('Online Only?', 'owbn-chronicle-manager'),
+                        'type'  => 'boolean',
+                    ],
+                    'country' => [
+                        'label' => __('Country', 'owbn-chronicle-manager'),
+                        'type'  => 'select',
+                        'options' => owbn_get_country_list(),
+                        'search'  => true, // enable Select2 search
+                    ],
+                    'region' => [
+                        'label' => __('State / Province / Region', 'owbn-chronicle-manager'),
+                        'type'  => 'text',
+                    ],
+                    'city' => [
+                        'label' => __('City / Municipality', 'owbn-chronicle-manager'),
+                        'type'  => 'text',
+                    ],
+                    'address' => [
+                        'label' => __('Street Address (optional)', 'owbn-chronicle-manager'),
+                        'type'  => 'text',
+                    ],
+                    'notes' => [
+                        'label' => __('Location Notes', 'owbn-chronicle-manager'),
+                        'type'  => 'wysiwyg',
+                    ],
+                ]
+            ],
+            'ic_location_list' => [
+                'label' => __('IC Locations', 'owbn-chronicle-manager'),
+                'type'  => 'location_group',
+                'fields' => [
+                    'name' => [
+                        'label' => __('Site Name', 'owbn-chronicle-manager'),
+                        'type' => 'text',
+                        'required' => true,
+                    ],
+                    'country' => [
+                        'label' => __('Country', 'owbn-chronicle-manager'),
+                        'type'  => 'select',
+                        'options' => owbn_get_country_list(),
+                        'search'  => true, // enable Select2 search
+                    ],
+                    'region' => [
+                        'label' => __('State / Province / Region', 'owbn-chronicle-manager'),
+                        'type'  => 'text',
+                    ],
+                    'city' => [
+                        'label' => __('City / Municipality', 'owbn-chronicle-manager'),
+                        'type'  => 'text',
+                    ],
+                    'address' => [
+                        'label' => __('Street Address (optional)', 'owbn-chronicle-manager'),
+                        'type'  => 'text',
+                    ],
+                    'notes' => [
+                        'label' => __('Game Site Notes', 'owbn-chronicle-manager'),
+                        'type'  => 'wysiwyg',
+                    ],
+                ]
+            ],
+            'game_site_list' => [
+                'label' => __('Game Sites', 'owbn-chronicle-manager'),
+                'type'  => 'location_group',
+                'fields' => [
+                    'name' => [
+                        'label' => __('Site Name', 'owbn-chronicle-manager'),
+                        'type' => 'text',
+                        'required' => true,
+                    ],
+                    'online_only' => [
+                        'label' => __('Online Only?', 'owbn-chronicle-manager'),
+                        'type'  => 'boolean',
+                    ],
+                    'country' => [
+                        'label' => __('Country', 'owbn-chronicle-manager'),
+                        'type'  => 'select',
+                        'options' => owbn_get_country_list(),
+                        'search'  => true, // enable Select2 search
+                    ],
+                    'region' => [
+                        'label' => __('State / Province / Region', 'owbn-chronicle-manager'),
+                        'type'  => 'text',
+                    ],
+                    'city' => [
+                        'label' => __('City / Municipality', 'owbn-chronicle-manager'),
+                        'type'  => 'text',
+                    ],
+                    'address' => [
+                        'label' => __('Street Address (optional)', 'owbn-chronicle-manager'),
+                        'type'  => 'text',
+                    ],
+                    'notes' => [
+                        'label' => __('Game Site Notes', 'owbn-chronicle-manager'),
+                        'type'  => 'wysiwyg',
+                    ],
+                ]
+            ]
+        ],
+        'Links' => [
+            'document_links' => ['label' => __('Document Links', 'owbn-chronicle-manager'), 'type' => 'json'],
+            'social_urls' => ['label' => __('Social Media URLs', 'owbn-chronicle-manager'), 'type' => 'json'],
+            'email_lists' => ['label' => __('Email Lists', 'owbn-chronicle-manager'), 'type' => 'json'],
+        ],
+        'Metadata' => [
+            'chronicle_start_date' => ['label' => __('Start Date', 'owbn-chronicle-manager'), 'type' => 'date'],
+            'chronicle_region' => [
+                'label'   => __('Region', 'owbn-chronicle-manager'),
+                'type'    => 'select',
+                'options' => get_option('owbn_region_list', []),
+            ],
+            'chronicle_probationary' => ['label' => __('Probationary?', 'owbn-chronicle-manager'), 'type' => 'boolean'],
+            'chronicle_satellite' => ['label' => __('Satellite?', 'owbn-chronicle-manager'), 'type' => 'boolean'],
+            'chronicle_parent' => [
+                'label' => __('Parent Chronicle', 'owbn-chronicle-manager'),
+                'type'  => 'chronicle_select',
+                'source' => 'owbn_chronicle_list',
+            ],
+        ],
+    ];
+}
+
+function owbn_render_chronicle_fields_metabox($post) {
+    $field_definitions = owbn_get_chronicle_field_definitions();
+    $errors = get_transient("owbn_chronicle_errors_{$post->ID}") ?: [];
+
+    echo "\n<div class=\"owbn-meta-view\">\n";
+    foreach ($field_definitions as $section_label => $fields) {
+        echo "<h2>" . esc_html($section_label) . "</h2>\n";
+        echo "<table class=\"form-table\">\n<tbody>\n";
+        foreach ($fields as $key => $meta) {
+            $value = get_post_meta($post->ID, $key, true);
+            $label = $meta['label'];
+            $type  = $meta['type'];
+            $error_class = in_array($key, $errors, true) ? ' owbn-error-field' : '';
+
+            echo "<tr>\n";
+            echo "<th><label for=\"" . esc_attr($key) . "\">" . esc_html($label) . "</label></th>\n";
+            echo "<td class=\"" . esc_attr(trim($error_class)) . "\">\n";
+
+            switch ($type) {
+                case 'wysiwyg':
+                    owbn_render_wysiwyg_editor($key, $value);
+                    break;
+
+                case 'select':
+                    owbn_render_select_field($key, $value, $meta);
+                    break;
+
+                case 'chronicle_select':
+                    owbn_render_chronicle_select_field($key, $value, $meta, $label, $error_class);
+                    break;
+
+                case 'multi_select':
+                    owbn_render_multi_select_field($key, $value, $meta);
+                    break;
+
+                case 'session_group':
+                    owbn_render_session_group($key, $value, $meta);
+                    break;
+
+                case 'repeatable_group':
+                    owbn_render_repeatable_group($key, $value, $meta);
+                    break;
+
+                case 'user_info':
+                    owbn_render_user_info($key, $value, $meta);
+                    break;
+
+                case 'ast_group':
+                    owbn_render_ast_group($key, $value, $meta);
+                    break; 
+                
+                case 'boolean':
+                    owbn_render_boolean_field($key, $value);
+                    break;
+                
+                case 'location_group':
+                    owbn_render_location_group($key, $value, $meta);
+                    break;
+
+                case 'date':
+                    echo "<input type=\"date\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\">\n";
+                    break;
+
+                case 'number':
+                    echo "<input type=\"number\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\">\n";
+                    break;
+
+                case 'json':
+                    echo "<textarea class=\"large-text code\" rows=\"4\" name=\"" . esc_attr($key) . "\">" .
+                        esc_textarea(is_scalar($value) ? $value : wp_json_encode($value)) .
+                        "</textarea>\n";
+                    break;
+
+                case 'slug':
+                    owbn_render_slug_field($key, $value);
+                    break;
+
+                default:
+                    echo "<input type=\"text\" class=\"regular-text\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\">\n";
+                    break;
+            }
+
+            echo '</td></tr>';
+        }
+        echo '</tbody></table>';
+    }
+    echo '</div>';
+}
+
+function owbn_render_slug_field($key, $value) {
+    echo "<input type=\"text\" class=\"regular-text\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\" " .
+        "minlength=\"4\" maxlength=\"6\" pattern=\"[a-z0-9]{4,6}\" " .
+        "placeholder=\"" . esc_attr__('4–6 lowercase alphanumeric characters', 'owbn-chronicle-manager') . "\">\n";
+
+    echo "<p class=\"description\">" . esc_html__('Allowed: lowercase letters and numbers, 4–6 characters.', 'owbn-chronicle-manager') . "</p>\n";
+}
+
+function owbn_render_boolean_field($key, $value) {
+    $is_checked = ($value === '1');
+
+    echo '<div class="owbn-boolean-switch">' . "\n";
+    echo '  <span class="switch-label switch-label-left">' . __('No', 'owbn-chronicle-manager') . '</span>' . "\n";
+    echo '  <label class="switch">' . "\n";
+    echo '    <input type="checkbox" name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" value="1" ' . checked($is_checked, true, false) . '>' . "\n";
+    echo '    <span class="slider round"></span>' . "\n";
+    echo '  </label>' . "\n";
+    echo '  <span class="switch-label switch-label-right">' . __('Yes', 'owbn-chronicle-manager') . '</span>' . "\n";
+    echo '</div>' . "\n";
+}
+
+function owbn_render_select_field($key, $value, $meta) {
+    $options = $meta['options'] ?? [];
+
+    echo "<select name=\"" . esc_attr($key) . "\" id=\"" . esc_attr($key) . "\" class=\"regular-text owbn-select2 single\">\n";
+    echo "<option value=\"\">" . esc_html__('— Select —', 'owbn-chronicle-manager') . "</option>\n";
+
+    foreach ($options as $option) {
+        echo "<option value=\"" . esc_attr($option) . "\" " . selected($value, $option, false) . ">" . esc_html($option) . "</option>\n";
+    }
+
+    echo "</select>\n";
+}
+
+function owbn_render_multi_select_field($key, $value, $meta) {
+    $selected = is_array($value) ? $value : [];
+    $options = [];
+
+    if (!empty($meta['source']) && $meta['source'] === 'owbn_genre_list') {
+        $options = get_option('owbn_genre_list', []);
+    }
+
+    echo "<select name=\"" . esc_attr($key) . "[]\" multiple=\"multiple\" size=\"8\" class=\"owbn-select2 multi\" style=\"width: 100%;\">\n";
+    foreach ($options as $opt) {
+        $is_selected = in_array($opt, $selected, true);
+        echo "<option value=\"" . esc_attr($opt) . "\" " . selected($is_selected, true, false) . ">" . esc_html($opt) . "</option>\n";
+    }
+    echo "</select>\n";
+    echo "<p class=\"description\">" . esc_html__('Select one or more options.', 'owbn-chronicle-manager') . "</p>\n";
+}
+
+function owbn_render_wysiwyg_editor($key, $value) {
+    wp_editor(
+        is_scalar($value) ? $value : '',
+        $key,
+        [
+            'textarea_name' => $key,
+            'textarea_rows' => 6,
+            'media_buttons' => false,
+        ]
+    );
+}
+
+function owbn_render_session_group($key, $value, $meta) {
+    $groups = is_array($value) ? $value : [];
+    $subfields = $meta['fields'];
+
+    if (empty($groups)) {
+        $groups[] = []; // Start with one blank
+    }
+
+    echo '<div class="owbn-repeatable-group" data-key="' . esc_attr($key) . '">' . "\n";
+
+    foreach ($groups as $i => $group) {
+        echo '<div class="owbn-session-block">' . "\n";
+        echo '<div class="owbn-session-header">' . "\n";
+
+        $session_type = $group['session_type'] ?? 'Session';
+        $frequency = $group['frequency'] ?? '';
+        $day = $group['day'] ?? '';
+        $start_time = $group['start_time'] ?? '';
+        $header = $session_type;
+        $header_parts = [];
+
+        if ($frequency && $day) {
+            $header_parts[] = "{$frequency} {$day}";
+        } elseif ($day) {
+            $header_parts[] = $day;
+        }
+
+        if ($start_time) {
+            $header_parts[] = $start_time;
+        }
+
+        $genre_list = [];
+        $all_genres = get_option('owbn_genre_list', []);
+        $session_genres = $group['genres'] ?? [];
+
+        if (is_array($session_genres)) {
+            foreach ($session_genres as $genre) {
+                if (in_array($genre, $all_genres, true)) {
+                    $genre_list[] = $genre;
+                }
+            }
+        }
+
+        if (!empty($genre_list)) {
+            $header_parts[] = '(' . implode(', ', $genre_list) . ')';
+        }
+
+        if (!empty($header_parts)) {
+            $header .= ' – ' . implode(' ', $header_parts);
+        }
+
+        echo '<strong>' . esc_html($header) . '</strong>' . "\n";
+        echo '<button type="button" class="toggle-session button">Toggle</button>' . "\n";
+        echo '</div>' . "\n"; // .header
+
+        echo '<div class="owbn-session-body" style="display: none;">' . "\n";
+
+        // Row 1: Session Type | Genres
+        echo '<div class="owbn-session-row">' . "\n";
+        render_session_field($key, $i, 'session_type', $subfields['session_type'], $group['session_type'] ?? '');
+        render_session_field($key, $i, 'genres', $subfields['genres'], $group['genres'] ?? []);
+        echo '</div>' . "\n";
+
+        // Row 2: Frequency | Day | Check-in Time | Start Time
+        echo '<div class="owbn-session-row">' . "\n";
+        render_session_field($key, $i, 'frequency', $subfields['frequency'], $group['frequency'] ?? '');
+        render_session_field($key, $i, 'day', $subfields['day'], $group['day'] ?? '');
+        render_session_field($key, $i, 'checkin_time', $subfields['checkin_time'], $group['checkin_time'] ?? '');
+        render_session_field($key, $i, 'start_time', $subfields['start_time'], $group['start_time'] ?? '');
+        echo '</div>' . "\n";
+
+        // Row 3: Game Date Notes (full width)
+        echo '<div class="owbn-session-row-full">' . "\n";
+        render_session_field($key, $i, 'notes', $subfields['notes'], $group['notes'] ?? '');
+        echo '</div>' . "\n";
+
+        echo '<button type="button" class="button remove-session">Remove</button>' . "\n";
+        echo '</div>' . "\n"; // .body
+        echo '</div>' . "\n"; // .block
+    }
+
+    echo '<button type="button" class="button add-session" data-field="' . esc_attr($key) . '">Add</button>' . "\n";
+    echo '</div>' . "\n"; // .repeatable-group
+}
+
+function render_session_field($key, $index, $subkey, $meta, $value) {
+    $field_id = "{$key}_{$index}_{$subkey}";
+    $field_name = "{$key}[{$index}][{$subkey}]";
+
+    echo '<div class="owbn-session-field">' . "\n";
+    echo '<label for="' . esc_attr($field_id) . '">' . esc_html($meta['label']) . '</label><br>' . "\n";
+
+    switch ($meta['type']) {
+        case 'select':
+            echo '<select class="owbn-select2" name="' . esc_attr($field_name) . '" id="' . esc_attr($field_id) . '">' . "\n";
+            foreach ($meta['options'] as $opt) {
+                echo '<option value="' . esc_attr($opt) . '" ' . selected($value, $opt, false) . '>' . esc_html($opt) . '</option>' . "\n";
+            }
+            echo '</select>' . "\n";
+            break;
+
+        case 'time':
+            echo '<input type="time" name="' . esc_attr($field_name) . '" value="' . esc_attr($value) . '">' . "\n";
+            break;
+
+        case 'wysiwyg':
+            wp_editor($value, $field_id, [
+                'textarea_name' => $field_name,
+                'textarea_rows' => 4,
+                'media_buttons' => false,
+            ]);
+            break;
+
+        case 'multi_select':
+            $selected = is_array($value) ? $value : [];
+            $opts = get_option('owbn_genre_list', []);
+            echo '<select class="owbn-select2" name="' . esc_attr($field_name) . '[]" multiple="multiple">' . "\n";
+            foreach ($opts as $opt) {
+                echo '<option value="' . esc_attr($opt) . '" ' . selected(in_array($opt, $selected, true), true, false) . '>' . esc_html($opt) . '</option>' . "\n";
+            }
+            echo '</select>' . "\n";
+            break;
+
+        default:
+            echo '<input type="text" name="' . esc_attr($field_name) . '" value="' . esc_attr($value) . '">' . "\n";
+    }
+
+    echo '</div>' . "\n";
+}
+
+function owbn_render_user_info($key, $value, $meta) {
+    $is_cm = ($key === 'cm_info');
+
+    if ($is_cm) {
+        echo "<div class=\"owbn-cm-info-container\">\n";
+        echo "<div id=\"owbn-cm-info-wrapper\">\n";
+    }
+
+    $user_id = $value['user'] ?? '';
+    $display_name = $value['display_name'] ?? '';
+    $email = $value['email'] ?? '';
+
+    $users = get_users(['fields' => ['ID', 'display_name']]);
+
+    echo "<div class=\"owbn-user-info-row\">\n";
+
+    // User dropdown
+    echo "<div class=\"owbn-user-info-field\">\n";
+    echo "<label>" . __('User', 'owbn-chronicle-manager') . "<br>\n";
+    echo "<select name=\"" . esc_attr($key) . "[user]\" class=\"owbn-select2\">\n";
+    echo "<option value=\"\">" . __('— Select —', 'owbn-chronicle-manager') . "</option>\n";
+    foreach ($users as $user) {
+        echo "<option value=\"" . esc_attr($user->ID) . "\" " . selected($user_id, $user->ID, false) . ">" . esc_html($user->display_name) . "</option>\n";
+    }
+    echo "</select>\n";
+    echo "</label>\n";
+    echo "</div>\n";
+
+    // Display Name
+    echo "<div class=\"owbn-user-info-field\">\n";
+    echo "<label>" . __('Display Name', 'owbn-chronicle-manager') . "<br>\n";
+    echo "<input type=\"text\" name=\"" . esc_attr($key) . "[display_name]\" value=\"" . esc_attr($display_name) . "\" class=\"regular-text\">\n";
+    echo "</label>\n";
+    echo "</div>\n";
+
+    // Email
+    echo "<div class=\"owbn-user-info-field\">\n";
+    echo "<label>" . __('Display Email', 'owbn-chronicle-manager') . "<br>\n";
+    echo "<input type=\"email\" name=\"" . esc_attr($key) . "[email]\" value=\"" . esc_attr($email) . "\" class=\"regular-text\">\n";
+    echo "</label>\n";
+    echo "</div>\n";
+
+    echo "</div>\n"; // .owbn-user-info-row
+
+    if ($is_cm) {
+        echo "</div>\n"; // #owbn-cm-info-wrapper
+
+        // Satellite note toggle target
+        echo "<div id=\"owbn-cm-info-message\" style=\"display:none; margin-top: 10px;\">\n";
+        echo "<em>" . esc_html__('Satellite Chronicles are represented on council by their parent chronicle.', 'owbn-chronicle-manager') . "</em>\n";
+        echo "</div>\n";
+        echo "</div>\n"; // .owbn-cm-info-container
+    }
+}
+
+function owbn_render_ast_group($key, $value, $meta) {
+    $fields = $meta['fields'] ?? [];
+    $value = is_array($value) ? $value : [];
+    $users = get_users(['fields' => ['ID', 'display_name']]);
+
+    echo "<div class=\"owbn-repeatable-group\" id=\"ast-group-wrapper\">\n";
+
+    foreach ($value as $index => $entry) {
+        echo "<div class=\"owbn-ast-block\">\n";
+
+        // Row 1: User Select
+        echo "<div class=\"owbn-user-info-row\">\n";
+        echo "<div class=\"owbn-user-info-field\">\n";
+        echo "<label>" . __('User', 'owbn-chronicle-manager') . "<br>\n";
+        echo "<select name=\"ast_list[{$index}][user]\" class=\"owbn-select2 single\">\n";
+        echo "<option value=\"\">" . __('— Select —', 'owbn-chronicle-manager') . "</option>\n";
+        foreach ($users as $user) {
+            echo "<option value=\"" . esc_attr($user->ID) . "\" " . selected($entry['user'] ?? '', $user->ID, false) . ">" . esc_html($user->display_name) . "</option>\n";
+        }
+        echo "</select>\n</label>\n</div>\n";
+        echo "</div>\n";
+
+        // Row 2: Display Name, Email, Role
+        echo "<div class=\"owbn-user-info-row\">\n";
+
+        echo "<div class=\"owbn-user-info-field\">\n";
+        echo "<label>" . __('Display Name', 'owbn-chronicle-manager') . "<br>\n";
+        echo "<input type=\"text\" name=\"ast_list[{$index}][display_name]\" value=\"" . esc_attr($entry['display_name'] ?? '') . "\" class=\"regular-text\">\n";
+        echo "</label>\n</div>\n";
+
+        echo "<div class=\"owbn-user-info-field\">\n";
+        echo "<label>" . __('Email', 'owbn-chronicle-manager') . "<br>\n";
+        echo "<input type=\"email\" name=\"ast_list[{$index}][email]\" value=\"" . esc_attr($entry['email'] ?? '') . "\" class=\"regular-text\">\n";
+        echo "</label>\n</div>\n";
+
+        echo "<div class=\"owbn-user-info-field\">\n";
+        echo "<label>" . __('Role', 'owbn-chronicle-manager') . "<br>\n";
+        echo "<input type=\"text\" name=\"ast_list[{$index}][role]\" value=\"" . esc_attr($entry['role'] ?? '') . "\" class=\"regular-text\">\n";
+        echo "</label>\n</div>\n";
+
+        echo "</div>\n"; // Row 2
+
+        echo "<button type=\"button\" class=\"button owbn-remove-ast\">" . __('Remove AST', 'owbn-chronicle-manager') . "</button>\n";
+        echo "</div>\n"; // end .owbn-ast-block
+    }
+
+    // Template block for JS clone
+    echo "<div class=\"owbn-ast-block owbn-ast-template\" style=\"display:none;\">\n";
+
+    // Row 1: User
+    echo "<div class=\"owbn-user-info-row\">\n";
+    echo "<div class=\"owbn-user-info-field\">\n";
+    echo "<label>" . __('User', 'owbn-chronicle-manager') . "<br>\n";
+    echo "<select name=\"ast_list[__INDEX__][user]\" class=\"owbn-select2 single\">\n";
+    echo "<option value=\"\">" . __('— Select —', 'owbn-chronicle-manager') . "</option>\n";
+    foreach ($users as $user) {
+        echo "<option value=\"" . esc_attr($user->ID) . "\">" . esc_html($user->display_name) . "</option>\n";
+    }
+    echo "</select>\n</label>\n</div>\n";
+    echo "</div>\n";
+
+    // Row 2: Display Name, Email, Role
+    echo "<div class=\"owbn-user-info-row\">\n";
+
+    echo "<div class=\"owbn-user-info-field\">\n";
+    echo "<label>" . __('Display Name', 'owbn-chronicle-manager') . "<br>\n";
+    echo "<input type=\"text\" name=\"ast_list[__INDEX__][display_name]\" class=\"regular-text\">\n";
+    echo "</label>\n</div>\n";
+
+    echo "<div class=\"owbn-user-info-field\">\n";
+    echo "<label>" . __('Email', 'owbn-chronicle-manager') . "<br>\n";
+    echo "<input type=\"email\" name=\"ast_list[__INDEX__][email]\" class=\"regular-text\">\n";
+    echo "</label>\n</div>\n";
+
+    echo "<div class=\"owbn-user-info-field\">\n";
+    echo "<label>" . __('Role', 'owbn-chronicle-manager') . "<br>\n";
+    echo "<input type=\"text\" name=\"ast_list[__INDEX__][role]\" class=\"regular-text\">\n";
+    echo "</label>\n</div>\n";
+
+    echo "</div>\n";
+
+    echo "<button type=\"button\" class=\"button owbn-remove-ast\">" . __('Remove AST', 'owbn-chronicle-manager') . "</button>\n";
+    echo "</div>\n"; // template
+
+    echo "<button type=\"button\" class=\"button button-primary owbn-add-ast\">" . __('Add AST', 'owbn-chronicle-manager') . "</button>\n";
+    echo "</div>\n"; // .owbn-repeatable-group
+}
+
+function owbn_render_location_group($key, $value, $meta) {
+    $groups = is_array($value) ? $value : [];
+    $subfields = $meta['fields'];
+
+    if (empty($groups)) {
+        $groups[] = []; // Start with one blank
+    }
+
+    echo '<div class="owbn-repeatable-group" data-key="' . esc_attr($key) . '">' . "\n";
+
+    foreach ($groups as $i => $group) {
+        echo '<div class="owbn-location-block">' . "\n";
+        echo '<div class="owbn-location-header">' . "\n";
+
+        $name    = $group['name'] ?? __('(Unnamed)', 'owbn-chronicle-manager');
+        $city    = $group['city'] ?? '';
+        $region  = $group['region'] ?? '';
+        $country = $group['country'] ?? '';
+        $online  = !empty($group['online_only']) ? __('(Online Only)', 'owbn-chronicle-manager') : '';
+
+        $location_parts = array_filter([$city, $region, $country]);
+        $header = esc_html($name);
+
+        if (!empty($location_parts)) {
+            $header .= ' – ' . esc_html(implode(', ', $location_parts));
+        }
+
+        if ($online) {
+            $header .= ' ' . esc_html($online);
+        }
+
+        echo '<strong>' . $header . '</strong>' . "\n";
+        echo '<button type="button" class="toggle-location button">Toggle</button>' . "\n";
+        echo '</div>' . "\n"; // .header
+
+        echo '<div class="owbn-location-body" style="display: none;">' . "\n";
+
+        // Row 1: name, online_only, country
+        echo '<div class="owbn-location-row">' . "\n";
+        if (isset($subfields['name'])) {
+            render_location_field($key, $i, 'name', $subfields['name'], $group['name'] ?? '');
+        }
+        if (isset($subfields['online_only'])) {
+            render_location_field($key, $i, 'online_only', $subfields['online_only'], $group['online_only'] ?? '');
+        }
+        if (isset($subfields['country'])) {
+            render_location_field($key, $i, 'country', $subfields['country'], $group['country'] ?? '');
+        }
+        echo '</div>' . "\n";
+
+        // Row 2: region, city, address
+        echo '<div class="owbn-location-row">' . "\n";
+        if (isset($subfields['region'])) {
+            render_location_field($key, $i, 'region', $subfields['region'], $group['region'] ?? '');
+        }
+        if (isset($subfields['city'])) {
+            render_location_field($key, $i, 'city', $subfields['city'], $group['city'] ?? '');
+        }
+        if (isset($subfields['address'])) {
+            render_location_field($key, $i, 'address', $subfields['address'], $group['address'] ?? '');
+        }
+        echo '</div>' . "\n";
+
+        // Row 3: notes (full width) - TEMPORARY fallback to avoid wp_editor crash
+        if (isset($subfields['notes'])) {
+            echo '<div class="owbn-location-row-full">' . "\n";
+            try {
+                render_location_field($key, $i, 'notes', $subfields['notes'], $group['notes'] ?? '');
+            } catch (Throwable $e) {
+                echo '<p style="color:red;">Error rendering notes field: ' . esc_html($e->getMessage()) . '</p>';
+            }
+            echo '</div>' . "\n";
+        }
+
+        echo '<button type="button" class="button remove-location">Remove</button>' . "\n";
+        echo '</div>' . "\n"; // .body
+        echo '</div>' . "\n"; // .block
+    }
+
+    echo '<button type="button" class="button add-location" data-field="' . esc_attr($key) . '">Add</button>' . "\n";
+    echo '</div>' . "\n"; // .repeatable-group
+}
+
+function render_location_field($key, $index, $subkey, $meta, $value) {
+    $field_id = "{$key}_{$index}_{$subkey}";
+    $field_name = "{$key}[{$index}][{$subkey}]";
+
+    echo '<div class="owbn-location-field">' . "\n";
+    echo '<label for="' . esc_attr($field_id) . '">' . esc_html($meta['label']) . '</label><br>' . "\n";
+
+    switch ($meta['type']) {
+        case 'select':
+            $options = $meta['options'] ?? [];
+            $extra_class = !empty($meta['search']) ? 'select2-searchable' : ''; // NEW
+            echo '<select class="owbn-select2 ' . esc_attr($extra_class) . '" name="' . esc_attr($field_name) . '" id="' . esc_attr($field_id) . '">' . "\n";
+            echo '<option value="">' . esc_html__('— Select —', 'owbn-chronicle-manager') . '</option>' . "\n";
+            foreach ($options as $key => $label) {
+                // Handle array or indexed options
+                $value_attr = is_string($key) ? $key : $label;
+                echo '<option value="' . esc_attr($value_attr) . '" ' . selected($value, $value_attr, false) . '>' . esc_html($label) . '</option>' . "\n";
+            }
+            echo '</select>' . "\n";
+            break;
+
+        case 'multi_select':
+            $selected = is_array($value) ? $value : [];
+            $options = [];
+
+            if (!empty($meta['source']) && $meta['source'] === 'owbn_genre_list') {
+                $options = get_option('owbn_genre_list', []);
+            }
+
+            echo '<select class="owbn-select2" name="' . esc_attr($field_name) . '[]" multiple="multiple" id="' . esc_attr($field_id) . '">' . "\n";
+            foreach ($options as $opt) {
+                echo '<option value="' . esc_attr($opt) . '" ' . selected(in_array($opt, $selected, true), true, false) . '>' . esc_html($opt) . '</option>' . "\n";
+            }
+            echo '</select>' . "\n";
+            break;
+
+        case 'boolean':
+            $is_checked = ($value === '1' || $value === 1 || $value === true);
+            echo '<div class="owbn-boolean-switch">' . "\n";
+            echo '  <span class="switch-label switch-label-left">' . __('No', 'owbn-chronicle-manager') . '</span>' . "\n";
+            echo '  <label class="switch">' . "\n";
+            echo '    <input type="checkbox" name="' . esc_attr($field_name) . '" id="' . esc_attr($field_id) . '" value="1" ' . checked($is_checked, true, false) . '>' . "\n";
+            echo '    <span class="slider round"></span>' . "\n";
+            echo '  </label>' . "\n";
+            echo '  <span class="switch-label switch-label-right">' . __('Yes', 'owbn-chronicle-manager') . '</span>' . "\n";
+            echo '</div>' . "\n";
+            break;
+
+        case 'wysiwyg':
+            wp_editor(
+                is_scalar($value) ? $value : '',
+                $field_id,
+                [
+                    'textarea_name' => $field_name,
+                    'textarea_rows' => 5,
+                    'media_buttons' => false,
+                    'teeny' => true,
+                ]
+            );
+            break;
+
+        default: // text
+            echo '<input type="text" name="' . esc_attr($field_name) . '" id="' . esc_attr($field_id) . '" value="' . esc_attr($value) . '" class="regular-text">' . "\n";
+    }
+
+    echo '</div>' . "\n";
+}
+
+function owbn_render_repeatable_group($key, $value, $meta) {
+    $groups = is_array($value) ? $value : [];
+    $subfields = $meta['fields'] ?? [];
+
+    echo '<div class="owbn-repeatable-group" data-key="' . esc_attr($key) . '">';
+
+    foreach ($groups as $i => $group) {
+        echo '<div class="owbn-session-block">';
+        echo '<div class="owbn-session-header">';
+
+        $session_type = $group['session_type'] ?? 'Session';
+        $frequency = $group['frequency'] ?? '';
+        $day = $group['day'] ?? '';
+        $start_time = $group['start_time'] ?? '';
+
+        $header = $session_type;
+        $header_parts = [];
+
+        if ($frequency && $day) {
+            $header_parts[] = "{$frequency} {$day}";
+        } elseif ($day) {
+            $header_parts[] = $day;
+        }
+
+        if ($start_time) {
+            $header_parts[] = $start_time;
+        }
+
+        $genre_list = [];
+        $all_genres = get_option('owbn_genre_list', []);
+        $session_genres = $group['genres'] ?? [];
+
+        if (is_array($session_genres)) {
+            foreach ($session_genres as $genre) {
+                if (in_array($genre, $all_genres, true)) {
+                    $genre_list[] = $genre;
+                }
+            }
+        }
+
+        if (!empty($genre_list)) {
+            $header_parts[] = '(' . implode(', ', $genre_list) . ')';
+        }
+
+        if (!empty($header_parts)) {
+            $header .= ' – ' . implode(' ', $header_parts);
+        }
+
+        echo '<strong>' . esc_html($header) . '</strong>';
+        echo '<button type="button" class="toggle-session button">Toggle</button>';
+        echo '</div>';
+
+        echo '<div class="owbn-session-body" style="display: none;">';
+
+        foreach ($subfields as $subkey => $submeta) {
+            $field_id = "{$key}_{$i}_{$subkey}";
+            $field_name = "{$key}[{$i}][{$subkey}]";
+            $field_value = $group[$subkey] ?? '';
+
+            echo '<p><label for="' . esc_attr($field_id) . '">' . esc_html($submeta['label']) . '</label><br>';
+
+            switch ($submeta['type']) {
+                case 'select':
+                    echo '<select class="owbn-select2" name="' . esc_attr($field_name) . '" id="' . esc_attr($field_id) . '">';
+                    foreach ($submeta['options'] as $opt) {
+                        echo '<option value="' . esc_attr($opt) . '" ' . selected($field_value, $opt, false) . '>' . esc_html($opt) . '</option>';
+                    }
+                    echo '</select>';
+                    break;
+
+                case 'time':
+                    echo '<input type="time" name="' . esc_attr($field_name) . '" value="' . esc_attr($field_value) . '">';
+                    break;
+
+                case 'wysiwyg':
+                    wp_editor($field_value, $field_id, [
+                        'textarea_name' => $field_name,
+                        'textarea_rows' => 4,
+                        'media_buttons' => false,
+                    ]);
+                    break;
+
+                case 'multi_select':
+                    $selected = is_array($field_value) ? $field_value : [];
+                    $opts = get_option('owbn_genre_list', []);
+                    echo '<select class="owbn-select2" name="' . esc_attr($field_name) . '[]" multiple="multiple">';
+                    foreach ($opts as $opt) {
+                        echo '<option value="' . esc_attr($opt) . '" ' . selected(in_array($opt, $selected, true), true, false) . '>' . esc_html($opt) . '</option>';
+                    }
+                    echo '</select>';
+                    break;
+
+                default:
+                    echo '<input type="text" name="' . esc_attr($field_name) . '" value="' . esc_attr($field_value) . '">';
+            }
+
+            echo '</p>';
+        }
+
+        echo '<button type="button" class="button remove-session">Remove Session</button>';
+        echo '</div></div>';
+    }
+
+    echo '<button type="button" class="button add-session" data-field="' . esc_attr($key) . '">Add Session</button>';
+    echo '</div>';
+}
+
+function owbn_render_chronicle_select_field($key, $value, $meta, $label, $error_class) {
+    global $post;
+    $value = is_scalar($value) ? $value : '';
+
+    echo "<tr id=\"row-{$key}\">\n";
+    echo "<th><label for=\"" . esc_attr($key) . "\">" . esc_html($label) . "</label></th>\n";
+    echo "<td class=\"" . esc_attr(trim($error_class)) . "\">\n";
+
+    $args = [
+        'post_type'      => 'owbn_chronicle',
+        'posts_per_page' => -1,
+        'post_status'    => 'publish',
+        'orderby'        => 'title',
+        'order'          => 'ASC',
+        'post__not_in'   => [$post->ID],
+    ];
+
+    $chronicles = get_posts($args);
+
+    // Conditional wrapper
+    echo "<div id=\"owbn-parent-chronicle-select\" style=\"display:none\">\n";
+    echo "<select name=\"" . esc_attr($key) . "\" id=\"" . esc_attr($key) . "\" class=\"regular-text owbn-select2 single\" style=\"width: 100%;\">\n";
+    echo "<option value=\"\">" . esc_html__('— Select —', 'owbn-chronicle-manager') . "</option>\n";
+
+    foreach ($chronicles as $chron) {
+        $slug = $chron->post_name;
+        $title = $chron->post_title;
+        echo "<option value=\"" . esc_attr($slug) . "\" " . selected($value, $slug, false) . ">" . esc_html($title) . "</option>\n";
+    }
+
+    echo "</select>\n";
+    echo "<p class=\"description\">" . esc_html__('Only applicable to Satellite Chronicles.', 'owbn-chronicle-manager') . "</p>\n";
+    echo "</div>\n";
+
+    // Default visible message
+    echo "<div id=\"owbn-parent-chronicle-message\" style=\"margin-top: 10px; padding: 8px; background-color: #e8f5e9; border-left: 3px solid #4CAF50;\">\n";
+    echo "<em>" . esc_html__('Only Satellite Chronicles have parents.', 'owbn-chronicle-manager') . "</em>\n";
+    echo "</div>\n";
+
+    echo "</td>\n</tr>\n";
+}
+
+function owbn_save_chronicle_meta($post_id) {
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+    if (get_post_type($post_id) !== 'owbn_chronicle') return;
+
+    $definitions = owbn_get_chronicle_field_definitions();
+    $errors = get_transient("owbn_chronicle_errors_{$post_id}") ?: [];
+
+    foreach ($definitions as $fields) {
+        foreach ($fields as $key => $meta) {
+            if (!isset($_POST[$key]) && $meta['type'] !== 'boolean') continue;
+
+            $raw = owbn_safe_post_value($key);
+
+            switch ($meta['type']) {
+                case 'slug':
+                    $sanitized = strtolower(sanitize_text_field($raw));
+                    update_post_meta($post_id, $key, $sanitized);
+                    break;
+
+                case 'select':
+                    update_post_meta($post_id, $key, sanitize_text_field($raw));
+                    break;
+
+                case 'multi_select':
+                    $value = isset($_POST[$key]) && is_array($_POST[$key]) ? array_map('sanitize_text_field', $_POST[$key]) : [];
+                    update_post_meta($post_id, $key, $value);
+                    break;
+
+                case 'ast_group':
+                    $group_data = $_POST[$key] ?? [];
+                    $cleaned = [];
+
+                    if (is_array($group_data)) {
+                        foreach ($group_data as $row) {
+                            $row_cleaned = [];
+                            foreach ($meta['fields'] as $sub_key => $sub_meta) {
+                                if (!isset($row[$sub_key])) continue;
+                                $raw = $row[$sub_key];
+                                if ($sub_key === 'email') {
+                                    $row_cleaned[$sub_key] = sanitize_email($raw);
+                                } else {
+                                    $row_cleaned[$sub_key] = is_array($raw)
+                                        ? array_map('sanitize_text_field', $raw)
+                                        : sanitize_text_field($raw);
+                                }
+                            }
+                            $cleaned[] = $row_cleaned;
+                        }
+                    }
+
+                    update_post_meta($post_id, $key, $cleaned);
+                    break;
+
+                case 'session_group':
+                    $group_data = $_POST[$key] ?? [];
+                    $cleaned = [];
+
+                    if (is_array($group_data)) {
+                        foreach ($group_data as $row) {
+                            $row_cleaned = [];
+                            foreach ($meta['fields'] as $sub_key => $sub_meta) {
+                                if (!isset($row[$sub_key])) continue;
+                                $raw = $row[$sub_key];
+
+                                switch ($sub_meta['type']) {
+                                    case 'wysiwyg':
+                                        $row_cleaned[$sub_key] = wp_kses_post($raw);
+                                        break;
+
+                                    case 'multi_select':
+                                        $row_cleaned[$sub_key] = is_array($raw)
+                                            ? array_map('sanitize_text_field', $raw)
+                                            : [];
+                                        break;
+
+                                    case 'email':
+                                        $row_cleaned[$sub_key] = sanitize_email($raw);
+                                        break;
+
+                                    case 'time':
+                                    case 'select':
+                                    default:
+                                        $row_cleaned[$sub_key] = is_array($raw)
+                                            ? array_map('sanitize_text_field', $raw)
+                                            : sanitize_text_field($raw);
+                                        break;
+                                }
+                            }
+                            $cleaned[] = $row_cleaned;
+                        }
+                    }
+
+                    update_post_meta($post_id, $key, $cleaned);
+                    break;
+
+                case 'repeatable_group':
+                    $group_data = $_POST[$key] ?? [];
+                    $cleaned = [];
+                    if (is_array($group_data)) {
+                        foreach ($group_data as $row) {
+                            $row_cleaned = [];
+                            foreach ($meta['fields'] as $sub_key => $sub_meta) {
+                                if (!isset($row[$sub_key])) continue;
+                                $raw = $row[$sub_key];
+                                if (is_array($raw)) {
+                                    $row_cleaned[$sub_key] = array_map('sanitize_text_field', $raw);
+                                } else {
+                                    $row_cleaned[$sub_key] = sanitize_text_field($raw);
+                                }
+                            }
+                            $cleaned[] = $row_cleaned;
+                        }
+                    }
+                    update_post_meta($post_id, $key, $cleaned);
+                    break;
+
+                case 'user_info':
+                    $info = $_POST[$key] ?? [];
+                    $cleaned = [
+                        'user' => isset($info['user']) ? sanitize_text_field($info['user']) : '',
+                        'display_name' => isset($info['display_name']) ? sanitize_text_field($info['display_name']) : '',
+                        'email' => isset($info['email']) ? sanitize_email($info['email']) : '',
+                    ];
+                    update_post_meta($post_id, $key, $cleaned);
+                    break;
+                
+                case 'boolean':
+                    update_post_meta($post_id, $key, isset($_POST[$key]) ? '1' : '0');
+                    break;
+
+                case 'json':
+                    $value = json_decode($raw, true);
+                    update_post_meta($post_id, $key, is_array($value) ? $value : sanitize_text_field($raw));
+                    break;
+
+                default:
+                    update_post_meta($post_id, $key, sanitize_text_field($raw));
+                    break;
+            }
+        }
+    }
+}
+add_action('save_post', 'owbn_save_chronicle_meta');
+
+function owbn_safe_post_value($key, $source = null) {
+    $source = $source ?? $_POST;
+    if (!isset($source[$key])) return '';
+    return is_array($source[$key]) ? $source[$key] : stripslashes($source[$key]);
+}
+
+function owbn_validate_chronicle_submission($postarr) {
+    $definitions = owbn_get_chronicle_field_definitions();
+    // Normalize all boolean checkbox fields to '0' if not set
+    foreach ($definitions as $fields) {
+        foreach ($fields as $key => $meta) {
+            if ($meta['type'] === 'boolean' && !isset($postarr[$key])) {
+                $postarr[$key] = '0';
+            }
+        }
+    }
+    $errors = [];
+
+    foreach ($definitions as $fields) {
+        foreach ($fields as $key => $meta) {
+            $raw = owbn_safe_post_value($key, $postarr);
+            $raw_string = is_array($raw) ? '' : $raw;
+
+            if (!empty($meta['required']) && (is_array($raw) ? empty($raw) : trim($raw_string) === '')) {
+                $errors[] = $key;
+                continue;
+            }
+
+            if ($meta['type'] === 'slug') {
+                if (!preg_match('/^[a-z0-9]{4,6}$/', strtolower($raw_string))) {
+                    $errors[] = $key;
+                }
+            }
+
+            if ($meta['type'] === 'user_info') {
+                $user_info = is_array($raw) ? $raw : [];
+                $display_name = trim($user_info['display_name'] ?? '');
+                $email = trim($user_info['email'] ?? '');
+
+                $is_required = !empty($meta['required']);
+
+                if (!$is_required && isset($meta['conditional_required'])) {
+                    [$dep_key, $dep_value] = explode('=', $meta['conditional_required']);
+                    $actual = owbn_safe_post_value($dep_key, $postarr);
+                    
+                    // Normalize checkbox value
+                    $actual = is_array($actual) ? '' : trim($actual);
+                    $dep_value = trim($dep_value);
+
+                    if ((string)$actual === $dep_value) {
+                        $is_required = true;
+                    }
+                }
+
+                if ($is_required && ($display_name === '' || $email === '')) {
+                    $errors[] = $key;
+                }
+            }
+
+            if ($meta['type'] === 'select' && $raw === '--Select Option--') {
+                $errors[] = $key;
+            }
+        }
+    }
+    error_log("CM REQUIRED CHECK — Sat value: " . print_r(owbn_safe_post_value('chronicle_satellite', $postarr), true));
+    error_log("CM REQUIRED? " . (in_array('cm_info', $errors, true) ? 'YES' : 'NO'));
+    return $errors;
+}
+
+function owbn_admin_notice_invalid_fields() {
+    global $post;
+    $post_id = 0;
+
+    if (isset($post->ID)) {
+        $post_id = $post->ID;
+    } elseif (!empty($_GET['post'])) {
+        $post_id = intval($_GET['post']);
+    } elseif (!empty($_POST['post_ID'])) {
+        $post_id = intval($_POST['post_ID']);
+    }
+
+    if (!$post_id) return;
+
+    $errors = get_transient("owbn_chronicle_errors_{$post_id}");
+    if ($errors) {
+        $definitions = owbn_get_chronicle_field_definitions();
+        $labels = [];
+
+        foreach ($errors as $error_key) {
+            foreach ($definitions as $section => $fields) {
+                if (isset($fields[$error_key])) {
+                    $labels[] = $fields[$error_key]['label'];
+                }
+            }
+        }
+
+        if (!empty($labels)) {
+            echo '<div class="notice notice-error owbn-error-notice"><p><strong>' . esc_html__('Please fix the following required fields:', 'owbn-chronicle-manager') . '</strong></p>';
+            echo '<ul>';
+            foreach ($labels as $label) {
+                echo '<li>' . esc_html($label) . '</li>';
+            }
+            echo '</ul></div>';
+        }
+
+        delete_transient("owbn_chronicle_errors_{$post_id}");
+    }
+}
+add_action('admin_notices', 'owbn_admin_notice_invalid_fields');
+
+function owbn_force_draft_on_error($data, $postarr) {
+    // Only apply to our custom post type
+    if ($data['post_type'] !== 'owbn_chronicle') {
+        return $data;
+    }
+
+    // Allow trashing or deleting
+    if (isset($data['post_status']) && in_array($data['post_status'], ['trash', 'auto-draft'], true)) {
+        return $data;
+    }
+
+    // Skip validation if the post is being trashed or deleted
+    if (
+        isset($_POST['action']) && $_POST['action'] === 'delete' ||
+        (isset($_POST['action2']) && $_POST['action2'] === 'delete')
+    ) {
+        return $data;
+    }
+
+    $errors = owbn_validate_chronicle_submission($postarr);
+    if (!empty($errors)) {
+        $data['post_status'] = 'draft';
+        if (!empty($postarr['ID'])) {
+            set_transient("owbn_chronicle_errors_{$postarr['ID']}", $errors, 60);
+        }
+    }
+
+    return $data;
+}
+add_filter('wp_insert_post_data', 'owbn_force_draft_on_error', 10, 2);
+
+function owbn_get_country_list() {
+    return [
+        'AF' => 'Afghanistan',
+        'AL' => 'Albania',
+        'DZ' => 'Algeria',
+        'AS' => 'American Samoa',
+        'AD' => 'Andorra',
+        'AO' => 'Angola',
+        'AI' => 'Anguilla',
+        'AQ' => 'Antarctica',
+        'AG' => 'Antigua and Barbuda',
+        'AR' => 'Argentina',
+        'AM' => 'Armenia',
+        'AW' => 'Aruba',
+        'AU' => 'Australia',
+        'AT' => 'Austria',
+        'AZ' => 'Azerbaijan',
+        'BS' => 'Bahamas',
+        'BH' => 'Bahrain',
+        'BD' => 'Bangladesh',
+        'BB' => 'Barbados',
+        'BY' => 'Belarus',
+        'BE' => 'Belgium',
+        'BZ' => 'Belize',
+        'BJ' => 'Benin',
+        'BM' => 'Bermuda',
+        'BT' => 'Bhutan',
+        'BO' => 'Bolivia',
+        'BA' => 'Bosnia and Herzegovina',
+        'BW' => 'Botswana',
+        'BR' => 'Brazil',
+        'BN' => 'Brunei',
+        'BG' => 'Bulgaria',
+        'BF' => 'Burkina Faso',
+        'BI' => 'Burundi',
+        'KH' => 'Cambodia',
+        'CM' => 'Cameroon',
+        'CA' => 'Canada',
+        'CV' => 'Cape Verde',
+        'KY' => 'Cayman Islands',
+        'CF' => 'Central African Republic',
+        'TD' => 'Chad',
+        'CL' => 'Chile',
+        'CN' => 'China',
+        'CO' => 'Colombia',
+        'KM' => 'Comoros',
+        'CG' => 'Congo (Brazzaville)',
+        'CD' => 'Congo (Kinshasa)',
+        'CR' => 'Costa Rica',
+        'HR' => 'Croatia',
+        'CU' => 'Cuba',
+        'CY' => 'Cyprus',
+        'CZ' => 'Czech Republic',
+        'DK' => 'Denmark',
+        'DJ' => 'Djibouti',
+        'DM' => 'Dominica',
+        'DO' => 'Dominican Republic',
+        'EC' => 'Ecuador',
+        'EG' => 'Egypt',
+        'SV' => 'El Salvador',
+        'GQ' => 'Equatorial Guinea',
+        'ER' => 'Eritrea',
+        'EE' => 'Estonia',
+        'ET' => 'Ethiopia',
+        'FJ' => 'Fiji',
+        'FI' => 'Finland',
+        'FR' => 'France',
+        'GA' => 'Gabon',
+        'GM' => 'Gambia',
+        'GE' => 'Georgia',
+        'DE' => 'Germany',
+        'GH' => 'Ghana',
+        'GR' => 'Greece',
+        'GD' => 'Grenada',
+        'GT' => 'Guatemala',
+        'GN' => 'Guinea',
+        'GW' => 'Guinea-Bissau',
+        'GY' => 'Guyana',
+        'HT' => 'Haiti',
+        'HN' => 'Honduras',
+        'HK' => 'Hong Kong',
+        'HU' => 'Hungary',
+        'IS' => 'Iceland',
+        'IN' => 'India',
+        'ID' => 'Indonesia',
+        'IR' => 'Iran',
+        'IQ' => 'Iraq',
+        'IE' => 'Ireland',
+        'IL' => 'Israel',
+        'IT' => 'Italy',
+        'JM' => 'Jamaica',
+        'JP' => 'Japan',
+        'JO' => 'Jordan',
+        'KZ' => 'Kazakhstan',
+        'KE' => 'Kenya',
+        'KI' => 'Kiribati',
+        'KW' => 'Kuwait',
+        'KG' => 'Kyrgyzstan',
+        'LA' => 'Laos',
+        'LV' => 'Latvia',
+        'LB' => 'Lebanon',
+        'LS' => 'Lesotho',
+        'LR' => 'Liberia',
+        'LY' => 'Libya',
+        'LI' => 'Liechtenstein',
+        'LT' => 'Lithuania',
+        'LU' => 'Luxembourg',
+        'MO' => 'Macau',
+        'MK' => 'North Macedonia',
+        'MG' => 'Madagascar',
+        'MW' => 'Malawi',
+        'MY' => 'Malaysia',
+        'MV' => 'Maldives',
+        'ML' => 'Mali',
+        'MT' => 'Malta',
+        'MH' => 'Marshall Islands',
+        'MR' => 'Mauritania',
+        'MU' => 'Mauritius',
+        'MX' => 'Mexico',
+        'FM' => 'Micronesia',
+        'MD' => 'Moldova',
+        'MC' => 'Monaco',
+        'MN' => 'Mongolia',
+        'ME' => 'Montenegro',
+        'MA' => 'Morocco',
+        'MZ' => 'Mozambique',
+        'MM' => 'Myanmar',
+        'NA' => 'Namibia',
+        'NR' => 'Nauru',
+        'NP' => 'Nepal',
+        'NL' => 'Netherlands',
+        'NZ' => 'New Zealand',
+        'NI' => 'Nicaragua',
+        'NE' => 'Niger',
+        'NG' => 'Nigeria',
+        'KP' => 'North Korea',
+        'NO' => 'Norway',
+        'OM' => 'Oman',
+        'PK' => 'Pakistan',
+        'PW' => 'Palau',
+        'PA' => 'Panama',
+        'PG' => 'Papua New Guinea',
+        'PY' => 'Paraguay',
+        'PE' => 'Peru',
+        'PH' => 'Philippines',
+        'PL' => 'Poland',
+        'PT' => 'Portugal',
+        'QA' => 'Qatar',
+        'RO' => 'Romania',
+        'RU' => 'Russia',
+        'RW' => 'Rwanda',
+        'KN' => 'Saint Kitts and Nevis',
+        'LC' => 'Saint Lucia',
+        'VC' => 'Saint Vincent and the Grenadines',
+        'WS' => 'Samoa',
+        'SM' => 'San Marino',
+        'ST' => 'Sao Tome and Principe',
+        'SA' => 'Saudi Arabia',
+        'SN' => 'Senegal',
+        'RS' => 'Serbia',
+        'SC' => 'Seychelles',
+        'SL' => 'Sierra Leone',
+        'SG' => 'Singapore',
+        'SK' => 'Slovakia',
+        'SI' => 'Slovenia',
+        'SB' => 'Solomon Islands',
+        'SO' => 'Somalia',
+        'ZA' => 'South Africa',
+        'KR' => 'South Korea',
+        'ES' => 'Spain',
+        'LK' => 'Sri Lanka',
+        'SD' => 'Sudan',
+        'SR' => 'Suriname',
+        'SE' => 'Sweden',
+        'CH' => 'Switzerland',
+        'SY' => 'Syria',
+        'TW' => 'Taiwan',
+        'TJ' => 'Tajikistan',
+        'TZ' => 'Tanzania',
+        'TH' => 'Thailand',
+        'TL' => 'Timor-Leste',
+        'TG' => 'Togo',
+        'TO' => 'Tonga',
+        'TT' => 'Trinidad and Tobago',
+        'TN' => 'Tunisia',
+        'TR' => 'Turkey',
+        'TM' => 'Turkmenistan',
+        'TV' => 'Tuvalu',
+        'UG' => 'Uganda',
+        'UA' => 'Ukraine',
+        'AE' => 'United Arab Emirates',
+        'GB' => 'United Kingdom',
+        'US' => 'United States',
+        'UY' => 'Uruguay',
+        'UZ' => 'Uzbekistan',
+        'VU' => 'Vanuatu',
+        'VE' => 'Venezuela',
+        'VN' => 'Vietnam',
+        'YE' => 'Yemen',
+        'ZM' => 'Zambia',
+        'ZW' => 'Zimbabwe',
+    ];
+}
+
+///// Closing Content /////
+// Flush permalinks on activation/deactivation
+///// Closing Content /////
+// Flush permalinks on activation/deactivation
+register_activation_hook(__FILE__, 'owbn_activate_plugin');
+register_deactivation_hook(__FILE__, 'owbn_deactivate_plugin');
+
+function owbn_deactivate_plugin() {
+    flush_rewrite_rules();
+}
