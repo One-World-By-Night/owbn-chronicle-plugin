@@ -230,9 +230,75 @@ function owbn_get_chronicle_field_definitions() {
             ]
         ],
         'Links' => [
-            'document_links' => ['label' => __('Document Links', 'owbn-chronicle-manager'), 'type' => 'json'],
-            'social_urls' => ['label' => __('Social Media URLs', 'owbn-chronicle-manager'), 'type' => 'json'],
-            'email_lists' => ['label' => __('Email Lists', 'owbn-chronicle-manager'), 'type' => 'json'],
+            'document_links' => [
+                'label' => __('Document Links', 'owbn-chronicle-manager'),
+                'type'  => 'document_links_group',
+                'fields' => [
+                    'title' => [
+                        'label'    => __('Title', 'owbn-chronicle-manager'),
+                        'type'     => 'text',
+                        'required' => true,
+                    ],
+                    'link' => [
+                        'label' => __('External URL (if no upload)', 'owbn-chronicle-manager'),
+                        'type'  => 'url',
+                    ],
+                    'upload' => [
+                        'label' => __('Upload File (optional)', 'owbn-chronicle-manager'),
+                        'type'  => 'upload',
+                    ],
+                ],
+            ],
+            'social_urls' => [
+                'label'  => __('Social Media URLs', 'owbn-chronicle-manager'),
+                'type'   => 'social_links_group',
+                'fields' => [
+                    'platform' => [
+                        'label'   => __('Platform', 'owbn-chronicle-manager'),
+                        'type'    => 'select',
+                        'options' => [
+                            'facebook'   => 'Facebook',
+                            'twitter'    => 'Twitter (X)',
+                            'instagram'  => 'Instagram',
+                            'linkedin'   => 'LinkedIn',
+                            'youtube'    => 'YouTube',
+                            'tiktok'     => 'TikTok',
+                            'discord'    => 'Discord',
+                            'twitch'     => 'Twitch',
+                            'reddit'     => 'Reddit',
+                            'threads'    => 'Threads',
+                            'mastodon'   => 'Mastodon',
+                            'bluesky'    => 'Bluesky',
+                            'custom'     => 'Other',
+                        ],
+                        'required' => true,
+                    ],
+                    'url' => [
+                        'label'    => __('Profile URL', 'owbn-chronicle-manager'),
+                        'type'     => 'url',
+                        'required' => true,
+                    ],
+                ],
+            ],
+            'email_lists' => [
+                'label' => __('Email Lists', 'owbn-chronicle-manager'),
+                'type' => 'email_lists_group',
+                'fields' => [
+                    'list_name' => [
+                        'label' => __('List Name', 'owbn-chronicle-manager'),
+                        'type' => 'text',
+                        'required' => true,
+                    ],
+                    'email_address' => [
+                        'label' => __('Email Address', 'owbn-chronicle-manager'),
+                        'type' => 'email',
+                    ],
+                    'description' => [
+                        'label' => __('Description', 'owbn-chronicle-manager'),
+                        'type' => 'wysiwyg',
+                    ],
+                ],
+            ],
         ],
         'Metadata' => [
             'chronicle_start_date' => ['label' => __('Start Date', 'owbn-chronicle-manager'), 'type' => 'date'],

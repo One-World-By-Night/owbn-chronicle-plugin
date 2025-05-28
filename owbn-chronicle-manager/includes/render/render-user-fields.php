@@ -1,4 +1,5 @@
 <?php
+if (!defined('ABSPATH')) exit;
 
 // Render the user info fields for the Chronicle custom post typ
 function owbn_render_user_info($key, $value, $meta) {

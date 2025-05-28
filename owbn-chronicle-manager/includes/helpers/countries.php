@@ -1,4 +1,5 @@
 <?php
+if (!defined('ABSPATH')) exit;
 
 // Countries
 function owbn_get_country_list() {

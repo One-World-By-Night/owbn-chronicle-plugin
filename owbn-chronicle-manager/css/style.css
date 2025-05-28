@@ -160,7 +160,7 @@ input:checked + .slider:before {
     width: 100%;
 }
 
-/* Match session header style (optional) */
+/* Match session header style */
 .owbn-location-header {
     display: flex;
     justify-content: space-between;
@@ -180,8 +180,122 @@ input:checked + .slider:before {
     margin-bottom: 1rem;
 }
 
-/* Optional: Add spacing to Add/Remove buttons */
+/* Add spacing to Add/Remove buttons */
 .owbn-repeatable-group > .button.add-location,
 .owbn-location-body > .button.remove-location {
     margin-top: 0.5rem;
+}
+
+/* Layout rows for document link blocks */
+.owbn-document-row {
+    flex: 1;
+    min-width: 200px;
+}
+
+.owbn-document-row-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 1rem;
+}
+
+.owbn-document-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f0f0f0;
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    font-weight: 600;
+}
+
+.owbn-document-body {
+    border: 1px solid #ccc;
+    border-top: none;
+    padding: 1rem;
+    background: #fff;
+    margin-bottom: 1rem;
+}
+
+
+/* Layout rows for social media blocks */
+.owbn-social-row-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 1rem;
+}
+
+.owbn-social-row {
+    flex: 1;
+    min-width: 200px;
+}
+
+.owbn-social-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f0f0f0;
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    font-weight: 600;
+}
+
+.owbn-social-body {
+    border: 1px solid #ccc;
+    border-top: none;
+    padding: 1rem;
+    background: #fff;
+    margin-bottom: 1rem;
+}
+
+/* Email lists */
+.owbn-email-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 1rem;
+}
+
+.owbn-email-field {
+    flex: 1;
+    min-width: 250px; /* Was 200px — gives more comfortable width on desktop */
+}
+
+/* Ensure WYSIWYG field spans full width */
+.owbn-email-row-full .owbn-email-field {
+    width: 100%;
+}
+
+/* Header styling */
+.owbn-email-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f0f0f0;
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    font-weight: 600;
+}
+
+/* Body styling */
+.owbn-email-body {
+    border: 1px solid #ccc;
+    border-top: none;
+    padding: 1rem;
+    background: #fff;
+    margin-bottom: 1rem;
+}
+
+@media screen and (max-width: 768px) {
+    .owbn-email-row {
+        flex-direction: column;
+    }
+
+    .owbn-email-field {
+        width: 100%;
+    }
 }

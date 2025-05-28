@@ -1,4 +1,6 @@
 <?php
+if (!defined('ABSPATH')) exit;
+
 // Renders the OWbN Options Page in the WP Admin
 
 function owbn_render_options_page() {

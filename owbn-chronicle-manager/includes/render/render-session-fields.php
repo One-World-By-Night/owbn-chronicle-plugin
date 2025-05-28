@@ -1,4 +1,5 @@
 <?php
+if (!defined('ABSPATH')) exit;
 
 // Render the session group fields for the Chronicle custom post type
 function owbn_render_session_group($key, $value, $meta) {
