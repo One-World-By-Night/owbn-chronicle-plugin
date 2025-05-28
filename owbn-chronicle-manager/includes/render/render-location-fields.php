@@ -1,4 +1,5 @@
 <?php
+if (!defined('ABSPATH')) exit;
 
 // Render the location group fields for the Chronicle custom post type
 function owbn_render_location_group($key, $value, $meta) {

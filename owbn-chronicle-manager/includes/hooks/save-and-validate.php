@@ -1,9 +1,13 @@
 <?php
+if (!defined('ABSPATH')) exit;
 
 // Save the Chronicle meta fields
 function owbn_save_chronicle_meta($post_id) {
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (get_post_type($post_id) !== 'owbn_chronicle') return;
+
+    // $user_id = get_current_user_id();
+    // if (!owbn_user_can_edit_chronicle($user_id, $post_id)) return;
 
     $definitions = owbn_get_chronicle_field_definitions();
     $errors = get_transient("owbn_chronicle_errors_{$post_id}") ?: [];
@@ -34,11 +38,23 @@ function owbn_save_chronicle_meta($post_id) {
                     $cleaned = [];
 
                     if (is_array($group_data)) {
-                        foreach ($group_data as $row) {
+                        foreach ($group_data as $index => $row) {
+                            // Skip template or completely empty rows
+                            if (
+                                $index === '__INDEX__' ||
+                                empty($row['user']) &&
+                                empty($row['display_name']) &&
+                                empty($row['email']) &&
+                                empty($row['role'])
+                            ) {
+                                continue;
+                            }
+
                             $row_cleaned = [];
                             foreach ($meta['fields'] as $sub_key => $sub_meta) {
                                 if (!isset($row[$sub_key])) continue;
                                 $raw = $row[$sub_key];
+
                                 if ($sub_key === 'email') {
                                     $row_cleaned[$sub_key] = sanitize_email($raw);
                                 } else {
@@ -47,6 +63,7 @@ function owbn_save_chronicle_meta($post_id) {
                                         : sanitize_text_field($raw);
                                 }
                             }
+
                             $cleaned[] = $row_cleaned;
                         }
                     }
@@ -161,6 +178,93 @@ function owbn_save_chronicle_meta($post_id) {
                     update_post_meta($post_id, $key, $cleaned);
                     break;
 
+                    case 'document_links_group':
+                        $group_data = $_POST[$key] ?? [];
+                        $cleaned = [];
+
+                        if (is_array($group_data)) {
+                            foreach ($group_data as $index => $row) {
+                                $row_cleaned = [];
+
+                                // Sanitize title and link
+                                $row_cleaned['title'] = isset($row['title']) ? sanitize_text_field($row['title']) : '';
+                                $row_cleaned['link']  = isset($row['link']) ? esc_url_raw($row['link']) : '';
+
+                                // Handle uploaded file
+                                $file_field = "{$key}_{$index}_upload";
+                                if (!empty($_FILES[$file_field]) && !empty($_FILES[$file_field]['tmp_name'])) {
+                                    require_once ABSPATH . 'wp-admin/includes/file.php';
+                                    require_once ABSPATH . 'wp-admin/includes/media.php';
+                                    require_once ABSPATH . 'wp-admin/includes/image.php';
+
+                                    $attachment_id = media_handle_upload($file_field, $post_id);
+                                    if (!is_wp_error($attachment_id)) {
+                                        $row_cleaned['file_id'] = $attachment_id;
+                                    }
+                                } else {
+                                    // Preserve existing file_id if already saved
+                                    $existing_meta = get_post_meta($post_id, $key, true);
+                                    $existing_file_id = $existing_meta[$index]['file_id'] ?? '';
+                                    if ($existing_file_id) {
+                                        $row_cleaned['file_id'] = $existing_file_id;
+                                    }
+                                }
+
+                                $cleaned[] = $row_cleaned;
+                            }
+                        }
+
+                        update_post_meta($post_id, $key, $cleaned);
+                        break;
+
+                    case 'social_links_group':
+                        $group_data = $_POST[$key] ?? [];
+                        $cleaned = [];
+
+                        if (is_array($group_data)) {
+                            foreach ($group_data as $index => $row) {
+                                // Skip template or fully empty rows
+                                if (
+                                    $index === '__INDEX__' ||
+                                    (empty($row['platform']) && empty($row['url']))
+                                ) {
+                                    continue;
+                                }
+
+                                $platform = isset($row['platform']) ? sanitize_text_field($row['platform']) : '';
+                                $url = isset($row['url']) ? esc_url_raw($row['url']) : '';
+
+                                $cleaned[] = [
+                                    'platform' => $platform,
+                                    'url'      => $url,
+                                ];
+                            }
+                        }
+
+                        update_post_meta($post_id, $key, $cleaned);
+                        break;
+
+                    case 'email_lists_group':
+                        $group_data = $_POST[$key] ?? [];
+                        $cleaned = [];
+
+                        if (is_array($group_data)) {
+                            foreach ($group_data as $row) {
+                                $row_cleaned = [];
+
+                                $row_cleaned['list_name'] = isset($row['list_name']) ? sanitize_text_field($row['list_name']) : '';
+                                $row_cleaned['email_address'] = isset($row['email_address']) ? sanitize_email($row['email_address']) : '';
+                                $row_cleaned['description'] = isset($row['description']) ? wp_kses_post($row['description']) : '';
+
+                                if ($row_cleaned['list_name'] || $row_cleaned['email_address'] || $row_cleaned['description']) {
+                                    $cleaned[] = $row_cleaned;
+                                }
+                            }
+                        }
+
+                        update_post_meta($post_id, $key, $cleaned);
+                        break;
+
                 case 'user_info':
                     $info = $_POST[$key] ?? [];
                     $cleaned = [
@@ -220,7 +324,7 @@ function owbn_validate_chronicle_submission($postarr) {
             }
 
             if ($meta['type'] === 'slug') {
-                if (!preg_match('/^[a-z0-9]{4,6}$/', strtolower($raw_string))) {
+                if (!preg_match('/^[a-z0-9]{2,6}$/', strtolower($raw_string))) {
                     $errors[] = $key;
                 }
             }
@@ -255,8 +359,8 @@ function owbn_validate_chronicle_submission($postarr) {
             }
         }
     }
-    error_log("CM REQUIRED CHECK — Sat value: " . print_r(owbn_safe_post_value('chronicle_satellite', $postarr), true));
-    error_log("CM REQUIRED? " . (in_array('cm_info', $errors, true) ? 'YES' : 'NO'));
+    // error_log("CM REQUIRED CHECK — Sat value: " . print_r(owbn_safe_post_value('chronicle_satellite', $postarr), true));
+    // error_log("CM REQUIRED? " . (in_array('cm_info', $errors, true) ? 'YES' : 'NO'));
     return $errors;
 }
 
@@ -333,3 +437,23 @@ function owbn_force_draft_on_error($data, $postarr) {
     return $data;
 }
 add_filter('wp_insert_post_data', 'owbn_force_draft_on_error', 10, 2);
+
+// Sync custom slug field with post_name
+function owbn_sync_custom_slug_with_post_name($data, $postarr) {
+    if ($data['post_type'] !== 'owbn_chronicle') {
+        return $data;
+    }
+
+    $definitions = owbn_get_chronicle_field_definitions();
+    foreach ($definitions as $fields) {
+        foreach ($fields as $key => $meta) {
+            if ($meta['type'] === 'slug' && !empty($postarr[$key])) {
+                $data['post_name'] = sanitize_title($postarr[$key]);
+                break 2;
+            }
+        }
+    }
+
+    return $data;
+}
+add_filter('wp_insert_post_data', 'owbn_sync_custom_slug_with_post_name', 5, 2); // Priority 5 so it runs BEFORE validation at 10

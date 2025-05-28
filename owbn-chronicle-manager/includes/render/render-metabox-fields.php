@@ -1,9 +1,28 @@
 <?php
+if (!defined('ABSPATH')) exit;
 
 // Render the metabox fields for the Chronicle custom post type
 function owbn_render_chronicle_fields_metabox($post) {
+    $user_id = get_current_user_id();
+
+    if (!owbn_user_can_edit_chronicle($user_id, $post->ID)) {
+        echo '<p>' . esc_html__('You do not have permission to edit this Chronicle.', 'owbn-chronicle-manager') . '</p>';
+        return;
+    }
+
     $field_definitions = owbn_get_chronicle_field_definitions();
     $errors = get_transient("owbn_chronicle_errors_{$post->ID}") ?: [];
+
+    $restricted_fields = [
+        'chronicle_slug',
+        'chronicle_start_date',
+        'chronicle_region',
+        'chronicle_probationary',
+        'chronicle_satellite',
+        'chronicle_parent',
+    ];
+
+    $can_edit_metadata = owbn_user_can_edit_metadata_fields($user_id);
 
     echo "\n<div class=\"owbn-meta-view\">\n";
     foreach ($field_definitions as $section_label => $fields) {
@@ -14,6 +33,7 @@ function owbn_render_chronicle_fields_metabox($post) {
             $label = $meta['label'];
             $type  = $meta['type'];
             $error_class = in_array($key, $errors, true) ? ' owbn-error-field' : '';
+            $disabled_attr = in_array($key, $restricted_fields) && !$can_edit_metadata ? ' disabled' : '';
 
             echo "<tr>\n";
             echo "<th><label for=\"" . esc_attr($key) . "\">" . esc_html($label) . "</label></th>\n";
@@ -25,15 +45,15 @@ function owbn_render_chronicle_fields_metabox($post) {
                     break;
 
                 case 'select':
-                    owbn_render_select_field($key, $value, $meta);
+                    owbn_render_select_field($key, $value, $meta, $disabled_attr);
                     break;
 
                 case 'chronicle_select':
-                    owbn_render_chronicle_select_field($key, $value, $meta, $label, $error_class);
+                    owbn_render_chronicle_select_field($key, $value, $meta, $label, $error_class, $disabled_attr);
                     break;
 
                 case 'multi_select':
-                    owbn_render_multi_select_field($key, $value, $meta);
+                    owbn_render_multi_select_field($key, $value, $meta, $disabled_attr);
                     break;
 
                 case 'session_group':
@@ -44,42 +64,54 @@ function owbn_render_chronicle_fields_metabox($post) {
                     owbn_render_repeatable_group($key, $value, $meta);
                     break;
 
+                case 'document_links_group':
+                    owbn_render_document_links_field($key, $value, $meta);
+                    break;
+
+                case 'social_links_group':
+                    owbn_render_social_links_field($key, $value, $meta);
+                    break;
+
+                case 'email_lists_group':
+                    owbn_render_email_lists_field($key, $value, $meta);
+                    break;
+
                 case 'user_info':
                     owbn_render_user_info($key, $value, $meta);
                     break;
 
                 case 'ast_group':
                     owbn_render_ast_group($key, $value, $meta);
-                    break; 
-                
-                case 'boolean':
-                    owbn_render_boolean_field($key, $value);
                     break;
-                
+
+                case 'boolean':
+                    owbn_render_boolean_field($key, $value, $disabled_attr);
+                    break;
+
                 case 'location_group':
                     owbn_render_location_group($key, $value, $meta);
                     break;
 
                 case 'date':
-                    echo "<input type=\"date\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\">\n";
+                    echo "<input type=\"date\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\"$disabled_attr>\n";
                     break;
 
                 case 'number':
-                    echo "<input type=\"number\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\">\n";
+                    echo "<input type=\"number\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\"$disabled_attr>\n";
                     break;
 
                 case 'json':
-                    echo "<textarea class=\"large-text code\" rows=\"4\" name=\"" . esc_attr($key) . "\">" .
+                    echo "<textarea class=\"large-text code\" rows=\"4\" name=\"" . esc_attr($key) . "\"$disabled_attr>" .
                         esc_textarea(is_scalar($value) ? $value : wp_json_encode($value)) .
                         "</textarea>\n";
                     break;
 
                 case 'slug':
-                    owbn_render_slug_field($key, $value);
+                    owbn_render_slug_field($key, $value, $disabled_attr);
                     break;
 
                 default:
-                    echo "<input type=\"text\" class=\"regular-text\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\">\n";
+                    echo "<input type=\"text\" class=\"regular-text\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\"$disabled_attr>\n";
                     break;
             }
 
@@ -90,34 +122,38 @@ function owbn_render_chronicle_fields_metabox($post) {
     echo '</div>';
 }
 
-//Render the slug field with validation
-function owbn_render_slug_field($key, $value) {
-    echo "<input type=\"text\" class=\"regular-text\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\" " .
-        "minlength=\"4\" maxlength=\"6\" pattern=\"[a-z0-9]{4,6}\" " .
-        "placeholder=\"" . esc_attr__('4–6 lowercase alphanumeric characters', 'owbn-chronicle-manager') . "\">\n";
 
-    echo "<p class=\"description\">" . esc_html__('Allowed: lowercase letters and numbers, 4–6 characters.', 'owbn-chronicle-manager') . "</p>\n";
+// Render the slug field with optional disabling
+function owbn_render_slug_field($key, $value, $disabled_attr = '') {
+    $disabled_html = $disabled_attr ? ' disabled' : '';
+
+    echo "<input type=\"text\" class=\"regular-text\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\" " .
+        "minlength=\"2\" maxlength=\"6\" pattern=\"[a-z0-9]{2,6}\" $disabled_html " .
+        "placeholder=\"" . esc_attr__('2–6 lowercase alphanumeric characters', 'owbn-chronicle-manager') . "\">\n";
+
+    echo "<p class=\"description\">" . esc_html__('Allowed: lowercase letters and numbers, 2–6 characters.', 'owbn-chronicle-manager') . "</p>\n";
 }
 
-// Render the boolean field as a switch
-function owbn_render_boolean_field($key, $value) {
+// Render the boolean field as a switch, with optional disabling
+function owbn_render_boolean_field($key, $value, $disabled_attr = '') {
     $is_checked = ($value === '1');
+    $disabled_html = $disabled_attr ? ' disabled' : '';
 
     echo '<div class="owbn-boolean-switch">' . "\n";
     echo '  <span class="switch-label switch-label-left">' . __('No', 'owbn-chronicle-manager') . '</span>' . "\n";
     echo '  <label class="switch">' . "\n";
-    echo '    <input type="checkbox" name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" value="1" ' . checked($is_checked, true, false) . '>' . "\n";
+    echo '    <input type="checkbox" name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" value="1" ' . checked($is_checked, true, false) . $disabled_html . '>' . "\n";
     echo '    <span class="slider round"></span>' . "\n";
     echo '  </label>' . "\n";
     echo '  <span class="switch-label switch-label-right">' . __('Yes', 'owbn-chronicle-manager') . '</span>' . "\n";
     echo '</div>' . "\n";
 }
 
-//Render the chronicle select field with AJAX loading
-function owbn_render_select_field($key, $value, $meta) {
+// Render the select field with optional disabling support
+function owbn_render_select_field($key, $value, $meta, $disabled_attr = '') {
     $options = $meta['options'] ?? [];
 
-    echo "<select name=\"" . esc_attr($key) . "\" id=\"" . esc_attr($key) . "\" class=\"regular-text owbn-select2 single\">\n";
+    echo "<select name=\"" . esc_attr($key) . "\" id=\"" . esc_attr($key) . "\" class=\"regular-text owbn-select2 single\" $disabled_attr>\n";
     echo "<option value=\"\">" . esc_html__('— Select —', 'owbn-chronicle-manager') . "</option>\n";
 
     foreach ($options as $option) {
@@ -267,9 +303,10 @@ function owbn_render_repeatable_group($key, $value, $meta) {
 }
 
 // Render the chronicle select field for selecting parent chronicles
-function owbn_render_chronicle_select_field($key, $value, $meta, $label, $error_class) {
+function owbn_render_chronicle_select_field($key, $value, $meta, $label, $error_class, $disabled_attr = '') {
     global $post;
     $value = is_scalar($value) ? $value : '';
+    $disabled_html = $disabled_attr ? ' disabled' : '';
 
     echo "<tr id=\"row-{$key}\">\n";
     echo "<th><label for=\"" . esc_attr($key) . "\">" . esc_html($label) . "</label></th>\n";
@@ -288,7 +325,7 @@ function owbn_render_chronicle_select_field($key, $value, $meta, $label, $error_
 
     // Conditional wrapper
     echo "<div id=\"owbn-parent-chronicle-select\" style=\"display:none\">\n";
-    echo "<select name=\"" . esc_attr($key) . "\" id=\"" . esc_attr($key) . "\" class=\"regular-text owbn-select2 single\" style=\"width: 100%;\">\n";
+    echo "<select name=\"" . esc_attr($key) . "\" id=\"" . esc_attr($key) . "\" class=\"regular-text owbn-select2 single\" style=\"width: 100%;\"{$disabled_html}>\n";
     echo "<option value=\"\">" . esc_html__('— Select —', 'owbn-chronicle-manager') . "</option>\n";
 
     foreach ($chronicles as $chron) {
