@@ -1,282 +1,173 @@
 # OWBN Chronicle Manager
-- Plugin Name: OWBN Chronicle Manager
-- Plugin URI: https://www.owbn.net
-- Description: Manage OWBN Chronicle information using structured custom post types, shortcodes, and approval workflows. Includes support for nested locations, staff roles, genre declarations, and versioned updates via Gravity Forms and Gravity Flow.
-- Version: 1.0.0
-- Author: OWBN Web Coordination Team, Greg Hacke
-- Author URI: https://www.owbn.net
-- Tags: chronicle, nested content, information, custom post types
-- Requires at least: 6.0
-- Tested up to: 6.8
-- Requires PHP: 7.4
-- License: GPL-2.0-or-later
-- License URI: http://www.gnu.org/licenses/gpl-2.0.html
-- Text Domain: owbn-chronicle-manager
 
-The OWbN Chronicle Manager is a custom WordPress plugin designed to store, manage, and display detailed information about OWbN Chronicles in a structured, searchable, and filterable way. It provides a clean interface for public users, Chronicle owners, and administrators to interact with chronicle data, leveraging custom post types and shortcodes, without relying on third-party form field plugins like ACF.
+**Plugin Name**: OWBN Chronicle Manager  
+**Plugin URI**: https://www.owbn.net  
+**Description**: Manage OWBN Chronicle information using structured custom post types, shortcodes, and internal workflows. Includes support for nested locations, staff roles, genre declarations, and repeatable sub-records.  
+**Version**: 1.0.0  
+**Author**: OWBN Web Coordination Team, Greg Hacke  
+**Author URI**: https://www.owbn.net  
+**Tags**: chronicle, nested content, information, custom post types  
+**Requires at least**: 6.0  
+**Tested up to**: 6.8  
+**Requires PHP**: 7.4  
+**License**: GPL-2.0-or-later  
+**License URI**: http://www.gnu.org/licenses/gpl-2.0.html  
+**Text Domain**: owbn-chronicle-manager  
+
+---
 
 ## Purpose
 
 This plugin aims to:
 
 - Centralize all OWbN Chronicle data using a native WordPress custom post type (`owbn_chronicle`)
-- Allow Chronicle owners to edit and propose updates to their chronicle information
-- Provide admins with tools to approve sensitive changes
-- Offer shortcode-based listing and filtering for public display of chronicles
+- Allow Chronicle owners to manage and update their chronicle profiles
+- Provide admins with oversight and editorial control
+- Offer shortcode-based filtering and rendering for public-facing displays
+- Store all data internally without external form builders or plugins
+
+---
 
 ## Architecture Overview
 
 ### Custom Post Type
 
-All Chronicle data is stored in a custom post type: `owbn_chronicle`. Each post represents a unique Chronicle entry within the OWbN network. This structure enables robust, extensible, and permission-aware data storage using WordPress's built-in systems for revisions, metadata, and user relationships.
+Each `owbn_chronicle` post stores the full record for a Chronicle. Metadata is attached to the post, including structured objects (e.g., staff, locations) and simple scalar values (e.g., region, slug).
 
-#### Sub-Records and Multiplicity
+### Repeatable Sub-records
 
-Several Chronicle fields support **multiple entries** to reflect the complex nature of OWbN chronicles:
+Chronicles can have multiple nested elements stored as JSON objects:
 
 - OOC and IC Locations
-- Game Sites (physical and virtual)
-- Sessions (repeatable entries per genre)
-- ASTs (Assistant Storytellers)
-- Documents, Email Lists, and External Links
+- Game Sites (virtual and physical)
+- Sessions
+- Assistant Storytellers (ASTs)
+- Documents
+- Email Lists
+- Social URLs
 
-#### Field Definitions
+These are saved under single meta keys and parsed/rendered accordingly.
 
-- **Chronicle Name**:
-  - The full name of the chronicle as it appears in listings
-  - Example: "US, New York - Kings of New York"
+---
 
-- **Chronicle Plug**:
-  - The chronicle plug, a short name like "kony" for "US, New York - Kings of New York"
+## Field Definitions
 
-- **OOC Location**:
-  - One or more entries
-  - Each includes a location selector, geocode, and structured address (City/State/Country)
+- **Chronicle Name**: Human-readable title of the chronicle  
+- **Chronicle Slug**: URL-safe identifier (e.g., `kony` for Kings of New York)  
 
-- **IC Location**:
-  - Supports multiple entries (multi-select)
-  - Each includes a name, geocode, and address
-  - Stored as child entries or sub-records
+**Nested Fields (stored as objects):**
 
-- **Game Site**:
-  - Can include both Virtual and Physical entries
-  - **Virtual Site**: Type (select dropdown) and URL
-  - **Physical Address**: Full address and structured location fields
+- **ooc_locations**: One or more locations with city/state/country and geocode  
+- **ic_location_list**: In-character locations (multi-record)  
+- **game_site_list**: Combined physical and virtual game sites  
+- **session_list**: Repeatable session entries with type, date, frequency, genres  
+- **ast_list**: Assistant Storytellers (ASTs) with name, email, role, user ID  
+- **document_links**: Label + URL pairs for internal or external documentation  
+- **email_lists**: Named group mailing lists  
+- **social_urls**: Discord, Facebook, etc.  
+- **genres**: Array of genre and subgenre combinations  
 
-- **Chronicle Data**:
-  - Premise (WYSIWYG)
-  - Game Theme (WYSIWYG)
-  - Game Mood (WYSIWYG)
-  - Information for Travellers (WYSIWYG)
+**Scalar Fields:**
 
-- **Genre Information**:
-  - Multi-select field
-  - Genres include: Vampire (Anarch, Camarilla, Sabbat, Independent, Giovanni, Clan-Specific), Changing Breeds (Garou, Other), Changeling, Demon, Hunter, Kuei-Jin, Mage, Wraith, Other
+- **premise**, **game_theme**, **game_mood**, **traveler_info**: WYSIWYG text  
+- **active_player_count**: Integer estimate  
+- **web_url**: Website  
+- **hst_user**, **hst_display_name**, **hst_email**: HST data  
+- **cm_user**, **cm_display_name**, **cm_email**: CM data (if not a satellite)  
+- **hst_selection**, **cm_selection**, **ast_selection**: How each was selected  
+- **chronicle_start_date**: ISO date  
+- **chronicle_region**: Region name  
+- **chronicle_probationary**, **chronicle_satellite**: Boolean (yes/no)  
+- **chronicle_parent**: Slug of parent chronicle (if satellite)  
 
-- **Active Players / Session Count**:
-  - Numeric estimate of currently active players per game session
-
-- **Web URL**:
-  - Chronicle website or primary presence
-
-- **Social Media Addresses**:
-  - One or more entries, including platforms like Discord, Facebook, etc.
-
-- **Sessions**:
-  - Repeatable
-  - Fields include:
-    - Type (Game/Meetup)
-    - Frequency (1st–5th, Every, Every Other, Random, Other)
-    - Day or Range (Monday–Sunday, Week, Other)
-    - Time (local)
-    - Game Date Notes
-    - Genre (Multi-select)
-
-- **Staff Information**:
-  - HST: Name, Email, and linked to a WordPress user account
-  - CM: Name, Email, and linked to a WordPress user account
-  - AST(s): Multiple entries, each with Name, Email, optional user account, and custom title
-  - Admin: Name and Email (optional, for backend management)
-
-- **Staff Selection Processes**:
-  - Defined per role (HST, CM, AST)
-  - Options include: Player Vote, By HST, By Staff, Other
-
-- **Document Links**:
-  - Multiple entries allowed
-  - Each includes a descriptive label and document URL
-
-- **Chronicle Email Lists**:
-  - Multiple named lists, each with a contact email
-
-- **Behind the Scenes**:
-  - Chronicle Start Date
-  - Region (selectable)
-  - Probationary Status (Yes/No)
-  - Satellite Status (Yes/No)
-    - If yes, also includes linked Parent Chronicle
-
-This structured model ensures each Chronicle entry captures comprehensive details while maintaining flexibility and editability for owners, visibility for users, and approval control for administrators.
-
-- **OOC Locations**: Allows one or more OOC locations to be listed, each with its own geocode and address metadata. For example, a chronicle may operate in multiple counties.
-- **IC Locations**: Supports multiple in-character locations. Each entry includes a name, geocode, and structured address. These are treated as repeatable sub-records.
-- **Game Sites**: Chronicles may run both physical and virtual games. Each game site is stored independently and may include:
-  - **Virtual**: Type (e.g., Discord, Zoom), URL
-  - **Physical**: Full address and city/state/country fields
-- **Chronicle Data**: Each data point (Premise, Game Theme, Game Mood, Information for Travellers) is stored as a WYSIWYG/HTML field to allow for full formatting and links.
-- **Genres**: Multi-select field. A single chronicle may list support for multiple genres (e.g., Vampire, Wraith, Mage, etc.) and sub-genres (e.g., Sabbat, Camarilla).
-- **Sessions**: Repeatable entries that can vary by genre. Each session entry includes:
-  - Session type (Game/Meetup)
-  - Frequency (e.g., 1st Saturday, Every Other Week, etc.)
-  - Day and Time
-  - Game Date Notes
-  - Genres covered
-- **Staff**:
-  - **HST** (Head Storyteller): Single required entry. Should be linkable to an existing user account.
-  - **CM** (Chronicle Manager): Single required entry. Should be linkable to an existing user account.
-  - **ASTs** (Assistant Storytellers): One or more entries. Each AST can include a unique title and contact information. User linkage optional.
-- **Staff Selection Processes**: Stores how each staff member is selected. Includes options like Player Vote, Appointed by HST, or Other. Stored per role (HST, CM, AST).
-- **Document Links**: Supports multiple document entries (PDFs, Google Docs, etc.). Each entry includes a label and link.
-- **Chronicle Email Lists**: Allows multiple entries, each with a name and address.
-- **Web and Social Media URLs**: Includes standard Chronicle website, Discord invite URLs, Facebook pages, and other external links.
-
-### User Roles and Views
-
-| Role      | Access Level                      | Purpose                               |
-|-----------|-----------------------------------|---------------------------------------|
-| Public    | Read-only                         | Browse Chronicle data                 |
-| Owner     | Edit (own chronicle only)         | Propose updates via form interface    |
-| Admin     | Edit + approve submitted changes  | Moderate restricted fields            |
-
-### Approval Workflow
-
-The OWbN Chronicle Manager plugin uses a structured workflow that ensures chronicle data is verified, versioned, and subject to admin approval when necessary. This is achieved through the integration of Gravity Forms for data submission and Gravity Flow for approval routing.
-
-#### 1. Initial Submission
-
-- A Chronicle Owner (typically the HST or CM) submits a new chronicle via the Chronicle Information Form (built using Gravity Forms).
-- All chronicle data is captured, including OOC/IC locations, game site details, session schedules, genres, staff, and behind-the-scenes metadata.
-
-#### 2. Initial Approval (Gravity Flow)
-
-- The submission is routed through Gravity Flow for administrative approval.
-- Admins review all fields, particularly those requiring approval (e.g., genre declarations, staff roles, region/probation status).
-- Upon approval, a new `owbn_chronicle` post is created and marked as published.
-
-#### 3. Chronicle Appears Publicly
-
-- Once approved, the chronicle will be included in:
-  - Shortcode-rendered listings
-  - Public displays on the site
-  - Any federated views or REST API endpoints
-
-#### 4. Editing an Existing Chronicle
-
-- Chronicle Owners can initiate edits via a pre-populated Gravity Form, launched via a webhook or admin/editor link.
-- The form auto-fills with the current values from the live chronicle post.
-- The user makes updates and submits the form.
-
-#### 5. Post-Edit Processing
-
-- Upon form submission:
-  - A new version of the existing chronicle post is created.
-  - If no changes were made to any fields that require approval, the new version is published immediately.
-  - If changes include any workflow-managed fields, the update is routed to Gravity Flow for admin approval.
-
-#### 6. Approval of Updated Version
-
-- Admins compare the submitted version to the current published version.
-- Upon approval:
-  - The updated version is published and becomes the new active chronicle.
-  - The previous version is retained in a version history log.
-- If rejected:
-  - The current version remains unchanged.
-  - The Owner is notified and may revise and resubmit.
-
-This workflow balances editorial freedom with administrative oversight and ensures that all chronicle data displayed to users is accurate, consistent, and accountable.
+---
 
 ## Shortcodes
 
-Chronicle lists and individual chronicle entries can be embedded anywhere using shortcode filters.
+Chronicle data can be rendered anywhere using the following shortcodes:
 
-### Basic Listing Usage
+### `[owbn-chronicles]`
 
-[owbn-chronicles]
+Renders a listing of approved chronicles.
 
-Renders a complete listing of all approved chronicles.
+Example:
 
-### Filtered Listing Usage
+`[owbn-chronicles]` – show all  
+`[owbn-chronicles region="great lakes" genre="sabbat"]` – filter
 
-Shortcodes accept attributes for field-based filtering:
+**Supported filters:**
 
-[owbn-chronicles region="great lakes" genre="sabbat"]
+- `plug`
+- `region`
+- `genre`
+- `country`
+- `state`
+- `game_type` (virtual, in-person)
+- `active_players_min`
+- `active_players_max`
+- `probationary` (yes/no)
+- `satellite` (yes/no)
 
-Supported filters (case-insensitive):
+### `[owbn-chronicle plug="kony" view="box|full"]`
 
-- plug (Limits the listing to the specified chronicle using its unique short name)
-- region
-- genre
-- country
-- state
-- game_type (virtual, in-person)
-- active_players_min, active_players_max
-- probationary (yes/no)
-- satellite (yes/no)
+Render a single chronicle:
 
-### Single Chronicle Display
+- `view="full"` (default): Full profile view  
+- `view="box"`: Compact card/summary view with title and key info  
 
-To render a specific chronicle directly, use the `[owbn-chronicle]` shortcode with the `plug` attribute:
-
-[owbn-chronicle plug="kony"]
-
-This will display the full formatted view of the chronicle associated with the plug `kony`.
-
-An optional `view` attribute can be used to control output format:
-
-[owbn-chronicle plug="kony" view="box"]
-
-- **view="full"** (default): Shows the complete chronicle profile in full format.
-- **view="box"**: Displays a condensed view (e.g., sidebar or card) with summary data and a link to the full chronicle profile.
-
+---
 
 ## Installation
 
-1. Upload the plugin to `/wp-content/plugins/owbn-chronicle-manager/`
-2. Activate via the WordPress admin panel
-3. Use `[owbn-chronicles]` in pages or posts to render lists
-4. Assign proper roles to Chronicle owners and admins
+1. Copy this plugin folder into `/wp-content/plugins/`
+2. Activate via the WordPress dashboard
+3. Add `[owbn-chronicles]` or `[owbn-chronicle plug="kony"]` to any page or post
+4. Begin managing chronicles using WordPress post editing and structured metadata
+
+---
 
 ## Developer Notes
 
-- All chronicle metadata is stored as post meta attached to the `owbn_chronicle` post type.
-- Shortcode rendering is handled via template parts or inline rendering hooks.
-- Future enhancements may include JSON API support, external data sync, and Gravity Flow integration for approvals.
+- Data is stored using `register_post_meta()` for GraphQL/REST access
+- All fields are editable via internal admin tools or custom interfaces
+- Repeatables are saved as JSON under single meta keys (e.g., `ast_list`)
+- Plugin includes metabox rendering for internal admin review
+- Designed to support full static form processing without ACF or Gravity Forms
+
+---
 
 ## License
 
-This plugin is licensed under the GNU General Public License v2.0.
+This plugin is licensed under the [GNU General Public License v2.0](http://www.gnu.org/licenses/gpl-2.0.html)
 
-See LICENSE for full text.
+---
 
 ## Example Output
 
-To see a visual example, visit:
+View a formatted sample:
 
 https://www.owbn.net/chronicles/new-york-city-ny-usa-kings-of-new-york
 
+---
+
 ## Roadmap
 
-- Custom post type scaffolding
-- User/admin roles & edit views
-- Field storage and validation
-- Admin change approval UI
-- Gravity Flow integration for approval routing
-- Custom REST API for federation and external tools
+- Fully JS-based inline editing of chronicle metadata  
+- Admin approval interface with change tracking  
+- Federated REST/GraphQL sync support  
+- JSON export/import across OWBN instances  
+- Advanced genre and regional filtering with select2
+
+---
 
 ## Contributing
 
-Want to help? Open a GitHub issue, fork the repo, or submit a pull request.
+Fork the repository, open issues, or submit pull requests via:
+
+[https://github.com/One-World-By-Night/owbn-chronicle-plugin](https://github.com/One-World-By-Night/owbn-chronicle-plugin)
+
+---
 
 ## Maintainers
 
-This plugin is maintained by OWbN.org development volunteers.
+This plugin is maintained by the OWBN.org Web Coordination team.

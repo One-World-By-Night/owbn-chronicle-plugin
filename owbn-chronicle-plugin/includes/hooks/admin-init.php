@@ -1,24 +1,10 @@
 <?php
-/**
- * Plugin Name: OWBN Chronicle Manager
- * Text Domain: owbn-chronicle-manager
- * Description: Manage OWBN Chronicle information using structured custom post types, shortcodes, and approval workflows. Includes support for nested locations, staff roles, genre declarations, and versioned updates via Gravity Forms and Gravity Flow.
- * Version: 1.0.0
- * Author: greghacke
- * Author URI: https://www.owbn.net
- * License: GPL-2.0-or-later
- * License URI: http://www.gnu.org/licenses/gpl-2.0.html
- * Domain Path: /languages
- * GitHub Plugin URI: https://github.com/One-World-By-Night/owbn-chronicle-plugin
- * GitHub Branch: main
- */
-
- // Register Custom Post Type
+// Register Custom Post Type
 function owbn_register_chronicle_cpt() {
     register_post_type('owbn_chronicle', [
         'labels' => [
-            'name' => 'Chronicles',
-            'singular_name' => 'Chronicle',
+            'name' => __('Chronicles', 'owbn-chronicle-manager'),
+            'singular_name' => __('Chronicle', 'owbn-chronicle-manager'),
         ],
         'public' => true,
         'has_archive' => true,
@@ -33,11 +19,23 @@ function owbn_register_chronicle_cpt() {
 }
 add_action('init', 'owbn_register_chronicle_cpt');
 
+function owbn_register_options_menu() {
+    add_submenu_page(
+        'edit.php?post_type=owbn_chronicle', // Parent menu under your CPT
+        __('OWbN Options', 'owbn-chronicle-manager'), // Page title
+        __('Options', 'owbn-chronicle-manager'),     // Menu title
+        'manage_options',                            // Capability
+        'owbn-options',                              // Menu slug
+        'owbn_render_options_page'                   // Callback function
+    );
+}
+add_action('admin_menu', 'owbn_register_options_menu');
+
 // Filter the permalink structure for owbn_chronicle
 function owbn_custom_chronicle_permalink($post_link, $post) {
     if ($post->post_type !== 'owbn_chronicle') return $post_link;
 
-    $plug = get_post_meta($post->ID, 'chronicle_plug', true);
+    $plug = get_post_meta($post->ID, 'chronicle_slug', true);
     $plug = $plug ? sanitize_title($plug) : sanitize_title($post->post_title);
 
     return home_url("/chronicles/{$plug}/");
@@ -59,26 +57,28 @@ function owbn_register_chronicle_meta() {
     $complex_fields = [
         'ooc_locations',
         'ic_location_list',
-        'game_site_virtual',
-        'game_site_physical',
+        'game_site_list',
         'genres',
         'social_urls',
         'session_list',
-        'hst_info',
-        'cm_info',
-        'ast_list',
         'admin_contact',
         'document_links',
         'email_lists',
     ];
 
     $simple_fields = [
-        'chronicle_plug',
+        'chronicle_slug',
         'premise',
         'game_theme',
         'game_mood',
         'traveler_info',
         'active_player_count',
+        'hst_user',
+        'hst_display_name',
+        'hst_email',
+        'cm_user',
+        'cm_display_name',
+        'cm_email',
         'web_url',
         'hst_selection',
         'cm_selection',
@@ -110,42 +110,15 @@ function owbn_register_chronicle_meta() {
 }
 add_action('init', 'owbn_register_chronicle_meta');
 
-// Ensure prerequisites are met
-function owbn_check_required_plugins() {
-    if (!class_exists('GFForms')) {
-        add_action('admin_notices', 'owbn_notice_gf_missing');
-        return;
-    }
-
-    if (!class_exists('Gravity_Flow')) {
-        add_action('admin_notices', 'owbn_notice_gf_missing_gf');
-        return;
-    }
+// Register Chronicle Fields metabox
+function owbn_add_chronicle_meta_box() {
+    add_meta_box(
+        'owbn_chronicle_fields',
+        'Chronicle Fields',
+        'owbn_render_chronicle_fields_metabox',
+        'owbn_chronicle',
+        'normal',
+        'default'
+    );
 }
-add_action('admin_init', 'owbn_check_required_plugins');
-
-// Display admin notice for missing Gravity Forms
-function owbn_notice_gf_missing() {
-    echo '<div class="notice notice-error"><p><strong>OWBN Chronicle Manager</strong> requires <strong>Gravity Forms</strong> to function properly. Please install and activate Gravity Forms.</p></div>';
-}
-
-// Display admin notice for missing Gravity Flow
-function owbn_notice_gf_missing_gf() {
-    echo '<div class="notice notice-error"><p><strong>OWBN Chronicle Manager</strong> requires <strong>Gravity Flow</strong> for workflow approval. Please install and activate Gravity Flow.</p></div>';
-}
-add_action('admin_init', 'owbn_check_required_plugins');
-
-
-///// Closing Content /////
-// Flush permalinks on activation/deactivation
-function owbn_activate_plugin() {
-    owbn_register_chronicle_cpt();
-    owbn_custom_chronicle_rewrite_rules();
-    flush_rewrite_rules();
-}
-register_activation_hook(__FILE__, 'owbn_activate_plugin');
-
-function owbn_deactivate_plugin() {
-    flush_rewrite_rules();
-}
-register_deactivation_hook(__FILE__, 'owbn_deactivate_plugin');
+add_action('add_meta_boxes', 'owbn_add_chronicle_meta_box');
