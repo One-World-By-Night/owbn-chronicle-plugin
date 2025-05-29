@@ -5,6 +5,7 @@ if (!defined('ABSPATH')) exit;
 function owbn_save_chronicle_meta($post_id) {
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (get_post_type($post_id) !== 'owbn_chronicle') return;
+    $staff_user_dirty = false;
 
     // $user_id = get_current_user_id();
     // if (!owbn_user_can_edit_chronicle($user_id, $post_id)) return;
@@ -37,11 +38,8 @@ function owbn_save_chronicle_meta($post_id) {
                     $group_data = $_POST[$key] ?? [];
                     $cleaned = [];
 
-                    $dirty_set = false;
                     $previous = get_post_meta($post_id, $key, true);
                     $previous_users = is_array($previous) ? array_column($previous, 'user') : [];
-                    $previous_users = array_map('sanitize_text_field', $previous_users);
-                    sort($previous_users); // Ensure consistent order
 
                     if (is_array($group_data)) {
                         foreach ($group_data as $index => $row) {
@@ -72,13 +70,10 @@ function owbn_save_chronicle_meta($post_id) {
                         }
                     }
 
-                    // Extract sanitized current users and compare
                     $new_users = array_column($cleaned, 'user');
-                    $new_users = array_map('sanitize_text_field', $new_users);
-                    sort($new_users);
 
-                    if ($new_users !== $previous_users) {
-                        update_post_meta($post_id, '_owbn_dirty_user_change', '1');
+                    if (owbn_users_changed($previous_users, $new_users)) {
+                        $staff_user_dirty = true;
                     }
 
                     update_post_meta($post_id, $key, $cleaned);
@@ -287,10 +282,10 @@ function owbn_save_chronicle_meta($post_id) {
                     ];
 
                     $previous = get_post_meta($post_id, $key, true);
-                    $previous_user = isset($previous['user']) ? sanitize_text_field($previous['user']) : '';
+                    $previous_user = isset($previous['user']) ? $previous['user'] : '';
 
-                    if ($cleaned['user'] !== $previous_user) {
-                        update_post_meta($post_id, '_owbn_dirty_user_change', '1');
+                    if (owbn_users_changed([$previous_user], [$cleaned['user']])) {
+                        $staff_user_dirty = true;
                     }
 
                     update_post_meta($post_id, $key, $cleaned);
@@ -308,6 +303,28 @@ function owbn_save_chronicle_meta($post_id) {
                 default:
                     update_post_meta($post_id, $key, sanitize_text_field($raw));
                     break;
+            }
+        }
+    }
+    // After all post_meta fields processed
+    if ($staff_user_dirty) {
+        $current_user = wp_get_current_user();
+        $user_roles = (array) $current_user->roles;
+        $allowed_roles = ['administrator', 'exec_team', 'web_team'];
+
+        $is_allowed = array_intersect($allowed_roles, $user_roles);
+
+        if (empty($is_allowed)) {
+            // Only change status if not already a draft
+            $post = get_post($post_id);
+            if ($post->post_status !== 'draft') {
+                // Draft the post
+                wp_update_post([
+                    'ID' => $post_id,
+                    'post_status' => 'draft',
+                ]);
+                // Set a flag to show the admin notice
+                set_transient("owbn_chronicle_dirty_notice_{$post_id}", true, 60);
             }
         }
     }
@@ -447,6 +464,11 @@ function owbn_force_draft_on_error($data, $postarr) {
         return $data;
     }
 
+    // Skip validation if dirty changes already flagged
+    if (!empty($postarr['ID']) && get_transient("owbn_chronicle_dirty_notice_{$postarr['ID']}")) {
+        return $data;
+    }
+
     $errors = owbn_validate_chronicle_submission($postarr);
     if (!empty($errors)) {
         $data['post_status'] = 'draft';
@@ -459,46 +481,13 @@ function owbn_force_draft_on_error($data, $postarr) {
 }
 add_filter('wp_insert_post_data', 'owbn_force_draft_on_error', 10, 2);
 
-function owbn_force_draft_user_changes($data, $postarr) {
-    if ($data['post_type'] !== 'owbn_chronicle') {
-        return $data;
-    }
-
-    // Allow trashing or deleting
-    if (isset($data['post_status']) && in_array($data['post_status'], ['trash', 'auto-draft'], true)) {
-        return $data;
-    }
-
-    if (
-        isset($_POST['action']) && $_POST['action'] === 'delete' ||
-        (isset($_POST['action2']) && $_POST['action2'] === 'delete')
-    ) {
-        return $data;
-    }
-
-    $post_id = $postarr['ID'] ?? 0;
-    if (!$post_id) return $data;
-
-    $is_dirty = get_post_meta($post_id, '_owbn_dirty_user_change', true) === '1';
-
-    if ($is_dirty) {
-        $current_user = wp_get_current_user();
-
-        // Check for allowed roles
-        $allowed_roles = ['administrator', 'exec_team', 'web_team'];
-        $user_roles = (array) $current_user->roles;
-
-        $is_allowed = array_intersect($allowed_roles, $user_roles);
-
-        if (empty($is_allowed)) {
-            $data['post_status'] = 'draft';
-            set_transient("owbn_chronicle_dirty_notice_{$post_id}", true, 60);
-        }
-    }
-
-    return $data;
+function owbn_users_changed($old, $new) {
+    $old_users = array_filter(array_map(fn($u) => trim(strtolower((string)$u)), is_array($old) ? $old : []));
+    $new_users = array_filter(array_map(fn($u) => trim(strtolower((string)$u)), is_array($new) ? $new : []));
+    sort($old_users);
+    sort($new_users);
+    return $old_users !== $new_users;
 }
-add_filter('wp_insert_post_data', 'owbn_force_draft_user_changes', 20, 2);
 
 function owbn_admin_notice_dirty_user_change() {
     global $post;
@@ -514,9 +503,8 @@ function owbn_admin_notice_dirty_user_change() {
 
     if (get_transient("owbn_chronicle_dirty_notice_{$post_id}")) {
         echo '<div class="notice notice-warning is-dismissible">';
-        echo '<p><strong>' . esc_html__('Chronicle Staff changes require authentication from Exec or Web Teams. Upon validation, this change will be published.', 'owbn-chronicle-manager') . '</strong></p>';
+        echo "<p>\n<strong>\n<span class='dashicons dashicons-lock'></span> Chronicle Staff changes require authentication from Exec or Web Teams.<br>\nUpon validation, this change will be published.\n</strong>\n</p>\n";
         echo '</div>';
-
         delete_transient("owbn_chronicle_dirty_notice_{$post_id}");
     }
 }
