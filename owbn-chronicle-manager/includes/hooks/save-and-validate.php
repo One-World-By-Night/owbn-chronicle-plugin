@@ -37,15 +37,19 @@ function owbn_save_chronicle_meta($post_id) {
                     $group_data = $_POST[$key] ?? [];
                     $cleaned = [];
 
+                    $dirty_set = false;
+                    $previous = get_post_meta($post_id, $key, true);
+                    $previous_users = is_array($previous) ? array_column($previous, 'user') : [];
+                    $previous_users = array_map('sanitize_text_field', $previous_users);
+                    sort($previous_users); // Ensure consistent order
+
                     if (is_array($group_data)) {
                         foreach ($group_data as $index => $row) {
                             // Skip template or completely empty rows
                             if (
                                 $index === '__INDEX__' ||
-                                empty($row['user']) &&
-                                empty($row['display_name']) &&
-                                empty($row['email']) &&
-                                empty($row['role'])
+                                (empty($row['user']) && empty($row['display_name']) &&
+                                empty($row['email']) && empty($row['role']))
                             ) {
                                 continue;
                             }
@@ -66,6 +70,15 @@ function owbn_save_chronicle_meta($post_id) {
 
                             $cleaned[] = $row_cleaned;
                         }
+                    }
+
+                    // Extract sanitized current users and compare
+                    $new_users = array_column($cleaned, 'user');
+                    $new_users = array_map('sanitize_text_field', $new_users);
+                    sort($new_users);
+
+                    if ($new_users !== $previous_users) {
+                        update_post_meta($post_id, '_owbn_dirty_user_change', '1');
                     }
 
                     update_post_meta($post_id, $key, $cleaned);
@@ -178,92 +191,92 @@ function owbn_save_chronicle_meta($post_id) {
                     update_post_meta($post_id, $key, $cleaned);
                     break;
 
-                    case 'document_links_group':
-                        $group_data = $_POST[$key] ?? [];
-                        $cleaned = [];
+                case 'document_links_group':
+                    $group_data = $_POST[$key] ?? [];
+                    $cleaned = [];
 
-                        if (is_array($group_data)) {
-                            foreach ($group_data as $index => $row) {
-                                $row_cleaned = [];
+                    if (is_array($group_data)) {
+                        foreach ($group_data as $index => $row) {
+                            $row_cleaned = [];
 
-                                // Sanitize title and link
-                                $row_cleaned['title'] = isset($row['title']) ? sanitize_text_field($row['title']) : '';
-                                $row_cleaned['link']  = isset($row['link']) ? esc_url_raw($row['link']) : '';
+                            // Sanitize title and link
+                            $row_cleaned['title'] = isset($row['title']) ? sanitize_text_field($row['title']) : '';
+                            $row_cleaned['link']  = isset($row['link']) ? esc_url_raw($row['link']) : '';
 
-                                // Handle uploaded file
-                                $file_field = "{$key}_{$index}_upload";
-                                if (!empty($_FILES[$file_field]) && !empty($_FILES[$file_field]['tmp_name'])) {
-                                    require_once ABSPATH . 'wp-admin/includes/file.php';
-                                    require_once ABSPATH . 'wp-admin/includes/media.php';
-                                    require_once ABSPATH . 'wp-admin/includes/image.php';
+                            // Handle uploaded file
+                            $file_field = "{$key}_{$index}_upload";
+                            if (!empty($_FILES[$file_field]) && !empty($_FILES[$file_field]['tmp_name'])) {
+                                require_once ABSPATH . 'wp-admin/includes/file.php';
+                                require_once ABSPATH . 'wp-admin/includes/media.php';
+                                require_once ABSPATH . 'wp-admin/includes/image.php';
 
-                                    $attachment_id = media_handle_upload($file_field, $post_id);
-                                    if (!is_wp_error($attachment_id)) {
-                                        $row_cleaned['file_id'] = $attachment_id;
-                                    }
-                                } else {
-                                    // Preserve existing file_id if already saved
-                                    $existing_meta = get_post_meta($post_id, $key, true);
-                                    $existing_file_id = $existing_meta[$index]['file_id'] ?? '';
-                                    if ($existing_file_id) {
-                                        $row_cleaned['file_id'] = $existing_file_id;
-                                    }
+                                $attachment_id = media_handle_upload($file_field, $post_id);
+                                if (!is_wp_error($attachment_id)) {
+                                    $row_cleaned['file_id'] = $attachment_id;
                                 }
+                            } else {
+                                // Preserve existing file_id if already saved
+                                $existing_meta = get_post_meta($post_id, $key, true);
+                                $existing_file_id = $existing_meta[$index]['file_id'] ?? '';
+                                if ($existing_file_id) {
+                                    $row_cleaned['file_id'] = $existing_file_id;
+                                }
+                            }
 
+                            $cleaned[] = $row_cleaned;
+                        }
+                    }
+
+                    update_post_meta($post_id, $key, $cleaned);
+                    break;
+
+                case 'social_links_group':
+                    $group_data = $_POST[$key] ?? [];
+                    $cleaned = [];
+
+                    if (is_array($group_data)) {
+                        foreach ($group_data as $index => $row) {
+                            // Skip template or fully empty rows
+                            if (
+                                $index === '__INDEX__' ||
+                                (empty($row['platform']) && empty($row['url']))
+                            ) {
+                                continue;
+                            }
+
+                            $platform = isset($row['platform']) ? sanitize_text_field($row['platform']) : '';
+                            $url = isset($row['url']) ? esc_url_raw($row['url']) : '';
+
+                            $cleaned[] = [
+                                'platform' => $platform,
+                                'url'      => $url,
+                            ];
+                        }
+                    }
+
+                    update_post_meta($post_id, $key, $cleaned);
+                    break;
+
+                case 'email_lists_group':
+                    $group_data = $_POST[$key] ?? [];
+                    $cleaned = [];
+
+                    if (is_array($group_data)) {
+                        foreach ($group_data as $row) {
+                            $row_cleaned = [];
+
+                            $row_cleaned['list_name'] = isset($row['list_name']) ? sanitize_text_field($row['list_name']) : '';
+                            $row_cleaned['email_address'] = isset($row['email_address']) ? sanitize_email($row['email_address']) : '';
+                            $row_cleaned['description'] = isset($row['description']) ? wp_kses_post($row['description']) : '';
+
+                            if ($row_cleaned['list_name'] || $row_cleaned['email_address'] || $row_cleaned['description']) {
                                 $cleaned[] = $row_cleaned;
                             }
                         }
+                    }
 
-                        update_post_meta($post_id, $key, $cleaned);
-                        break;
-
-                    case 'social_links_group':
-                        $group_data = $_POST[$key] ?? [];
-                        $cleaned = [];
-
-                        if (is_array($group_data)) {
-                            foreach ($group_data as $index => $row) {
-                                // Skip template or fully empty rows
-                                if (
-                                    $index === '__INDEX__' ||
-                                    (empty($row['platform']) && empty($row['url']))
-                                ) {
-                                    continue;
-                                }
-
-                                $platform = isset($row['platform']) ? sanitize_text_field($row['platform']) : '';
-                                $url = isset($row['url']) ? esc_url_raw($row['url']) : '';
-
-                                $cleaned[] = [
-                                    'platform' => $platform,
-                                    'url'      => $url,
-                                ];
-                            }
-                        }
-
-                        update_post_meta($post_id, $key, $cleaned);
-                        break;
-
-                    case 'email_lists_group':
-                        $group_data = $_POST[$key] ?? [];
-                        $cleaned = [];
-
-                        if (is_array($group_data)) {
-                            foreach ($group_data as $row) {
-                                $row_cleaned = [];
-
-                                $row_cleaned['list_name'] = isset($row['list_name']) ? sanitize_text_field($row['list_name']) : '';
-                                $row_cleaned['email_address'] = isset($row['email_address']) ? sanitize_email($row['email_address']) : '';
-                                $row_cleaned['description'] = isset($row['description']) ? wp_kses_post($row['description']) : '';
-
-                                if ($row_cleaned['list_name'] || $row_cleaned['email_address'] || $row_cleaned['description']) {
-                                    $cleaned[] = $row_cleaned;
-                                }
-                            }
-                        }
-
-                        update_post_meta($post_id, $key, $cleaned);
-                        break;
+                    update_post_meta($post_id, $key, $cleaned);
+                    break;
 
                 case 'user_info':
                     $info = $_POST[$key] ?? [];
@@ -272,6 +285,14 @@ function owbn_save_chronicle_meta($post_id) {
                         'display_name' => isset($info['display_name']) ? sanitize_text_field($info['display_name']) : '',
                         'email' => isset($info['email']) ? sanitize_email($info['email']) : '',
                     ];
+
+                    $previous = get_post_meta($post_id, $key, true);
+                    $previous_user = isset($previous['user']) ? sanitize_text_field($previous['user']) : '';
+
+                    if ($cleaned['user'] !== $previous_user) {
+                        update_post_meta($post_id, '_owbn_dirty_user_change', '1');
+                    }
+
                     update_post_meta($post_id, $key, $cleaned);
                     break;
                 
@@ -437,6 +458,69 @@ function owbn_force_draft_on_error($data, $postarr) {
     return $data;
 }
 add_filter('wp_insert_post_data', 'owbn_force_draft_on_error', 10, 2);
+
+function owbn_force_draft_user_changes($data, $postarr) {
+    if ($data['post_type'] !== 'owbn_chronicle') {
+        return $data;
+    }
+
+    // Allow trashing or deleting
+    if (isset($data['post_status']) && in_array($data['post_status'], ['trash', 'auto-draft'], true)) {
+        return $data;
+    }
+
+    if (
+        isset($_POST['action']) && $_POST['action'] === 'delete' ||
+        (isset($_POST['action2']) && $_POST['action2'] === 'delete')
+    ) {
+        return $data;
+    }
+
+    $post_id = $postarr['ID'] ?? 0;
+    if (!$post_id) return $data;
+
+    $is_dirty = get_post_meta($post_id, '_owbn_dirty_user_change', true) === '1';
+
+    if ($is_dirty) {
+        $current_user = wp_get_current_user();
+
+        // Check for allowed roles
+        $allowed_roles = ['administrator', 'exec_team', 'web_team'];
+        $user_roles = (array) $current_user->roles;
+
+        $is_allowed = array_intersect($allowed_roles, $user_roles);
+
+        if (empty($is_allowed)) {
+            $data['post_status'] = 'draft';
+            set_transient("owbn_chronicle_dirty_notice_{$post_id}", true, 60);
+        }
+    }
+
+    return $data;
+}
+add_filter('wp_insert_post_data', 'owbn_force_draft_user_changes', 20, 2);
+
+function owbn_admin_notice_dirty_user_change() {
+    global $post;
+    $post_id = 0;
+
+    if (isset($post->ID)) {
+        $post_id = $post->ID;
+    } elseif (!empty($_GET['post'])) {
+        $post_id = intval($_GET['post']);
+    }
+
+    if (!$post_id) return;
+
+    if (get_transient("owbn_chronicle_dirty_notice_{$post_id}")) {
+        echo '<div class="notice notice-warning is-dismissible">';
+        echo '<p><strong>' . esc_html__('Chronicle Staff changes require authentication from Exec or Web Teams. Upon validation, this change will be published.', 'owbn-chronicle-manager') . '</strong></p>';
+        echo '</div>';
+
+        delete_transient("owbn_chronicle_dirty_notice_{$post_id}");
+    }
+}
+add_action('admin_notices', 'owbn_admin_notice_dirty_user_change');
 
 // Sync custom slug field with post_name
 function owbn_sync_custom_slug_with_post_name($data, $postarr) {

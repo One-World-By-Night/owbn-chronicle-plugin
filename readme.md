@@ -150,13 +150,10 @@ https://www.owbn.net/chronicles/new-york-city-ny-usa-kings-of-new-york
 
 ---
 
-## Roadmap
+## Updates
 
-- Fully JS-based inline editing of chronicle metadata  
-- Admin approval interface with change tracking  
-- Federated REST/GraphQL sync support  
-- JSON export/import across OWBN instances  
-- Advanced genre and regional filtering with select2
+- 1.1.2: Multi-Site control  
+- 1.1.5: Validation and noitce of approval requirements for staff changes.
 
 ---
 
