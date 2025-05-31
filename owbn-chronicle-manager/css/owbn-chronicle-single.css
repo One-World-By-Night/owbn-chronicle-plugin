@@ -1,0 +1,18 @@
+/* Scoped styles for single Chronicle posts */
+.single-owbn_chronicle .chronicle-title {
+    font-size: 2em;
+    font-weight: bold;
+    margin-bottom: 0.5em;
+}
+
+.single-owbn_chronicle .chronicle-meta {
+    background: #f7f7f7;
+    padding: 1em;
+    border-left: 4px solid #412234;
+    margin-bottom: 1.5em;
+}
+
+.single-owbn_chronicle .chronicle-content {
+    line-height: 1.6;
+    color: #222;
+}

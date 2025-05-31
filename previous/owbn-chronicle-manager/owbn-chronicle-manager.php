@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OWBN Chronicle Manager
  * Description: Manage OWBN Chronicle information using structured custom post types, shortcodes, and approval workflows.
- * Version: 1.1.44
+ * Version: 1.1.29
  * Author: greghacke
  * Author URI: https://www.owbn.net
  * Text Domain: owbn-chronicle-manager
@@ -27,7 +27,6 @@ require_once plugin_dir_path(__FILE__) . 'includes/render/render-session-fields.
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-user-fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-links-uploads-fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/chronicle-shortcode.php';
-require_once plugin_dir_path(__FILE__) . 'includes/render/render-chronicle-box.php';
 // require_once plugin_dir_path(__FILE__) . 'languages/i18n.php';
 
 // ─── Activation Hook ─────────────────────────────────────────────────────────

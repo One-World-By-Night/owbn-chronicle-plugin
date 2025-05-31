@@ -145,7 +145,7 @@ function owbn_register_chronicle_meta() {
 
     foreach ($complex_fields as $field) {
         register_post_meta('owbn_chronicle', $field, [
-            'type'              => 'array',
+            'type'              => 'object',
             'single'            => true,
             'show_in_rest'      => true,
             'sanitize_callback' => null,
@@ -412,14 +412,4 @@ add_action('init', function () {
             'Wraith'
         ));
     }
-});
-
-add_filter('template_include', function ($template) {
-    if (is_singular('owbn_chronicle')) {
-        $plugin_template = plugin_dir_path(__FILE__) . 'includes/templates/single-owbn_chronicle.php';
-        if (file_exists($plugin_template)) {
-            return $plugin_template;
-        }
-    }
-    return $template;
 });

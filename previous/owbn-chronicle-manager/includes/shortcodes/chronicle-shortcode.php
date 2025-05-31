@@ -1,5 +1,4 @@
 <?php
-if (!defined('ABSPATH')) exit;
 
 // Shortcode to display a list of chronicles with filters
 add_shortcode('owbn-chronicles', function($atts) {
@@ -79,30 +78,29 @@ add_shortcode('owbn-chronicles', function($atts) {
     return ob_get_clean();
 });
 
-// Shortcode to display a single chronicle as a card
+// Shortcode to display a single chronicle in full or as a card
 add_shortcode('owbn-chronicle', function($atts) {
     $atts = shortcode_atts([
         'plug' => '',
+        'view' => 'full',
     ], $atts);
 
-    if (empty($atts['plug'])) {
-        return '<p>No chronicle specified.</p>';
-    }
+    if (empty($atts['plug'])) return '';
 
-    // Normalize the slug (strip full URLs or paths down to the last slug segment)
-    $slug = sanitize_title(basename(esc_url_raw($atts['plug'])));
+    $chronicle = get_posts([
+        'name' => sanitize_title($atts['plug']),
+        'post_type' => 'owbn_chronicle',
+        'post_status' => 'publish',
+        'numberposts' => 1,
+    ]);
 
-    // Use get_page_by_path for more reliable slug-to-post resolution
-    $chronicle_post = get_page_by_path($slug, OBJECT, 'owbn_chronicle');
+    if (empty($chronicle)) return '<p>Chronicle not found.</p>';
 
-    if (!$chronicle_post) {
-        return '<p>Chronicle not found. Please check the slug.</p>';
-    }
+    $post_id = $chronicle[0]->ID;
 
-    $post_id = $chronicle_post->ID;
-
-    // Output only the card version
-    return '<div class="owbn-chronicle-wrapper">' . owbn_render_chronicle_card($post_id) . '</div>';
+    return $atts['view'] === 'box'
+        ? owbn_render_chronicle_card($post_id)
+        : owbn_render_chronicle_full($post_id);
 });
 
 // Render a list of chronicles as a table
@@ -263,4 +261,3 @@ function owbn_render_chronicle_list($query) {
     wp_reset_postdata();
     return ob_get_clean();
 }
-
