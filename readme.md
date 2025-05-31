@@ -3,7 +3,7 @@
 **Plugin Name**: OWBN Chronicle Manager  
 **Plugin URI**: https://www.owbn.net  
 **Description**: Manage OWBN Chronicle information using structured custom post types, shortcodes, and internal workflows. Includes support for nested locations, staff roles, genre declarations, and repeatable sub-records.  
-**Version**: 1.1.5  
+**Version**: 1.1.6  
 **Author**: OWBN Web Coordination Team, Greg Hacke  
 **Author URI**: https://www.owbn.net  
 **Tags**: chronicle, nested content, information, custom post types  
@@ -103,8 +103,6 @@ Example:
 - `country`
 - `state`
 - `game_type` (virtual, in-person)
-- `active_players_min`
-- `active_players_max`
 - `probationary` (yes/no)
 - `satellite` (yes/no)
 
