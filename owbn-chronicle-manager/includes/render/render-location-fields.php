@@ -21,6 +21,7 @@ function owbn_render_location_group($key, $value, $meta) {
         $region  = $group['region'] ?? '';
         $country = $group['country'] ?? '';
         $online  = !empty($group['online_only']) ? __('(Online Only)', 'owbn-chronicle-manager') : '';
+        $online = !empty($group['online']) || !empty($group['online_only']);
 
         $location_parts = array_filter([$city, $region, $country]);
         $header = esc_html($name);
@@ -39,39 +40,40 @@ function owbn_render_location_group($key, $value, $meta) {
 
         echo '<div class="owbn-location-body" style="display: none;">' . "\n";
 
-        // Row 1: name, online_only, country
+        // Row 1: name, online_only, url (always render name + toggle + url if available)
         echo '<div class="owbn-location-row">' . "\n";
         if (isset($subfields['name'])) {
             render_location_field($key, $i, 'name', $subfields['name'], $group['name'] ?? '');
         }
         if (isset($subfields['online_only'])) {
             render_location_field($key, $i, 'online_only', $subfields['online_only'], $group['online_only'] ?? '');
+        } elseif (isset($subfields['online'])) {
+            render_location_field($key, $i, 'online', $subfields['online'], $group['online'] ?? '');
         }
-        if (isset($subfields['country'])) {
-            render_location_field($key, $i, 'country', $subfields['country'], $group['country'] ?? '');
-        }
-        echo '</div>' . "\n";
-
-        // Row 2: region, city, address
-        echo '<div class="owbn-location-row">' . "\n";
-        if (isset($subfields['region'])) {
-            render_location_field($key, $i, 'region', $subfields['region'], $group['region'] ?? '');
-        }
-        if (isset($subfields['city'])) {
-            render_location_field($key, $i, 'city', $subfields['city'], $group['city'] ?? '');
-        }
-        if (isset($subfields['address'])) {
-            render_location_field($key, $i, 'address', $subfields['address'], $group['address'] ?? '');
+        if (isset($subfields['url'])) {
+            render_location_field($key, $i, 'url', $subfields['url'], $group['url'] ?? '');
         }
         echo '</div>' . "\n";
 
-        // Row 3: notes (full width) - TEMPORARY fallback to avoid wp_editor crash
-        if (isset($subfields['notes'])) {
-            echo '<div class="owbn-location-row-full">' . "\n";
-            try {
-                render_location_field($key, $i, 'notes', $subfields['notes'], $group['notes'] ?? '');
-            } catch (Throwable $e) {
-                echo '<p style="color:red;">Error rendering notes field: ' . esc_html($e->getMessage()) . '</p>';
+        // Conditionally render location fields if not online-only
+        if (!$online) {
+            // Row 2: country, region, city
+            echo '<div class="owbn-location-row">' . "\n";
+            if (isset($subfields['country'])) {
+                render_location_field($key, $i, 'country', $subfields['country'], $group['country'] ?? '');
+            }
+            if (isset($subfields['region'])) {
+                render_location_field($key, $i, 'region', $subfields['region'], $group['region'] ?? '');
+            }
+            if (isset($subfields['city'])) {
+                render_location_field($key, $i, 'city', $subfields['city'], $group['city'] ?? '');
+            }
+            echo '</div>' . "\n";
+
+            // Row 3: address
+            echo '<div class="owbn-location-row">' . "\n";
+            if (isset($subfields['address'])) {
+                render_location_field($key, $i, 'address', $subfields['address'], $group['address'] ?? '');
             }
             echo '</div>' . "\n";
         }
@@ -145,6 +147,10 @@ function render_location_field($key, $index, $subkey, $meta, $value) {
                     'teeny' => true,
                 ]
             );
+            break;
+        
+        case 'url':
+            echo '<input type="url" name="' . esc_attr($field_name) . '" id="' . esc_attr($field_id) . '" value="' . esc_attr($value) . '" class="regular-text">' . "\n";
             break;
 
         default: // text
