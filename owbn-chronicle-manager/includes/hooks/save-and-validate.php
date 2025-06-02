@@ -161,6 +161,10 @@ function owbn_save_chronicle_meta($post_id) {
                             $cleaned[] = $row_cleaned;
                         }
                     }
+                    $allowed_keys = array_keys($meta['fields']);
+                    foreach ($cleaned as &$row) {
+                        $row = array_intersect_key($row, array_flip($allowed_keys));
+                    }
 
                     update_post_meta($post_id, $key, $cleaned);
                     break;
@@ -299,11 +303,19 @@ function owbn_save_chronicle_meta($post_id) {
                     update_post_meta($post_id, $key, isset($_POST[$key]) ? '1' : '0');
                     break;
 
+                case 'wysiwyg':
+                    update_post_meta($post_id, $key, wp_kses_post($raw));
+                    break;
+
                 case 'json':
                     $value = json_decode($raw, true);
                     update_post_meta($post_id, $key, is_array($value) ? $value : sanitize_text_field($raw));
                     break;
 
+                case 'url':
+                    update_post_meta($post_id, $key, esc_url_raw($raw));
+                    break;
+                    
                 default:
                     update_post_meta($post_id, $key, sanitize_text_field($raw));
                     break;

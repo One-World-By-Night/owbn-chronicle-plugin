@@ -15,6 +15,12 @@ function owbn_get_chronicle_field_definitions() {
                 'source' => 'owbn_genre_list',
                 'required' => true,
             ],
+            'game_type' => [
+                'label' => __('Game Type', 'owbn-chronicle-manager'),
+                'type' => 'select',
+                'options' => ['In-Person', 'Virtual', 'Hybrid'],
+                'required' => true,
+            ],
             'premise' => ['label' => __('Premise', 'owbn-chronicle-manager'), 'type' => 'wysiwyg'],
             'game_theme' => ['label' => __('Game Theme', 'owbn-chronicle-manager'), 'type' => 'wysiwyg'],
             'game_mood' => ['label' => __('Game Mood', 'owbn-chronicle-manager'), 'type' => 'wysiwyg'],
@@ -125,15 +131,6 @@ function owbn_get_chronicle_field_definitions() {
                 'label' => __('OOC Locations', 'owbn-chronicle-manager'),
                 'type'  => 'location_group',
                 'fields' => [
-                    'name' => [
-                        'label' => __('Location Name', 'owbn-chronicle-manager'),
-                        'type' => 'text',
-                        'required' => true,
-                    ],
-                    'online_only' => [
-                        'label' => __('Online Only?', 'owbn-chronicle-manager'),
-                        'type'  => 'boolean',
-                    ],
                     'country' => [
                         'label' => __('Country', 'owbn-chronicle-manager'),
                         'type'  => 'select',
@@ -146,10 +143,6 @@ function owbn_get_chronicle_field_definitions() {
                     ],
                     'city' => [
                         'label' => __('City / Municipality', 'owbn-chronicle-manager'),
-                        'type'  => 'text',
-                    ],
-                    'address' => [
-                        'label' => __('Street Address (optional)', 'owbn-chronicle-manager'),
                         'type'  => 'text',
                     ],
                     'notes' => [
@@ -200,9 +193,13 @@ function owbn_get_chronicle_field_definitions() {
                         'type' => 'text',
                         'required' => true,
                     ],
-                    'online_only' => [
-                        'label' => __('Online Only?', 'owbn-chronicle-manager'),
+                    'online' => [
+                        'label' => __('Online?', 'owbn-chronicle-manager'),
                         'type'  => 'boolean',
+                    ],
+                    'url' => [
+                        'label' => __('Online URL', 'owbn-chronicle-manager'),
+                        'type'  => 'url',
                     ],
                     'country' => [
                         'label' => __('Country', 'owbn-chronicle-manager'),

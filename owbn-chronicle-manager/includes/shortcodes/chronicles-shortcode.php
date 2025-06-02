@@ -87,30 +87,37 @@ function owbn_render_chronicle_list($query) {
 
     echo "\n<div class=\"owbn-chronicle-filters\">\n";
 
+    // Country filter
     echo "  <select id=\"filter-country\" class=\"owbn-select2 single\" data-filter=\"country\">\n";
     echo "    <option value=\"\">Filter by Country</option>\n";
     echo "  </select>\n";
 
+    // OWBN Region filter
     echo '<select id="filter-chronicle-region" class="owbn-select2 single" data-filter="chronicle-region">\n';
     echo "    <option value=\"\">Filter by Region</option>\n";
     echo "  </select>\n";
 
+    // Genre Filter
     echo "  <select id=\"filter-genre\" class=\"owbn-select2 multi\" data-filter=\"genre\">\n";
     echo "    <option value=\"\">Filter by Genre</option>\n";
     echo "  </select>\n";
 
+    // Game Type Filter
     echo "  <select id=\"filter-type\" class=\"owbn-select2 single\" data-filter=\"game-type\">\n";
     echo "    <option value=\"\">Filter by Game Type</option>\n";
+    echo "    <option value=\"in-person\">In-Person</option>\n";
     echo "    <option value=\"virtual\">Virtual</option>\n";
-    echo "    <option value=\"in-person\">In-person</option>\n";
+    echo "    <option value=\"hybrid\">Hybrid</option>\n";
     echo "  </select>\n";
 
+    // Probationary Filter
     echo "  <select id=\"filter-probationary\" class=\"owbn-select2 single\" data-filter=\"probationary\">\n";
     echo "    <option value=\"\">Filter by Probationary</option>\n";
     echo "    <option value=\"yes\">Probationary</option>\n";
     echo "    <option value=\"no\">Not Probationary</option>\n";
     echo "  </select>\n";
 
+    // Satellite Filter
     echo "  <div style=\"display: flex; flex-direction: column; gap: 0.5rem;\">\n";
     echo "    <select id=\"filter-satellite\" class=\"owbn-select2 single\" data-filter=\"satellite\">\n";
     echo "      <option value=\"\">Filter by Satellite</option>\n";
@@ -148,8 +155,8 @@ function owbn_render_chronicle_list($query) {
         $region  = isset($first_location['region']) ? $first_location['region'] : '—';
         $city    = isset($first_location['city']) ? $first_location['city'] : '—';
 
-        $online_only = !empty($first_location['online_only']) && $first_location['online_only'] === '1';
-        $game_type = $online_only ? 'Virtual' : 'In-person';
+        $game_type_raw = get_post_meta($post_id, 'game_type', true);
+        $game_type = in_array($game_type_raw, ['In-Person', 'Virtual', 'Hybrid']) ? $game_type_raw : '—';
 
         $location_parts = [];
         if (!empty($country) && $country !== '—') {
