@@ -88,6 +88,10 @@ function owbn_render_chronicle_fields_metabox($post) {
                     owbn_render_boolean_field($key, $value, $disabled_attr);
                     break;
 
+                case 'ooc_location':
+                    owbn_render_ooc_location($key, $value, $meta);
+                    break;
+
                 case 'location_group':
                     owbn_render_location_group($key, $value, $meta);
                     break;

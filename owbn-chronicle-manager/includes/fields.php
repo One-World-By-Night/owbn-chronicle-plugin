@@ -111,8 +111,12 @@ function owbn_get_chronicle_field_definitions() {
                         'label' => __('Display Name', 'owbn-chronicle-manager'),
                         'type' => 'text',
                     ],
-                    'email' => [
-                        'label' => __('Email', 'owbn-chronicle-manager'),
+                    'actual_email' => [
+                        'label' => __('Actual Email', 'owbn-chronicle-manager'),
+                        'type' => 'email',
+                    ],
+                    'display_email' => [
+                        'label' => __('Display Email', 'owbn-chronicle-manager'),
                         'type' => 'email',
                     ],
                     'role' => [
@@ -129,7 +133,7 @@ function owbn_get_chronicle_field_definitions() {
         'Locations' => [
             'ooc_locations' => [
                 'label' => __('OOC Locations', 'owbn-chronicle-manager'),
-                'type'  => 'location_group',
+                'type'  => 'ooc_location',
                 'fields' => [
                     'country' => [
                         'label' => __('Country', 'owbn-chronicle-manager'),
