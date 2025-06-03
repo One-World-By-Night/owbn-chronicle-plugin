@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OWBN Chronicle Manager
  * Description: Manage OWBN Chronicle information using structured custom post types, shortcodes, and approval workflows.
- * Version: 1.1.80
+ * Version: 1.1.82
  * Author: greghacke
  * Author URI: https://www.owbn.net
  * Text Domain: owbn-chronicle-manager
@@ -15,6 +15,7 @@
 
 // ─── Core Includes ───────────────────────────────────────────────────────────
 require_once plugin_dir_path(__FILE__) . 'includes/hooks/admin-init.php';
+require_once plugin_dir_path(__FILE__) . 'includes/render/render-chronicle-box.php';
 require_once plugin_dir_path(__FILE__) . 'includes/fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/hooks/save-and-validate.php';
 require_once plugin_dir_path(__FILE__) . 'includes/helpers/countries.php';
@@ -28,7 +29,6 @@ require_once plugin_dir_path(__FILE__) . 'includes/render/render-user-fields.php
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-links-uploads-fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/chronicles-shortcode.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/chronicle-shortcode.php';
-require_once plugin_dir_path(__FILE__) . 'includes/render/render-chronicle-box.php';
 // require_once plugin_dir_path(__FILE__) . 'languages/i18n.php';
 
 // ─── Activation Hook ─────────────────────────────────────────────────────────
@@ -46,7 +46,7 @@ add_action('init', function () {
 
         file_put_contents(
             WP_CONTENT_DIR . '/owbn-activation.log',
-            date('c') . " - Activation running on blog ID: " . get_current_blog_id() . "\n",
+            gmdate('c') . " - Activation running on blog ID: " . get_current_blog_id() . "\n",
             FILE_APPEND
         );
 
