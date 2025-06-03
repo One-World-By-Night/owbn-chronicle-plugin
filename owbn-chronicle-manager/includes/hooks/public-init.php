@@ -47,7 +47,8 @@ function owbn_enqueue_frontend_assets() {
         is_a($post, 'WP_Post') &&
         (
             has_shortcode($post->post_content, 'owbn-chronicles') ||
-            has_shortcode($post->post_content, 'owbn-chronicle')
+            has_shortcode($post->post_content, 'owbn-chronicle') ||
+            has_shortcode($post->post_content, 'owbn-chronicles-list')
         )
     ) {
         owbn_enqueue_plugin_assets();

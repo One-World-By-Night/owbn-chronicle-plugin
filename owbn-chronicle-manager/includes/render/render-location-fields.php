@@ -88,9 +88,9 @@ function owbn_render_location_group($key, $value, $meta) {
 }
 
 // Render a single location field based on its type
-function render_location_field($key, $index, $subkey, $meta, $value) {
-    $field_id = "{$key}_{$index}_{$subkey}";
-    $field_name = "{$key}[{$index}][{$subkey}]";
+function render_location_field($key, $index, $subkey, $meta, $value, $flat = false) {
+    $field_id = $flat ? "{$key}_{$subkey}" : "{$key}_{$index}_{$subkey}";
+    $field_name = $flat ? "{$key}[{$subkey}]" : "{$key}[{$index}][{$subkey}]";
 
     echo '<div class="owbn-location-field">' . "\n";
     echo '<label for="' . esc_attr($field_id) . '">' . esc_html($meta['label']) . '</label><br>' . "\n";
@@ -98,12 +98,11 @@ function render_location_field($key, $index, $subkey, $meta, $value) {
     switch ($meta['type']) {
         case 'select':
             $options = $meta['options'] ?? [];
-            $extra_class = !empty($meta['search']) ? 'select2-searchable' : ''; // NEW
+            $extra_class = !empty($meta['search']) ? 'select2-searchable' : '';
             echo '<select class="owbn-select2 ' . esc_attr($extra_class) . '" name="' . esc_attr($field_name) . '" id="' . esc_attr($field_id) . '">' . "\n";
             echo '<option value="">' . esc_html__('— Select —', 'owbn-chronicle-manager') . '</option>' . "\n";
-            foreach ($options as $key => $label) {
-                // Handle array or indexed options
-                $value_attr = is_string($key) ? $key : $label;
+            foreach ($options as $key_option => $label) {
+                $value_attr = is_string($key_option) ? $key_option : $label;
                 echo '<option value="' . esc_attr($value_attr) . '" ' . selected($value, $value_attr, false) . '>' . esc_html($label) . '</option>' . "\n";
             }
             echo '</select>' . "\n";
@@ -148,7 +147,7 @@ function render_location_field($key, $index, $subkey, $meta, $value) {
                 ]
             );
             break;
-        
+
         case 'url':
             echo '<input type="url" name="' . esc_attr($field_name) . '" id="' . esc_attr($field_id) . '" value="' . esc_attr($value) . '" class="regular-text">' . "\n";
             break;
@@ -156,6 +155,35 @@ function render_location_field($key, $index, $subkey, $meta, $value) {
         default: // text
             echo '<input type="text" name="' . esc_attr($field_name) . '" id="' . esc_attr($field_id) . '" value="' . esc_attr($value) . '" class="regular-text">' . "\n";
     }
+
+    echo '</div>' . "\n";
+}
+
+// Render the OOC location fields for the Chronicle custom post type
+function owbn_render_ooc_location($key, $value, $meta) {
+    $fields = $meta['fields'];
+    $value = is_array($value) ? $value : [];
+
+    echo '<div class="owbn-ooc-location-wrapper">' . "\n";
+    echo '<div class="owbn-location-row">' . "\n";
+
+    if (isset($fields['country'])) {
+        render_location_field($key, 0, 'country', $fields['country'], $value['country'] ?? '', true);
+    }
+    if (isset($fields['region'])) {
+        render_location_field($key, 0, 'region', $fields['region'], $value['region'] ?? '', true);
+    }
+    if (isset($fields['city'])) {
+        render_location_field($key, 0, 'city', $fields['city'], $value['city'] ?? '', true);
+    }
+
+    echo '</div>' . "\n";
+
+    echo '<div class="owbn-location-row">' . "\n";
+    if (isset($fields['notes'])) {
+        render_location_field($key, 0, 'notes', $fields['notes'], $value['notes'] ?? '', true);
+    }
+    echo '</div>' . "\n";
 
     echo '</div>' . "\n";
 }

@@ -356,6 +356,104 @@
     }
 
     // -----------------------------
+    // New OWBN Chronicles List Filters
+    // -----------------------------
+
+    function initChroniclesListFilterBlock() {
+        const allRows = $('.chron-list-wrapper');
+
+        // Dynamically detect filters
+        const filterKeys = [];
+        $('.owbn-chronicles-list-filters select').each(function () {
+            const filterKey = $(this).data('filter');
+            if (filterKey) filterKeys.push(filterKey);
+        });
+
+        const filters = {};
+        filterKeys.forEach(key => filters[key] = new Set());
+
+        // Collect unique values for each filter from the data-* attributes
+        allRows.each(function () {
+            const $row = $(this);
+
+            filterKeys.forEach(key => {
+                const val = $row.data(key);
+                if (!val || val === '—') return;
+
+                if (key === 'genre' || key === 'genres') {
+                    val.toString().split(',').map(v => v.trim()).forEach(part => {
+                        if (part) filters[key].add(part);
+                    });
+                } else {
+                    filters[key].add(val.toString());
+                }
+            });
+        });
+
+        // Populate <select>s dynamically
+        filterKeys.forEach(key => {
+            const $select = $(`.owbn-chronicles-list-filters [data-filter="${key}"]`);
+            if (!$select.length) return;
+
+            const sorted = Array.from(filters[key]).sort((a, b) => a.localeCompare(b));
+            sorted.forEach(value => {
+                let label = value;
+
+                // Pretty print for boolean-like
+                if (['yes', 'no'].includes(value.toLowerCase())) {
+                    label = value.toLowerCase() === 'yes' ? 'Yes' : 'No';
+                }
+
+                $select.append(`<option value="${value}">${label}</option>`);
+            });
+        });
+
+        // Wire up filters
+        $('.owbn-chronicles-list-filters select').on('change', applyChroniclesListFilters);
+        $('#clear-filters').on('click', function (e) {
+            e.preventDefault();
+            $('.owbn-chronicles-list-filters select').val(null).trigger('change');
+        });
+    }
+
+    function applyChroniclesListFilters() {
+        const filterValues = {};
+
+        $('.owbn-chronicles-list-filters select').each(function () {
+            const key = $(this).data('filter');
+            const val = $(this).val();
+            if (key && val) {
+                filterValues[key] = val;
+            }
+        });
+
+        $('.chron-list-wrapper').each(function () {
+            const $row = $(this);
+            let visible = true;
+
+            for (const key in filterValues) {
+                const filterVal = filterValues[key];
+                const rowVal = $row.data(key);
+
+                if (key === 'genre' || key === 'genres') {
+                    const genres = (rowVal || '').toString().split(',').map(v => v.trim());
+                    if (!genres.includes(filterVal)) {
+                        visible = false;
+                        break;
+                    }
+                } else {
+                    if ((rowVal || '').toString() !== filterVal) {
+                        visible = false;
+                        break;
+                    }
+                }
+            }
+
+            $row.toggle(visible);
+        });
+    }
+
+    // -----------------------------
     // Init
     // -----------------------------
     $(document).ready(function () {
@@ -384,6 +482,10 @@
             e.preventDefault();
             $('.owbn-chronicle-filters select').val(null).trigger('change');
         });
+        }
+        // ---- New Chronicles List Filters Init ----
+        if ($('.owbn-chronicles-list-filters').length) {
+            initChroniclesListFilterBlock();
         }
     });
 })(jQuery);

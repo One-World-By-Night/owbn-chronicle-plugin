@@ -316,7 +316,7 @@ function owbn_render_hst_info($post) {
     elseif (is_array($meta)) {
         $id = $meta['id'] ?? '';
         $display_name = $meta['display_name'] ?? '';
-        $email = $meta['email'] ?? '';
+        $email = $meta['display_email'] ?? $meta['email'] ?? '';
     } else {
         return '';
     }
@@ -351,7 +351,7 @@ function owbn_render_cm_info($post) {
     elseif (is_array($meta)) {
         $id = $meta['id'] ?? '';
         $display_name = $meta['display_name'] ?? '';
-        $email = $meta['email'] ?? '';
+        $email = $meta['display_email'] ?? $meta['email'] ?? '';
     }
 
     if (empty($display_name) || empty($email)) return '';
@@ -383,17 +383,21 @@ function owbn_render_ast_list($post) {
 
     foreach ($ast_list as $index => $ast) {
         $name  = trim($ast['display_name'] ?? '');
-        $email = trim($ast['email'] ?? '');
+        $email = trim($ast['display_email'] ?? ''); // only use display_email
         $role  = trim($ast['role'] ?? '');
 
-        if (!empty($name) && !empty($email)) {
+        if (!empty($name)) {
             echo "    <div class=\"chron-ast-entry chron-ast-{$index}\">\n";
-            echo "      <a href=\"mailto:" . esc_attr($email) . "\" class=\"chron-ast-email-link\" style=\"margin-right: 0.5rem; display: inline-block;\">\n";
-            echo "        " . esc_html($name) . "\n";
-            echo "      </a>\n";
+            echo "      ";
 
             if (!empty($role)) {
-                echo "      <span class=\"chron-ast-role\">" . esc_html($role) . "</span>\n";
+                echo esc_html($role) . ' ';
+            }
+
+            if (!empty($email)) {
+                echo "<a href=\"mailto:" . esc_attr($email) . "\" class=\"chron-ast-email-link\">" . esc_html($name) . "</a>\n";
+            } else {
+                echo esc_html($name) . "\n";
             }
 
             echo "    </div>\n";
@@ -411,9 +415,9 @@ function owbn_render_ooc_locations($post) {
         return '';
     }
 
-    $locations = get_post_meta($post->ID, 'ooc_locations', true);
+    $location = get_post_meta($post->ID, 'ooc_locations', true);
 
-    if (!is_array($locations) || empty($locations)) {
+    if (!is_array($location) || empty(array_filter($location))) {
         return "<div class=\"owbn-chronicle-ooc-list-empty elementor-widget-container\">\n" .
                "  <p>No locations listed.</p>\n" .
                "</div>\n";
@@ -421,55 +425,35 @@ function owbn_render_ooc_locations($post) {
 
     ob_start();
     echo "<div class=\"owbn-chronicle-ooc-locations\">\n";
+    echo "  <div class=\"chronicle-location-block elementor-widget-container\">\n";
 
-    foreach ($locations as $index => $loc) {
-        echo "  <div class=\"chronicle-location-block chronicle-ooc-{$index} elementor-widget-container\">\n";
-
-        if (!empty($loc['name'])) {
-            echo "    <div class=\"chron-location-name elementor-heading-title elementor-size-default\">\n";
-            echo "      <strong>Location Name:</strong> " . esc_html($loc['name']) . "\n";
-            echo "    </div>\n";
-        }
-
-        if (!empty($loc['online_only'])) {
-            echo "    <div class=\"chron-location-online\">\n";
-            echo "      <strong>Online Only:</strong> " . (!empty($loc['online_only']) ? 'Yes' : 'No') . "\n";
-            echo "    </div>\n";
-        }
-
-        if (!empty($loc['country'])) {
-            echo "    <div class=\"chron-location-country\">\n";
-            echo "      <strong>Country:</strong> " . esc_html(strtoupper($loc['country'])) . "\n";
-            echo "    </div>\n";
-        }
-
-        if (!empty($loc['region'])) {
-            echo "    <div class=\"chron-location-region\">\n";
-            echo "      <strong>Region:</strong> " . esc_html($loc['region']) . "\n";
-            echo "    </div>\n";
-        }
-
-        if (!empty($loc['city'])) {
-            echo "    <div class=\"chron-location-city\">\n";
-            echo "      <strong>City:</strong> " . esc_html($loc['city']) . "\n";
-            echo "    </div>\n";
-        }
-
-        if (!empty($loc['address'])) {
-            echo "    <div class=\"chron-location-address\">\n";
-            echo "      <strong>Address:</strong> " . esc_html($loc['address']) . "\n";
-            echo "    </div>\n";
-        }
-
-        if (!empty($loc['notes'])) {
-            echo "    <div class=\"chron-location-notes\">\n";
-            echo "      <strong>Notes:</strong><br />\n" . wp_kses_post(wpautop($loc['notes'])) . "\n";
-            echo "    </div>\n";
-        }
-
-        echo "  </div>\n";
+    // Collect non-empty location parts
+    $parts = [];
+    if (!empty($location['city'])) {
+        $parts[] = esc_html($location['city']);
+    }
+    if (!empty($location['region'])) {
+        $parts[] = esc_html($location['region']);
+    }
+    if (!empty($location['country'])) {
+        $parts[] = esc_html(strtoupper($location['country']));
     }
 
+    // Output location line if any parts exist
+    if (!empty($parts)) {
+        echo "    <div class=\"chron-location-line elementor-heading-title elementor-size-default\">\n";
+        echo "      " . implode(', ', $parts) . "\n";
+        echo "    </div>\n";
+    }
+
+    // Output notes if they exist
+    if (!empty($location['notes'])) {
+        echo "    <div class=\"chron-location-notes\">\n";
+        echo "      " . wp_kses_post(wpautop($location['notes'])) . "\n";
+        echo "    </div>\n";
+    }
+
+    echo "  </div>\n";
     echo "</div>\n";
     return ob_get_clean();
 }
@@ -493,39 +477,32 @@ function owbn_render_ic_location_list($post) {
     foreach ($locations as $index => $location) {
         echo "  <div class=\"owbn-chronicle-meta-ic_location_list-entry chronicle-ic-location-{$index} elementor-widget-container\">\n";
 
+        // Name Line
         if (!empty($location['name'])) {
             echo "    <div class=\"location-field location-name elementor-heading-title elementor-size-default\">\n";
-            echo "      <strong>Site Name:</strong> " . esc_html($location['name']) . "\n";
+            echo "      <strong>Name:</strong> " . esc_html($location['name']) . "\n";
             echo "    </div>\n";
         }
 
-        if (!empty($location['country'])) {
-            echo "    <div class=\"location-field location-country\">\n";
-            echo "      <strong>Country:</strong> " . esc_html($location['country']) . "\n";
-            echo "    </div>\n";
-        }
-
-        if (!empty($location['region'])) {
-            echo "    <div class=\"location-field location-region\">\n";
-            echo "      <strong>Region:</strong> " . esc_html($location['region']) . "\n";
-            echo "    </div>\n";
-        }
+        // City, Region (Country) Line
+        $parts = [];
 
         if (!empty($location['city'])) {
-            echo "    <div class=\"location-field location-city\">\n";
-            echo "      <strong>City:</strong> " . esc_html($location['city']) . "\n";
-            echo "    </div>\n";
+            $parts[] = esc_html($location['city']);
+        }
+        if (!empty($location['region'])) {
+            $parts[] = esc_html($location['region']);
         }
 
-        if (!empty($location['address'])) {
-            echo "    <div class=\"location-field location-address\">\n";
-            echo "      <strong>Address:</strong> " . esc_html($location['address']) . "\n";
-            echo "    </div>\n";
+        $location_line = implode(', ', $parts);
+
+        if (!empty($location['country'])) {
+            $location_line .= $location_line ? " (" . esc_html($location['country']) . ")" : esc_html($location['country']);
         }
 
-        if (!empty($location['notes'])) {
-            echo "    <div class=\"location-field location-notes\">\n";
-            echo "      <strong>Game Site Notes:</strong><br />\n" . wp_kses_post(wpautop($location['notes'])) . "\n";
+        if ($location_line) {
+            echo "    <div class=\"location-field location-summary\">\n";
+            echo "      $location_line\n";
             echo "    </div>\n";
         }
 
@@ -558,11 +535,11 @@ function owbn_render_game_site_list($post) {
 
         echo "  <div class=\"owbn-chronicle-meta-game_site_list-entry chronicle-game-site-{$index} elementor-widget-container\" style=\"margin-bottom: 1.5em;\">\n";
 
-        // Site Name (linked if online + URL)
+        // ---- Site Name (always shown) ----
         if (!empty($site['name'])) {
             echo "    <div class=\"site-field site-name elementor-heading-title elementor-size-default\">\n";
-            echo "      <strong>Site Name:</strong> ";
-            
+            echo "      <strong>Name:</strong> ";
+
             if ($online && $url) {
                 echo '<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html($site['name']) . '</a>';
             } else {
@@ -572,36 +549,38 @@ function owbn_render_game_site_list($post) {
             echo "\n    </div>\n";
         }
 
+        // ---- Online site: just show URL ----
         if ($online && $url) {
-            // Online only with URL
             echo "    <div class=\"site-field site-url\">\n";
             echo "      <a href=\"{$url}\" target=\"_blank\" rel=\"noopener noreferrer\">{$url}</a>\n";
             echo "    </div>\n";
-        } else {
-            // Physical location
-            $address_lines = [];
+        }
+        // ---- Physical site: address block ----
+        elseif (!$online) {
+            $address = !empty($site['address']) ? esc_html($site['address']) : '';
+            $city = !empty($site['city']) ? esc_html($site['city']) : '';
+            $region = !empty($site['region']) ? esc_html($site['region']) : '';
+            $country = !empty($site['country']) ? esc_html($site['country']) : '';
 
-            if (!empty($site['address'])) {
-                $address_lines[] = esc_html($site['address']);
+            $city_region = implode(', ', array_filter([$city, $region]));
+            $final_line = $city_region;
+            if (!empty($country)) {
+                $final_line .= $city_region ? " ({$country})" : $country;
             }
 
-            $city = $site['city'] ?? '';
-            $region = $site['region'] ?? '';
-            $country = $site['country'] ?? '';
-
-            $city_region_country = implode(', ', array_filter([$city, $region, $country]));
-            if (!empty($city_region_country)) {
-                $address_lines[] = esc_html($city_region_country);
-            }
-
-            if (!empty($address_lines)) {
+            if (!empty($address) || !empty($final_line)) {
                 echo "    <div class=\"site-field site-address\">\n";
-                echo "      " . implode("<br />\n", $address_lines) . "\n";
+                if ($address) {
+                    echo "      {$address}<br />\n";
+                }
+                if ($final_line) {
+                    echo "      {$final_line}\n";
+                }
                 echo "    </div>\n";
             }
         }
 
-        // Notes (with auto paragraph formatting)
+        // ---- Notes (optional) ----
         if (!empty($site['notes'])) {
             echo "    <div class=\"site-field site-notes\">\n";
             echo "      <strong>Game Site Notes:</strong><br />\n" . wp_kses_post(wpautop($site['notes'])) . "\n";
