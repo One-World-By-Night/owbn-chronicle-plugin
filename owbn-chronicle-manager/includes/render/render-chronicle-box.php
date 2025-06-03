@@ -162,13 +162,13 @@ function owbn_render_chronicle_card($post_id) {
             <div class="chronicle-links">
                 <?php if (!empty($document_output)): ?>
                     <div class="chronicle-documents" style="margin-bottom: 0.5rem;">
-                        <?php echo $document_output; ?>
+                        <?php echo wp_kses_post($document_output); ?>
                     </div>
                 <?php endif; ?>
 
                 <?php if (!empty($social_output)): ?>
                     <div class="chronicle-social-links">
-                        <?php echo $social_output; ?>
+                        <?php echo wp_kses_post($social_output); ?>
                     </div>
                 <?php endif; ?>
             </div>

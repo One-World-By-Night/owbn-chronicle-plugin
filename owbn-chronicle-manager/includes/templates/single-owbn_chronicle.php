@@ -5,7 +5,7 @@ get_header(); // Load theme header
 
 $post_id = get_the_ID();
 echo '<div class="owbn-chronicle-single">';
-echo owbn_render_chronicle_card($post_id); // Or full view function if preferred
+echo wp_kses_post(owbn_render_chronicle_card($post_id)); // Escaped output
 echo '</div>';
 
 get_footer(); // Load theme footer

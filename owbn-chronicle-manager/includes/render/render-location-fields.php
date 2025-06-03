@@ -34,7 +34,7 @@ function owbn_render_location_group($key, $value, $meta) {
             $header .= ' ' . esc_html($online);
         }
 
-        echo '<strong>' . $header . '</strong>' . "\n";
+        echo '<strong>' . esc_html($header) . '</strong>' . "\n";
         echo '<button type="button" class="toggle-location button">Toggle</button>' . "\n";
         echo '</div>' . "\n"; // .header
 
@@ -126,12 +126,12 @@ function render_location_field($key, $index, $subkey, $meta, $value, $flat = fal
         case 'boolean':
             $is_checked = ($value === '1' || $value === 1 || $value === true);
             echo '<div class="owbn-boolean-switch">' . "\n";
-            echo '  <span class="switch-label switch-label-left">' . __('No', 'owbn-chronicle-manager') . '</span>' . "\n";
+            echo '  <span class="switch-label switch-label-left">' . esc_html__('No', 'owbn-chronicle-manager') . '</span>' . "\n";
             echo '  <label class="switch">' . "\n";
             echo '    <input type="checkbox" name="' . esc_attr($field_name) . '" id="' . esc_attr($field_id) . '" value="1" ' . checked($is_checked, true, false) . '>' . "\n";
             echo '    <span class="slider round"></span>' . "\n";
             echo '  </label>' . "\n";
-            echo '  <span class="switch-label switch-label-right">' . __('Yes', 'owbn-chronicle-manager') . '</span>' . "\n";
+            echo '  <span class="switch-label switch-label-right">' . esc_html__('Yes', 'owbn-chronicle-manager') . '</span>' . "\n";
             echo '</div>' . "\n";
             break;
 

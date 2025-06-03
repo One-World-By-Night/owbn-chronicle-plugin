@@ -88,7 +88,7 @@ function owbn_render_chronicle_full($post_id) {
                     case 'document_links_group':
                     case 'social_links_group':
                     case 'email_lists_group':
-                        echo owbn_render_group_field($value, $field_def);
+                        echo wp_kses_post(owbn_render_group_field($value, $field_def));
                         break;
 
                     default:
@@ -104,7 +104,7 @@ function owbn_render_chronicle_full($post_id) {
         ?>
 
         <div class="chronicle-content">
-            <?php echo $content; ?>
+            <?php echo wp_kses_post($content); ?>
         </div>
     </div>
     <?php
@@ -160,7 +160,7 @@ function owbn_render_group_field($group_data, $field_def) {
                 case 'upload':
                     $file_url = wp_get_attachment_url($entry[$sub_key]);
                     if ($file_url) {
-                        echo '<a href="' . esc_url($file_url) . '" target="_blank">' . basename($file_url) . '</a>';
+                        echo '<a href="' . esc_url($file_url) . '" target="_blank">' . esc_html(basename($file_url)) . '</a>';
                     }
                     break;
 

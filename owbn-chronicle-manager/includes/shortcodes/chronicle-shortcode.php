@@ -24,7 +24,7 @@ add_shortcode('owbn-chronicle', function($atts) {
     $post_id = $chronicle_post->ID;
 
     // Output only the card version
-    return '<div class="owbn-chronicle-wrapper">' . owbn_render_chronicle_card($post_id) . '</div>';
+    return '<div class="owbn-chronicle-wrapper">' . wp_kses_post(owbn_render_chronicle_card($post_id)) . '</div>';
 });
 
 add_shortcode('owbn-chronicle-meta', function($atts) {

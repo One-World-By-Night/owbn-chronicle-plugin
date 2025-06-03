@@ -186,9 +186,9 @@ add_filter('map_meta_cap', function ($caps, $cap, $user_id, $args) {
     if (!empty($args[0])) {
         $post_id = (int) $args[0];
     } elseif (!empty($_REQUEST['post'])) {
-        $post_id = (int) $_REQUEST['post'];
+        $post_id = (int) sanitize_text_field(wp_unslash($_REQUEST['post']));
     } elseif (!empty($_POST['post_ID'])) {
-        $post_id = (int) $_POST['post_ID'];
+        $post_id = (int) sanitize_text_field(wp_unslash($_POST['post_ID']));
     }
 
     if (!in_array($cap, ['edit_post', 'delete_post', 'read_post'], true)) {
