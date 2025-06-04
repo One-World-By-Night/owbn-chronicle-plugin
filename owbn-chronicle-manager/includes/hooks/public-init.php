@@ -31,7 +31,7 @@ add_action('admin_enqueue_scripts', 'owbn_enqueue_admin_assets');
 function owbn_enqueue_plugin_assets() {
     $base_url = plugin_dir_url(dirname(__FILE__, 2)) . 'css/';
     $base_js  = plugin_dir_url(dirname(__FILE__, 2)) . 'js/';
-    $version  = '1.1.82'; // current plugin version
+    $version  = '1.1.83'; // current plugin version
 
 
     wp_enqueue_style('owbn-chronicle-style', $base_url . 'style.css', [], $version);
