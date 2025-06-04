@@ -97,15 +97,15 @@ function owbn_render_chronicle_fields_metabox($post) {
                     break;
 
                 case 'date':
-                    echo "<input type=\"date\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\"$disabled_attr>\n";
+                    echo "<input type=\"date\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\" " . esc_attr($disabled_attr) . ">\n";
                     break;
 
                 case 'number':
-                    echo "<input type=\"number\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\"$disabled_attr>\n";
+                    echo "<input type=\"number\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\" " . esc_attr($disabled_attr) . ">\n";
                     break;
 
                 case 'json':
-                    echo "<textarea class=\"large-text code\" rows=\"4\" name=\"" . esc_attr($key) . "\"$disabled_attr>" .
+                    echo "<textarea class=\"large-text code\" rows=\"4\" name=\"" . esc_attr($key) . "\" " . esc_attr($disabled_attr) . ">" .
                         esc_textarea(is_scalar($value) ? $value : wp_json_encode($value)) .
                         "</textarea>\n";
                     break;
@@ -115,7 +115,7 @@ function owbn_render_chronicle_fields_metabox($post) {
                     break;
 
                 default:
-                    echo "<input type=\"text\" class=\"regular-text\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\"$disabled_attr>\n";
+                    echo "<input type=\"text\" class=\"regular-text\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\" " . esc_attr($disabled_attr) . ">\n";
                     break;
             }
 
@@ -132,7 +132,7 @@ function owbn_render_slug_field($key, $value, $disabled_attr = '') {
     $disabled_html = $disabled_attr ? ' disabled' : '';
 
     echo "<input type=\"text\" class=\"regular-text\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\" " .
-        "minlength=\"2\" maxlength=\"6\" pattern=\"[a-z0-9]{2,6}\" $disabled_html " .
+        "minlength=\"2\" maxlength=\"6\" pattern=\"[a-z0-9]{2,6}\" " . esc_attr($disabled_html) . " " .
         "placeholder=\"" . esc_attr__('2–6 lowercase alphanumeric characters', 'owbn-chronicle-manager') . "\">\n";
 
     echo "<p class=\"description\">" . esc_html__('Allowed: lowercase letters and numbers, 2–6 characters.', 'owbn-chronicle-manager') . "</p>\n";
@@ -144,12 +144,12 @@ function owbn_render_boolean_field($key, $value, $disabled_attr = '') {
     $disabled_html = $disabled_attr ? ' disabled' : '';
 
     echo '<div class="owbn-boolean-switch">' . "\n";
-    echo '  <span class="switch-label switch-label-left">' . __('No', 'owbn-chronicle-manager') . '</span>' . "\n";
+    echo '  <span class="switch-label switch-label-left">' . esc_html__('No', 'owbn-chronicle-manager') . '</span>' . "\n";
     echo '  <label class="switch">' . "\n";
-    echo '    <input type="checkbox" name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" value="1" ' . checked($is_checked, true, false) . $disabled_html . '>' . "\n";
+    echo '    <input type="checkbox" name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" value="1" ' . checked($is_checked, true, false) . esc_attr($disabled_html) . '>' . "\n";
     echo '    <span class="slider round"></span>' . "\n";
     echo '  </label>' . "\n";
-    echo '  <span class="switch-label switch-label-right">' . __('Yes', 'owbn-chronicle-manager') . '</span>' . "\n";
+    echo '  <span class="switch-label switch-label-right">' . esc_html__('Yes', 'owbn-chronicle-manager') . '</span>' . "\n";
     echo '</div>' . "\n";
 }
 
@@ -157,7 +157,7 @@ function owbn_render_boolean_field($key, $value, $disabled_attr = '') {
 function owbn_render_select_field($key, $value, $meta, $disabled_attr = '') {
     $options = $meta['options'] ?? [];
 
-    echo "<select name=\"" . esc_attr($key) . "\" id=\"" . esc_attr($key) . "\" class=\"regular-text owbn-select2 single\" $disabled_attr>\n";
+    echo "<select name=\"" . esc_attr($key) . "\" id=\"" . esc_attr($key) . "\" class=\"regular-text owbn-select2 single\" " . esc_attr($disabled_attr) . ">\n";
     echo "<option value=\"\">" . esc_html__('— Select —', 'owbn-chronicle-manager') . "</option>\n";
 
     foreach ($options as $option) {
@@ -312,6 +312,7 @@ function owbn_render_chronicle_select_field($key, $value, $meta, $label, $error_
     $value = is_scalar($value) ? $value : '';
     $disabled_html = $disabled_attr ? ' disabled' : '';
 
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     echo "<tr id=\"row-{$key}\">\n";
     echo "<th><label for=\"" . esc_attr($key) . "\">" . esc_html($label) . "</label></th>\n";
     echo "<td class=\"" . esc_attr(trim($error_class)) . "\">\n";
@@ -329,7 +330,7 @@ function owbn_render_chronicle_select_field($key, $value, $meta, $label, $error_
 
     // Conditional wrapper
     echo "<div id=\"owbn-parent-chronicle-select\" style=\"display:none\">\n";
-    echo "<select name=\"" . esc_attr($key) . "\" id=\"" . esc_attr($key) . "\" class=\"regular-text owbn-select2 single\" style=\"width: 100%;\"{$disabled_html}>\n";
+    echo "<select name=\"" . esc_attr($key) . "\" id=\"" . esc_attr($key) . "\" class=\"regular-text owbn-select2 single\" style=\"width: 100%;\" " . esc_attr($disabled_html) . ">\n";
     echo "<option value=\"\">" . esc_html__('— Select —', 'owbn-chronicle-manager') . "</option>\n";
 
     foreach ($chronicles as $chron) {

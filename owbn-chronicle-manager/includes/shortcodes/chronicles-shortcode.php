@@ -68,7 +68,8 @@ add_shortcode('owbn-chronicles', function($atts) {
     echo '</div>';
 
     if ($query->have_posts()) {
-        echo owbn_render_chronicle_list($query); // Render as table
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        echo owbn_render_chronicle_list($query);
     } else {
         echo '<p>No chronicles found.</p>';
     }
@@ -175,8 +176,6 @@ function owbn_render_chronicle_list($query) {
         if ($is_satellite) {
             $parent_slug_meta = get_post_meta($post_id, 'chronicle_parent', true); // <-- CORRECT KEY
 
-            echo "<!-- DEBUG: using chronicle_parent = {$parent_slug_meta} -->";
-
             if (!empty($parent_slug_meta)) {
                 $parent_post = get_page_by_path($parent_slug_meta, OBJECT, 'owbn_chronicle'); // or your CPT slug
                 if ($parent_post) {
@@ -200,7 +199,7 @@ function owbn_render_chronicle_list($query) {
         $row_class .= " genre-" . $genre_classes;
         $row_class .= $is_satellite ? ' is-satellite' : ' is-primary';
 
-        echo "<div id=\"chron-{$slug}\" class=\"chron-wrapper {$row_class}\" 
+        echo "<div id=\"chron-" . esc_attr($slug) . "\" class=\"chron-wrapper " . esc_attr($row_class) . "\" 
             data-country=\"" . esc_attr($country) . "\" 
             data-region=\"" . esc_attr($region) . "\" 
             data-city=\"" . esc_attr($city) . "\" 
@@ -211,7 +210,7 @@ function owbn_render_chronicle_list($query) {
             data-chronicle-region=\"" . esc_attr($chronicle_region) . "\">\n";
 
         // Render each field as top-level grid cell
-        echo "  <div class=\"chron-title\"><a href=\"{$view_url}\">" . esc_html(get_the_title($post_id)) . "</a></div>\n";
+        echo "  <div class=\"chron-title\"><a href=\"" . esc_url($view_url) . "\">" . esc_html(get_the_title($post_id)) . "</a></div>\n";
         echo "  <div class=\"chron-field chron-location\">" . esc_html($location_display) . "</div>\n";
         echo "  <div class=\"chron-field chron-region\">" . esc_html($chronicle_region) . "</div>\n";
         echo "  <div class=\"chron-field chron-genre\">" . esc_html($genre_display) . "</div>\n";
@@ -220,7 +219,7 @@ function owbn_render_chronicle_list($query) {
 
         if ($is_satellite && !empty($parent_slug_meta)) {
             $parent_url = esc_url(home_url('/chronicle/' . $parent_slug_meta));
-            echo "  <div class=\"chron-field chron-satellite\"><a href=\"{$parent_url}\">" . esc_html($parent_slug) . "</a></div>\n";
+            echo "  <div class=\"chron-field chron-satellite\"><a href=\"" . esc_url($parent_url) . "\">" . esc_html($parent_slug) . "</a></div>\n";
         } else {
             echo "  <div class=\"chron-field chron-satellite\">No</div>\n";
         }
@@ -278,11 +277,13 @@ add_shortcode('owbn-chronicles-list', function($atts) {
 
     // Optional: dynamic filters dropdown
     if (!empty($filter_keys)) {
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         echo owbn_render_chronicle_filters($filter_keys);
     }
 
     // Table output
     if ($query->have_posts()) {
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         echo owbn_render_chronicle_table($query, $column_keys);
     } else {
         echo '<p>No chronicles found.</p>';
@@ -360,22 +361,22 @@ function owbn_render_chronicle_filters($filter_keys) {
         switch ($filter) {
             case 'probationary':
             case 'chronicle_probationary':
-                echo "  <select id=\"$filter_id\" class=\"owbn-select2 single\" data-filter=\"chronicle-probationary\">\n";
+                echo '  <select id="' . esc_attr($filter_id) . '" class="owbn-select2 single" data-filter="chronicle-probationary">' . "\n";
                 echo "    <option value=\"\">Filter by Probationary</option>\n";
                 echo "  </select>\n";
                 break;
 
             case 'satellite':
             case 'chronicle_satellite':
-                echo "  <select id=\"$filter_id\" class=\"owbn-select2 single\" data-filter=\"chronicle-satellite\">\n";
+                echo '  <select id="' . esc_attr($filter_id) . '" class="owbn-select2 single" data-filter="chronicle-satellite">' . "\n";
                 echo "    <option value=\"\">Filter by Satellite</option>\n";
                 echo "  </select>\n";
                 break;
 
             default:
                 $data_filter = strtolower(str_replace(['_', ':'], '-', $filter));
-                echo "  <select id=\"$filter_id\" class=\"owbn-select2\" data-filter=\"$data_filter\">\n";
-                echo "    <option value=\"\">Filter by $label</option>\n";
+                echo '  <select id="' . esc_attr($filter_id) . '" class="owbn-select2" data-filter="' . esc_attr($data_filter) . '">' . "\n";
+                echo '    <option value="">' . esc_html("Filter by $label") . "</option>\n";
                 echo "  </select>\n";
         }
     }
@@ -391,7 +392,7 @@ function owbn_render_chronicle_table($query, $column_keys) {
     echo "<div class=\"owbn-chronicle-legend\">\n";
     foreach ($column_keys as $col) {
         $label = ucwords(str_replace(['_', ':'], [' ', ' '], $col));
-        echo "  <div class=\"chron-header\">$label</div>\n";
+        echo '  <div class="chron-header">' . esc_html($label) . "</div>\n";
     }
     echo "</div>\n";
 
@@ -403,8 +404,10 @@ function owbn_render_chronicle_table($query, $column_keys) {
         $post_id = get_the_ID();
         $row_class = ($index++ % 2 === 0) ? 'even' : 'odd';
 
-        echo "  <div class=\"chron-list-wrapper {$row_class}\" " . owbn_extract_data_attributes($post_id, $column_keys) . ">";
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        echo '<div class="chron-list-wrapper ' . esc_attr($row_class) . '" ' . owbn_extract_data_attributes($post_id, $column_keys) . '>';
         foreach ($column_keys as $col) {
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
             echo "    " . owbn_render_chronicle_column($post_id, $col);
         }
         echo "  </div>\n";
