@@ -7,17 +7,27 @@ function owbn_render_options_page() {
     if (!current_user_can('manage_options')) return;
 
     // Process Genre form submission
-    if (isset($_POST['owbn_genres_nonce']) && wp_verify_nonce($_POST['owbn_genres_nonce'], 'save_owbn_genres')) {
-        $raw = stripslashes($_POST['owbn_genres'] ?? '');
-        $lines = array_filter(array_map('trim', explode("\n", $raw)));
+    if (
+        isset($_POST['owbn_genres_nonce']) &&
+        wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['owbn_genres_nonce'])), 'save_owbn_genres')
+    ) {
+        $lines = array_filter(array_map(
+            'sanitize_text_field',
+            array_map('trim', explode("\n", sanitize_textarea_field(wp_unslash($_POST['owbn_genres'] ?? ''))))
+        ));
         update_option('owbn_genre_list', $lines);
         echo '<div class="updated notice is-dismissible"><p>' . esc_html__('Genres updated.', 'owbn-chronicle-manager') . '</p></div>' . "\n";
     }
 
     // Process Region form submission
-    if (isset($_POST['owbn_regions_nonce']) && wp_verify_nonce($_POST['owbn_regions_nonce'], 'save_owbn_regions')) {
-        $raw = stripslashes($_POST['owbn_regions'] ?? '');
-        $lines = array_filter(array_map('trim', explode("\n", $raw)));
+    if (
+        isset($_POST['owbn_regions_nonce']) &&
+        wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['owbn_regions_nonce'])), 'save_owbn_regions')
+    ) {
+        $lines = array_filter(array_map(
+            'sanitize_text_field',
+            array_map('trim', explode("\n", sanitize_textarea_field(wp_unslash($_POST['owbn_regions'] ?? ''))))
+        ));
         update_option('owbn_region_list', $lines);
         echo '<div class="updated notice is-dismissible"><p>' . esc_html__('Regions updated.', 'owbn-chronicle-manager') . '</p></div>' . "\n";
     }

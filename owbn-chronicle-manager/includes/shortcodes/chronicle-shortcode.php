@@ -40,9 +40,9 @@ add_shortcode('owbn-chronicle-meta', function($atts) {
     $plug = $atts['plug'];
 
     if (empty($plug)) {
-        $uri = $_SERVER['REQUEST_URI'] ?? '';
+        $uri = isset($_SERVER['REQUEST_URI']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])) : '';
         if (preg_match('#/chronicles/([^/]+)/?#', $uri, $matches)) {
-            $plug = sanitize_title($matches[1]);
+            $plug = sanitize_title($matches[1]); // already matched slug
         }
     }
 
@@ -72,8 +72,8 @@ add_shortcode('owbn-chronicle-meta', function($atts) {
         'chronicle_slug'    => 'owbn_render_chronicle_slug',
         'hst_info'          => 'owbn_render_hst_info',
         'cm_info'           => 'owbn_render_cm_info',
-        'ast_list'          => 'owbn_render_ast_list',
         'ooc_locations'     => 'owbn_render_ooc_locations',
+        'ast_list'          => 'owbn_render_ast_list',
         'ic_location_list'  => 'owbn_render_ic_location_list',
         'game_site_list'    => 'owbn_render_game_site_list',
         'document_links'    => 'owbn_render_document_links',
@@ -183,6 +183,29 @@ function owbn_chronicle_output_simple_meta($post, $term) {
                 : '-';
             break;
 
+        case 'ast_list':
+            $value = get_post_meta($post->ID, 'ast_list', true); // ← ADD THIS LINE
+            $output .= '<ul>';
+
+            foreach ((array) $value as $person) {
+                $display_name  = $person['display_name'] ?? '';
+                $display_email = $person['display_email'] ?? '';
+
+                if ($display_name || $display_email) {
+                    $output .= '<li>';
+                    if ($display_name) {
+                        $output .= esc_html($display_name);
+                    }
+                    if ($display_email) {
+                        $output .= ' &lt;' . antispambot(esc_html($display_email)) . '&gt;';
+                    }
+                    $output .= '</li>';
+                }
+            }
+
+            $output .= '</ul>';
+            break;
+
         default:
             $definitions = function_exists('owbn_get_chronicle_field_definitions')
                 ? owbn_get_chronicle_field_definitions()
@@ -249,7 +272,7 @@ function owbn_render_session_list($post) {
     echo "<div class=\"owbn-chronicle-session-list\">\n";
 
     foreach ($session_list as $index => $session) {
-        echo "  <div class=\"chronicle-session-block chronicle-session-{$index} elementor-widget-container\">\n";
+        echo '  <div class="chronicle-session-block chronicle-session-' . esc_attr($index) . " elementor-widget-container\">\n";
 
         // Session Type
         if (!empty($session['session_type'])) {
@@ -286,7 +309,7 @@ function owbn_render_session_list($post) {
         if (!empty($session['genres'])) {
             $genres = is_array($session['genres']) ? $session['genres'] : explode(',', $session['genres']);
             $clean_genres = implode(', ', array_map('esc_html', array_filter(array_map('trim', $genres))));
-            echo "    <div class=\"chronicle-session-genres\"><strong>Genres:</strong> {$clean_genres}</div>\n";
+            echo '    <div class="chronicle-session-genres"><strong>Genres:</strong> ' . esc_html($clean_genres) . "</div>\n";
         }
 
         echo "  </div>\n";
@@ -366,41 +389,42 @@ function owbn_render_cm_info($post) {
 
 function owbn_render_ast_list($post) {
     if (!$post instanceof WP_Post) {
-        return '';
+        return '<!-- Post is not a WP_Post -->';
     }
 
     $ast_list = get_post_meta($post->ID, 'ast_list', true);
 
-    if (!is_array($ast_list) || empty($ast_list)) {
-        return "<div class=\"owbn-chronicle-ast-list-empty elementor-widget-container\">\n" .
-               "  <p>No ASTs listed.</p>\n" .
-               "</div>\n";
+    ob_start();
+
+
+    if (empty($ast_list)) {
+        echo "<div class=\"owbn-chronicle-ast-list-empty elementor-widget-container\">\n";
+        echo "  <p>No ASTs listed.</p>\n";
+        echo "</div>\n";
+        return ob_get_clean();
     }
 
-    ob_start();
     echo "<div class=\"owbn-chronicle-meta-ast_list\">\n";
     echo "  <div class=\"elementor-widget-container chronicle-ast-list-group\">\n";
 
     foreach ($ast_list as $index => $ast) {
         $name  = trim($ast['display_name'] ?? '');
-        $email = trim($ast['display_email'] ?? ''); // only use display_email
+        $email = trim($ast['display_email'] ?? '');
         $role  = trim($ast['role'] ?? '');
 
         if (!empty($name)) {
-            echo "    <div class=\"chron-ast-entry chron-ast-{$index}\">\n";
+            echo '    <div class="chron-ast-entry chron-ast-' . esc_attr($index) . "\">\n";
             echo "      ";
-
             if (!empty($role)) {
                 echo esc_html($role) . ' ';
             }
-
             if (!empty($email)) {
-                echo "<a href=\"mailto:" . esc_attr($email) . "\" class=\"chron-ast-email-link\">" . esc_html($name) . "</a>\n";
+                echo '<a href="mailto:' . esc_attr($email) . '" class="chron-ast-email-link">' . esc_html($name) . "</a>\n";
             } else {
                 echo esc_html($name) . "\n";
             }
-
             echo "    </div>\n";
+        } else {
         }
     }
 
@@ -442,7 +466,7 @@ function owbn_render_ooc_locations($post) {
     // Output location line if any parts exist
     if (!empty($parts)) {
         echo "    <div class=\"chron-location-line elementor-heading-title elementor-size-default\">\n";
-        echo "      " . implode(', ', $parts) . "\n";
+        echo "      " . esc_html(implode(', ', $parts)) . "\n";
         echo "    </div>\n";
     }
 
@@ -475,7 +499,7 @@ function owbn_render_ic_location_list($post) {
     echo "<div class=\"owbn-chronicle-meta-ic_location_list\">\n";
 
     foreach ($locations as $index => $location) {
-        echo "  <div class=\"owbn-chronicle-meta-ic_location_list-entry chronicle-ic-location-{$index} elementor-widget-container\">\n";
+        echo '  <div class="owbn-chronicle-meta-ic_location_list-entry chronicle-ic-location-' . esc_attr($index) . " elementor-widget-container\">\n";
 
         // Name Line
         if (!empty($location['name'])) {
@@ -502,7 +526,7 @@ function owbn_render_ic_location_list($post) {
 
         if ($location_line) {
             echo "    <div class=\"location-field location-summary\">\n";
-            echo "      $location_line\n";
+            echo '      ' . esc_html($location_line) . "\n";
             echo "    </div>\n";
         }
 
@@ -533,7 +557,7 @@ function owbn_render_game_site_list($post) {
         $online = !empty($site['online']) || !empty($site['online_only']);
         $url = !empty($site['url']) ? esc_url($site['url']) : '';
 
-        echo "  <div class=\"owbn-chronicle-meta-game_site_list-entry chronicle-game-site-{$index} elementor-widget-container\" style=\"margin-bottom: 1.5em;\">\n";
+        echo '  <div class="owbn-chronicle-meta-game_site_list-entry chronicle-game-site-' . esc_attr($index) . ' elementor-widget-container" style="margin-bottom: 1.5em;">' . "\n";
 
         // ---- Site Name (always shown) ----
         if (!empty($site['name'])) {
@@ -552,7 +576,7 @@ function owbn_render_game_site_list($post) {
         // ---- Online site: just show URL ----
         if ($online && $url) {
             echo "    <div class=\"site-field site-url\">\n";
-            echo "      <a href=\"{$url}\" target=\"_blank\" rel=\"noopener noreferrer\">{$url}</a>\n";
+            echo '      <a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html($url) . "</a>\n";
             echo "    </div>\n";
         }
         // ---- Physical site: address block ----
@@ -571,10 +595,10 @@ function owbn_render_game_site_list($post) {
             if (!empty($address) || !empty($final_line)) {
                 echo "    <div class=\"site-field site-address\">\n";
                 if ($address) {
-                    echo "      {$address}<br />\n";
+                    echo '      ' . esc_html($address) . "<br />\n";
                 }
                 if ($final_line) {
-                    echo "      {$final_line}\n";
+                    echo '      ' . esc_html($final_line) . "\n";
                 }
                 echo "    </div>\n";
             }
@@ -636,7 +660,7 @@ function owbn_render_document_links($post) {
         }
 
         if (!empty($doc_title) && !empty($url)) {
-            echo "  <div class=\"chronicle-document-entry chronicle-document-{$index} elementor-widget-container\">\n";
+            echo '  <div class="chronicle-document-entry chronicle-document-' . esc_attr($index) . " elementor-widget-container\">\n";
             echo "    <a href=\"" . esc_url($url) . "\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"chronicle-document-link\">\n";
             echo "      <i class=\"" . esc_attr($icon) . "\" style=\"margin-right: 0.5rem;\"></i> " . esc_html($doc_title) . "\n";
             echo "    </a>\n";
@@ -688,7 +712,7 @@ function owbn_render_social_urls($post) {
         if (!empty($platform) && !empty($url)) {
             $icon_class = $platform_icons[$platform] ?? 'fas fa-globe';
 
-            echo "    <a href=\"" . esc_url($url) . "\" class=\"chronicle-social-link chronicle-social-{$platform}\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"margin-right: 0.75rem; display: inline-block;\">\n";
+            echo '    <a href="' . esc_url($url) . '" class="chronicle-social-link chronicle-social-' . esc_attr($platform) . '" target="_blank" rel="noopener noreferrer" style="margin-right: 0.75rem; display: inline-block;">' . "\n";
             echo "      <i class=\"" . esc_attr($icon_class) . "\" aria-hidden=\"true\"></i><span class=\"screen-reader-text\">" . esc_html(ucfirst($platform)) . "</span>\n";
             echo "    </a>\n";
         }
@@ -722,7 +746,7 @@ function owbn_render_email_lists($post) {
         $desc = trim($entry['description'] ?? '');
 
         if (!empty($name) && !empty($email)) {
-            echo "    <div class=\"chron-email-entry chron-email-{$index}\">\n";
+            echo '    <div class="chron-email-entry chron-email-' . esc_attr($index) . "\">\n";
             echo "      <a href=\"mailto:" . esc_attr($email) . "\" class=\"email-list-link\" style=\"margin-right: 0.5rem; display: inline-block;\">\n";
             echo "        <i class=\"fa-solid fa-envelope\" aria-hidden=\"true\"></i> <span class=\"email-list-name\">" . esc_html($name) . "</span>\n";
             echo "      </a>\n";
@@ -774,7 +798,6 @@ function owbn_render_chronicle_status($post) {
     // Wrap each line in a div for spacing
     return implode("<br />\n", array_map('wp_kses_post', $lines));
 }
-
 
 function owbn_chronicle_output_wrapper($term, $content, $show_label = true) {
     if (empty(trim($content))) return ''; // Skip rendering if content is empty
@@ -835,3 +858,10 @@ function owbn_chronicle_output_wrapper($term, $content, $show_label = true) {
         $content
     );
 }
+
+add_shortcode('owbn_meta_dump', function () {
+    global $post;
+    $all_meta = get_post_meta($post->ID);
+    // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
+    return '<pre>' . esc_html(print_r($all_meta, true)) . '</pre>';
+});

@@ -9,11 +9,13 @@ function owbn_render_document_links_field($key, $value, $meta) {
     echo '<div class="owbn-repeatable-group" data-key="' . esc_attr($key) . '">' . "\n";
 
     foreach ($groups as $i => $group) {
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         echo render_document_link_block($key, $i, $group);
     }
 
     // Template block (hidden)
     echo '<template class="owbn-document-template">';
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     echo render_document_link_block($key, '__INDEX__', []);
     echo '</template>';
 
@@ -51,10 +53,11 @@ function render_document_link_block($key, $index, $group) {
                 <div class="owbn-document-row">
                     <label>Title (required)</label><br>
                     <input type="text"
-                           name="<?php echo esc_attr("{$key}[{$index}][title]"); ?>"
-                           value="<?php echo esc_attr($title); ?>"
-                           class="regular-text"
-                           <?php echo $required_attr . $disabled_attr; ?>>
+                            name="<?php echo esc_attr("{$key}[{$index}][title]"); ?>"
+                            value="<?php echo esc_attr($title); ?>"
+                            class="regular-text"
+                            <?php echo $required_attr ? esc_attr($required_attr) : ''; ?>
+                            <?php echo $disabled_attr ? esc_attr($disabled_attr) : ''; ?>>
                 </div>
 
                 <div class="owbn-document-row">
@@ -63,14 +66,14 @@ function render_document_link_block($key, $index, $group) {
                            name="<?php echo esc_attr("{$key}[{$index}][link]"); ?>"
                            value="<?php echo esc_url($link); ?>"
                            class="regular-text"
-                           <?php echo $disabled_attr; ?>>
+                           <?php echo esc_attr($disabled_attr); ?>>
                 </div>
 
                 <div class="owbn-document-row">
                     <label>Upload File</label><br>
                     <input type="file"
                            name="<?php echo esc_attr("{$key}[{$index}][upload]"); ?>"
-                           <?php echo $disabled_attr; ?>>
+                           <?php echo esc_attr($disabled_attr); ?>>
                     <?php if ($file_url): ?>
                         <p><a href="<?php echo esc_url($file_url); ?>" target="_blank">Current file</a></p>
                     <?php endif; ?>
@@ -93,11 +96,13 @@ function owbn_render_social_links_field($key, $value, $meta) {
     echo '<div class="owbn-repeatable-group" data-key="' . esc_attr($key) . '">' . "\n";
 
     foreach ($groups as $i => $group) {
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         echo render_social_link_block($key, $i, $group);
     }
 
     // Template block (hidden)
     echo '<div class="owbn-social-template" style="display:none;">';
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     echo render_social_link_block($key, '__INDEX__', []);
     echo '</div>';
 
@@ -161,11 +166,13 @@ function owbn_render_email_lists_field($key, $value, $meta) {
     echo '<div class="owbn-repeatable-group" data-key="' . esc_attr($key) . '">' . "\n";
 
     foreach ($groups as $i => $group) {
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         echo render_email_list_block($key, $i, $group, $subfields);
     }
 
     // Hidden template
     echo '<div class="owbn-email-template" style="display:none;">';
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     echo render_email_list_block($key, '__INDEX__', [], $subfields);
     echo '</div>';
 
@@ -202,15 +209,20 @@ function render_email_list_block($key, $index, $group, $subfields) {
                     <input type="text"
                            name="<?php echo esc_attr("{$key}[{$index}][list_name]"); ?>"
                            value="<?php echo esc_attr($list_name); ?>"
-                           <?php echo $required_attr . $disabled_attr; ?>>
+                           <input type="text"
+                                name="<?php echo esc_attr("{$key}[{$index}][title]"); ?>"
+                                value="<?php echo esc_attr($title); ?>"
+                                class="regular-text"
+                                <?php echo $required_attr ? esc_attr($required_attr) : ''; ?>
+                                <?php echo $disabled_attr ? esc_attr($disabled_attr) : ''; ?>>
                 </div>
 
                 <div class="owbn-email-field">
                     <label><?php echo esc_html($subfields['email_address']['label']); ?></label><br>
                     <input type="email"
-                           name="<?php echo esc_attr("{$key}[{$index}][email_address]"); ?>"
-                           value="<?php echo esc_attr($email); ?>"
-                           <?php echo $disabled_attr; ?>>
+                        name="<?php echo esc_attr("{$key}[{$index}][email_address]"); ?>"
+                        value="<?php echo esc_attr($email); ?>"
+                        <?php echo esc_attr($disabled_attr); ?>>
                 </div>
             </div>
 

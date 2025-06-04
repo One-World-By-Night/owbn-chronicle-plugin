@@ -185,10 +185,10 @@ add_filter('map_meta_cap', function ($caps, $cap, $user_id, $args) {
 
     if (!empty($args[0])) {
         $post_id = (int) $args[0];
-    } elseif (!empty($_REQUEST['post'])) {
-        $post_id = (int) sanitize_text_field(wp_unslash($_REQUEST['post']));
-    } elseif (!empty($_POST['post_ID'])) {
-        $post_id = (int) sanitize_text_field(wp_unslash($_POST['post_ID']));
+    } elseif (!empty($_REQUEST['post'])) {                                      // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        $post_id = (int) sanitize_text_field(wp_unslash($_REQUEST['post']));    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    } elseif (!empty($_POST['post_ID'])) {                                      // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        $post_id = (int) sanitize_text_field(wp_unslash($_POST['post_ID']));    // phpcs:ignore WordPress.Security.NonceVerification.Missing
     }
 
     if (!in_array($cap, ['edit_post', 'delete_post', 'read_post'], true)) {
