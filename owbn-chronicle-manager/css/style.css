@@ -468,3 +468,47 @@ button.add-email-list:hover {
 .owbn-boolean-switch input:checked + .slider::before {
   transform: translateX(20px);
 }
+
+.owbn-user-info-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.owbn-user-info-field {
+  flex: 1 1 45%;
+  min-width: 240px;
+}
+
+.owbn-user-info-field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.owbn-user-info-field input[type="text"],
+.owbn-user-info-field input[type="email"],
+.owbn-user-info-field select {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.owbn-ast-block {
+  border: 1px solid #ddd;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 6px;
+  background-color: #fafafa;
+}
+
+.owbn-remove-ast {
+  margin-top: 0.5rem;
+}
