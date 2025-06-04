@@ -401,15 +401,20 @@ add_action('init', function () {
             'Vampire - Camarilla',
             'Vampire - Sabbat',
             'Vampire - Giovanni',
+            'Vampire - Independent',
             'Vampire - Clan Specific',
-            'Changeling',
-            'Changing Breeds',
+            'Changeling - Seelie',
+            'Changeling -  Unseelie',
+            'Changing Breeds - Garou',
+            'Changing Breeds - Hengeyokai',
+            'Changing Breeds - Other',
             'Demon',
             'Hunter',
             'Kuei-Jin',
-            'Mage',
+            'Mage - Traditions',
+            'Mage - Technocracy',
+            'Wraith',
             'Other',
-            'Wraith'
         ));
     }
 });
