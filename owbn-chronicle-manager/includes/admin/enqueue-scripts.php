@@ -18,7 +18,7 @@ function owbn_enqueue_admin_assets($hook) {
         'owbn-chronicle-style',
         plugin_dir_url(dirname(__FILE__, 2)) . 'css/style.css',
         [],
-        '1.0.0'
+        filemtime(plugin_dir_path(dirname(__FILE__, 2)) . 'css/style.css')
     );
 
     wp_enqueue_style(
@@ -52,7 +52,7 @@ function owbn_enqueue_plugin_assets() {
         'owbn-chronicle-style',
         plugin_dir_url(dirname(__FILE__, 2)) . 'css/style.css',
         [],
-        '1.0.0'
+        filemtime(plugin_dir_path(dirname(__FILE__, 2)) . 'css/style.css')
     );
 
     wp_enqueue_style(
