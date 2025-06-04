@@ -21,7 +21,6 @@ function owbn_render_location_group($key, $value, $meta) {
         $region  = $group['region'] ?? '';
         $country = $group['country'] ?? '';
         $online  = !empty($group['online_only']) ? __('(Online Only)', 'owbn-chronicle-manager') : '';
-        $online = !empty($group['online']) || !empty($group['online_only']);
 
         $location_parts = array_filter([$city, $region, $country]);
         $header = esc_html($name);
@@ -54,6 +53,8 @@ function owbn_render_location_group($key, $value, $meta) {
             render_location_field($key, $i, 'url', $subfields['url'], $group['url'] ?? '');
         }
         echo '</div>' . "\n";
+
+        $online = !empty($group['online']) || !empty($group['online_only']);
 
         // Conditionally render location fields if not online-only
         if (!$online) {
