@@ -8,6 +8,7 @@ Requires PHP: 7.4
 Stable tag: 1.1.82
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
+OWBN Chronicle management tool for updating and maintaining chronicles in the organization.
 
 ## Purpose
 
@@ -50,7 +51,6 @@ These are saved under single meta keys and parsed/rendered accordingly.
 
 **Nested Fields (stored as objects):**
 
-- **ooc_locations**: One or more locations with city/state/country and geocode  
 - **ic_location_list**: In-character locations (multi-record)  
 - **game_site_list**: Combined physical and virtual game sites  
 - **session_list**: Repeatable session entries with type, date, frequency, genres  
@@ -68,6 +68,7 @@ These are saved under single meta keys and parsed/rendered accordingly.
 - **hst_user**, **hst_display_name**, **hst_email**: HST data  
 - **cm_user**, **cm_display_name**, **cm_email**: CM data (if not a satellite)  
 - **hst_selection**, **cm_selection**, **ast_selection**: How each was selected  
+- **ooc_location**: Where a game is portrayed for OOC tracability  
 - **chronicle_start_date**: ISO date  
 - **chronicle_region**: Region name  
 - **chronicle_probationary**, **chronicle_satellite**: Boolean (yes/no)  
