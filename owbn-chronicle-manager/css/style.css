@@ -201,3 +201,270 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* === REPEATABLE GROUP BLOCK STYLING === */
+.owbn-repeatable-group {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  border: 1px solid #ccc;
+  background: #fdfdfd;
+  border-radius: 8px;
+}
+
+.owbn-repeatable-group > .owbn-location-block,
+.owbn-repeatable-group > .owbn-document-block,
+.owbn-repeatable-group > .owbn-social-block,
+.owbn-repeatable-group > .owbn-email-block {
+  margin-bottom: 1rem;
+  border: 1px solid #e1e1e1;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* === BLOCK HEADER === */
+.owbn-location-header,
+.owbn-document-header,
+.owbn-social-header,
+.owbn-email-header {
+  background: #efefef;
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ccc;
+}
+
+.owbn-location-header strong,
+.owbn-document-header strong,
+.owbn-social-header strong,
+.owbn-email-header strong {
+  font-size: 1.1em;
+  color: #333;
+}
+
+/* === BODY WRAPPERS === */
+.owbn-location-body,
+.owbn-document-body,
+.owbn-social-body,
+.owbn-email-body {
+  padding: 1rem;
+  background: #fafafa;
+}
+
+/* === FIELDS + ROWS === */
+.owbn-location-row,
+.owbn-document-row,
+.owbn-social-row,
+.owbn-email-row,
+.owbn-email-row-full {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.owbn-location-field,
+.owbn-document-row,
+.owbn-social-row,
+.owbn-email-field {
+  flex: 1;
+  min-width: 220px;
+}
+
+.owbn-location-field label,
+.owbn-document-row label,
+.owbn-social-row label,
+.owbn-email-field label {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  display: inline-block;
+}
+
+/* === ADD / REMOVE BUTTONS === */
+.owbn-repeatable-group button.button {
+  margin-top: 0.5rem;
+  margin-right: 0.5rem;
+}
+
+button.remove-location,
+button.remove-document-link,
+button.remove-social-link,
+button.remove-email-list {
+  background-color: #d63638;
+  color: #fff;
+  border-color: #d63638;
+}
+
+button.remove-location:hover,
+button.remove-document-link:hover,
+button.remove-social-link:hover,
+button.remove-email-list:hover {
+  background-color: #a51c1c;
+  border-color: #a51c1c;
+}
+
+button.add-location,
+button.add-document-link,
+button.add-social-link,
+button.add-email-list {
+  background-color: #0073aa;
+  color: #fff;
+  border-color: #0073aa;
+}
+
+button.add-location:hover,
+button.add-document-link:hover,
+button.add-social-link:hover,
+button.add-email-list:hover {
+  background-color: #005177;
+  border-color: #005177;
+}
+
+/* === BOOLEAN SWITCH === */
+.owbn-boolean-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.owbn-boolean-switch .switch-label {
+  font-size: 0.85em;
+  color: #555;
+}
+
+.owbn-boolean-switch .switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+}
+
+.owbn-boolean-switch .switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.owbn-boolean-switch .slider {
+  position: absolute;
+  cursor: pointer;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 34px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.owbn-boolean-switch .slider::before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+.owbn-boolean-switch input:checked + .slider {
+  background-color: #0073aa;
+}
+
+.owbn-boolean-switch input:checked + .slider::before {
+  transform: translateX(20px);
+}
+
+/* === FLEXIBLE GRID ROW FOR INPUT GROUPS === */
+.owbn-location-row,
+.owbn-document-row-wrap,
+.owbn-social-row-wrap,
+.owbn-email-row,
+.owbn-email-row-full {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+/* === FIELD CONTAINERS === */
+.owbn-location-field,
+.owbn-document-row,
+.owbn-social-row,
+.owbn-email-field {
+  display: flex;
+  flex-direction: column;
+}
+
+/* === LABELS === */
+.owbn-location-field label,
+.owbn-document-row label,
+.owbn-social-row label,
+.owbn-email-field label {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: #333;
+}
+
+/* === INPUT WIDTH CONTROL === */
+.owbn-location-field input[type="text"],
+.owbn-location-field input[type="url"],
+.owbn-location-field select,
+.owbn-document-row input,
+.owbn-social-row input,
+.owbn-social-row select,
+.owbn-email-field input,
+.owbn-email-field textarea {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* === BOOLEAN SWITCH (TOGGLE) === */
+.owbn-boolean-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.owbn-boolean-switch .switch {
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 22px;
+}
+
+.owbn-boolean-switch .slider {
+  position: absolute;
+  cursor: pointer;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 34px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.owbn-boolean-switch .slider::before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+.owbn-boolean-switch input:checked + .slider {
+  background-color: #0073aa;
+}
+
+.owbn-boolean-switch input:checked + .slider::before {
+  transform: translateX(20px);
+}
