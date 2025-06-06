@@ -114,6 +114,7 @@ function owbn_api_get_chronicle_detail($request) {
         'id' => $post_id,
         'title' => wp_kses_post(get_the_title($post_id)),
         'slug' => $slug,
+        'content' => wp_kses_post(get_post_field('post_content', $post_id)),
     ];
 
     foreach ($all_fields as $section => $fields) {
