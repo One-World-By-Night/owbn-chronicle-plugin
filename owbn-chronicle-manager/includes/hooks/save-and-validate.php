@@ -362,7 +362,12 @@ function owbn_save_chronicle_meta($post_id) {
                     break;
                     
                 case 'chronicle_select':
-                    update_post_meta($post_id, $key, sanitize_text_field($raw));
+                    $parent_id = intval($raw);
+                    if ($parent_id > 0 && get_post_type($parent_id) === 'owbn_chronicle') {
+                        update_post_meta($post_id, $key, $parent_id);
+                    } else {
+                        delete_post_meta($post_id, $key);
+                    }
                     break;
 
                 case 'boolean':
