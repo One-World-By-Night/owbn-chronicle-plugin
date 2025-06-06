@@ -118,12 +118,32 @@ function owbn_api_get_chronicle_detail($request) {
 
     foreach ($all_fields as $section => $fields) {
         foreach ($fields as $key => $definition) {
-            $value = get_post_meta($post_id, $key, true);
+            $raw_value = get_post_meta($post_id, $key, true);
+            $value = null;
 
-            if (in_array($key, ['hst_info', 'cm_info', 'ast_list', 'admin_contact'], true)) {
-                $value = owbn_filter_personnel_list($value);
-            } elseif (is_string($value)) {
-                $value = wp_kses_post($value);
+            if ($key === 'chronicle_parent' && is_numeric($raw_value)) {
+                $parent_id = intval($raw_value);
+                $parent_slug = get_post_meta($parent_id, 'chronicle_slug', true);
+                $parent_title = get_the_title($parent_id);
+
+                if ($parent_slug && $parent_title) {
+                    $value = "[{$parent_slug}] {$parent_title}";
+                } elseif ($parent_title) {
+                    $value = $parent_title;
+                } else {
+                    $value = null;
+                }
+
+                $output['chronicle_parent_id'] = $parent_id;
+
+            } elseif (in_array($key, ['hst_info', 'cm_info', 'ast_list', 'admin_contact'], true)) {
+                $value = owbn_filter_personnel_list($raw_value);
+
+            } elseif (is_array($raw_value)) {
+                $value = owbn_strip_wysiwyg_subfields($raw_value, $definition);
+
+            } elseif (is_string($raw_value) && strlen(trim($raw_value)) > 0) {
+                $value = wp_kses_post($raw_value);
             }
 
             $output[$key] = $value ?? '';
@@ -137,9 +157,9 @@ function owbn_api_get_chronicle_detail($request) {
 function owbn_format_chronicle_data($post_id) {
     $all_fields = owbn_get_chronicle_field_definitions();
     $output = [
-        'id' => $post_id,
+        'id'   => $post_id,
         'title' => wp_kses_post(get_the_title($post_id)),
-        'slug' => get_post_meta($post_id, 'chronicle_slug', true) ?: null,
+        'slug'  => get_post_meta($post_id, 'chronicle_slug', true) ?: null,
     ];
 
     foreach ($all_fields as $section => $fields) {
@@ -151,10 +171,26 @@ function owbn_format_chronicle_data($post_id) {
             $raw_value = get_post_meta($post_id, $key, true);
             $value = null;
 
-            if (in_array($key, ['hst_info', 'cm_info', 'ast_list', 'admin_contact'], true)) {
+            if ($key === 'chronicle_parent' && is_numeric($raw_value)) {
+                $parent_id = intval($raw_value);
+                $parent_slug = get_post_meta($parent_id, 'chronicle_slug', true);
+                $parent_title = get_the_title($parent_id);
+
+                if ($parent_slug && $parent_title) {
+                    $value = "[{$parent_slug}] {$parent_title}";
+                } elseif ($parent_title) {
+                    $value = $parent_title;
+                }
+
+                // Include the raw parent post ID alongside
+                $output['chronicle_parent_id'] = $parent_id;
+
+            } elseif (in_array($key, ['hst_info', 'cm_info', 'ast_list', 'admin_contact'], true)) {
                 $value = owbn_filter_personnel_list($raw_value);
+
             } elseif (is_array($raw_value)) {
                 $value = owbn_strip_wysiwyg_subfields($raw_value, $definition);
+
             } elseif (is_string($raw_value) && strlen(trim($raw_value)) > 0) {
                 $value = wp_kses_post($raw_value);
             }

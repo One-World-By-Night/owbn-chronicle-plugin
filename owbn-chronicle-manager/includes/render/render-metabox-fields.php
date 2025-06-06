@@ -334,9 +334,9 @@ function owbn_render_chronicle_select_field($key, $value, $meta, $label, $error_
     echo "<option value=\"\">" . esc_html__('— Select —', 'owbn-chronicle-manager') . "</option>\n";
 
     foreach ($chronicles as $chron) {
-        $slug = $chron->post_name;
+        $id = $chron->ID;
         $title = $chron->post_title;
-        echo "<option value=\"" . esc_attr($slug) . "\" " . selected($value, $slug, false) . ">" . esc_html($title) . "</option>\n";
+        echo "<option value=\"" . esc_attr($id) . "\" " . selected($value, $id, false) . ">" . esc_html($title) . "</option>\n";
     }
 
     echo "</select>\n";
