@@ -471,7 +471,7 @@ function owbn_validate_chronicle_submission($postarr) {
             }
 
             if ($meta['type'] === 'slug') {
-                if (!preg_match('/^[a-z0-9]{2,6}$/', strtolower($raw_string))) {
+                if (!preg_match('/^[a-z0-9]{2,8}$/', strtolower($raw_string))) {
                     $errors[] = $key;
                 }
             }

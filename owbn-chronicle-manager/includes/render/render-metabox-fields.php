@@ -132,10 +132,10 @@ function owbn_render_slug_field($key, $value, $disabled_attr = '') {
     $disabled_html = $disabled_attr ? ' disabled' : '';
 
     echo "<input type=\"text\" class=\"regular-text\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\" " .
-        "minlength=\"2\" maxlength=\"6\" pattern=\"[a-z0-9]{2,6}\" " . esc_attr($disabled_html) . " " .
-        "placeholder=\"" . esc_attr__('2–6 lowercase alphanumeric characters', 'owbn-chronicle-manager') . "\">\n";
+        "minlength=\"2\" maxlength=\"6\" pattern=\"[a-z0-9]{2,8}\" " . esc_attr($disabled_html) . " " .
+        "placeholder=\"" . esc_attr__('2–8 lowercase alphanumeric characters', 'owbn-chronicle-manager') . "\">\n";
 
-    echo "<p class=\"description\">" . esc_html__('Allowed: lowercase letters and numbers, 2–6 characters.', 'owbn-chronicle-manager') . "</p>\n";
+    echo "<p class=\"description\">" . esc_html__('Allowed: lowercase letters and numbers, 2–8 characters.', 'owbn-chronicle-manager') . "</p>\n";
 }
 
 // Render the boolean field as a switch, with optional disabling

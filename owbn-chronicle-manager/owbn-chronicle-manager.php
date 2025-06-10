@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OWBN Chronicle Manager
  * Description: Manage OWBN Chronicle information using structured custom post types, shortcodes, and approval workflows.
- * Version: 1.2.3
+ * Version: 1.2.4
  * Author: greghacke
  * Author URI: https://www.owbn.net
  * Text Domain: owbn-chronicle-manager
