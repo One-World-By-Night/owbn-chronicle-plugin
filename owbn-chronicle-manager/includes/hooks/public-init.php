@@ -13,7 +13,8 @@ add_filter('template_include', function ($template) {
 });
 
 // ─── Enqueue Admin Assets ───────────────────────────────
-function owbn_enqueue_admin_assets($hook) {
+function owbn_enqueue_admin_assets($hook)
+{
     if ($hook !== 'post.php' && $hook !== 'post-new.php') {
         return;
     }
@@ -28,10 +29,11 @@ function owbn_enqueue_admin_assets($hook) {
 add_action('admin_enqueue_scripts', 'owbn_enqueue_admin_assets');
 
 // ─── Plugin-Wide Asset Enqueue (Shared Use) ─────────────
-function owbn_enqueue_plugin_assets() {
+function owbn_enqueue_plugin_assets()
+{
     $base_url = plugin_dir_url(dirname(__FILE__, 2)) . 'css/';
     $base_js  = plugin_dir_url(dirname(__FILE__, 2)) . 'js/';
-    $version  = '1.2.0'; // current plugin version
+    $version  = '1.5.0'; // current plugin version
 
 
     wp_enqueue_style('owbn-chronicle-style', $base_url . 'style.css', [], $version);
@@ -42,7 +44,8 @@ function owbn_enqueue_plugin_assets() {
 }
 
 // ─── Frontend Asset Loader ──────────────────────────────
-function owbn_enqueue_frontend_assets() {
+function owbn_enqueue_frontend_assets()
+{
     global $post;
 
     if (
@@ -68,7 +71,8 @@ function owbn_enqueue_frontend_assets() {
 }
 add_action('wp_enqueue_scripts', 'owbn_enqueue_frontend_assets');
 
-function owbn_register_chronicle_meta_fields() {
+function owbn_register_chronicle_meta_fields()
+{
     $fields = [
         'chronicle_slug' => 'string',
         'web_url' => 'string',
@@ -88,7 +92,9 @@ function owbn_register_chronicle_meta_fields() {
             'description' => ucfirst(str_replace('_', ' ', $field)),
             'single' => true,
             'show_in_rest' => true, // Necessary for Elementor dynamic tags
-            'auth_callback' => function() { return current_user_can('edit_posts'); },
+            'auth_callback' => function () {
+                return current_user_can('edit_posts');
+            },
         ]);
     }
 }
