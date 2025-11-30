@@ -14,7 +14,8 @@ if (!function_exists('owbn_get_chronicle_field_definitions')) {
  * @param int $post_id
  * @return string
  */
-function owbn_render_chronicle_full($post_id) {
+function owbn_render_chronicle_full($post_id)
+{
     if (get_post_type($post_id) !== 'owbn_chronicle') {
         return '<p>Invalid Chronicle.</p>';
     }
@@ -25,7 +26,7 @@ function owbn_render_chronicle_full($post_id) {
     $content = apply_filters('the_content', get_post_field('post_content', $post_id));
     $field_groups = owbn_get_chronicle_field_definitions();
 
-    ?>
+?>
     <div class="owbn-chronicle-full">
         <h1 class="chronicle-title"><?php echo esc_html($title); ?></h1>
 
@@ -45,11 +46,17 @@ function owbn_render_chronicle_full($post_id) {
                     case 'text':
                     case 'slug':
                     case 'select':
-                    case 'url':
-                    case 'email':
                     case 'date':
                     case 'time':
                         echo esc_html($value);
+                        break;
+
+                    case 'url':
+                        echo '<a href="' . esc_url($value) . '" target="_blank" rel="noopener noreferrer">' . esc_html($value) . '</a>';
+                        break;
+
+                    case 'email':
+                        echo '<a href="mailto:' . esc_attr($value) . '">' . esc_html($value) . '</a>';
                         break;
 
                     case 'boolean':
@@ -67,8 +74,10 @@ function owbn_render_chronicle_full($post_id) {
                     case 'user_info':
                         if (is_array($value)) {
                             echo esc_html($value['display_name'] ?? '[Unknown]');
-                            if (!empty($value['email'])) {
-                                echo ' &mdash; <a href="mailto:' . esc_attr($value['email']) . '">' . esc_html($value['email']) . '</a>';
+                            // Use display_email only - never expose actual_email
+                            $email = $value['display_email'] ?? '';
+                            if (!empty($email)) {
+                                echo ' &mdash; <a href="mailto:' . esc_attr($email) . '">' . esc_html($email) . '</a>';
                             }
                         }
                         break;
@@ -82,9 +91,47 @@ function owbn_render_chronicle_full($post_id) {
                         }
                         break;
 
+                    case 'ooc_location':
+                    case 'ic_location':
+                        // Single location object
+                        if (is_array($value)) {
+                            $parts = [];
+                            if (!empty($value['country'])) $parts[] = strtoupper($value['country']);
+                            if (!empty($value['region']))  $parts[] = $value['region'];
+                            if (!empty($value['city']))    $parts[] = $value['city'];
+                            if (!empty($value['county']))  $parts[] = $value['county'];
+                            if (!empty($value['name']))    $parts[] = $value['name'];
+                            echo esc_html(implode(', ', $parts));
+                            if (!empty($value['notes'])) {
+                                echo '<br><em>' . esc_html($value['notes']) . '</em>';
+                            }
+                        }
+                        break;
+
+                    case 'location_group':
+                        // Array of locations
+                        if (is_array($value)) {
+                            echo '<ul class="owbn-location-list">';
+                            foreach ($value as $loc) {
+                                if (!is_array($loc)) continue;
+                                $parts = [];
+                                if (!empty($loc['country'])) $parts[] = strtoupper($loc['country']);
+                                if (!empty($loc['region']))  $parts[] = $loc['region'];
+                                if (!empty($loc['city']))    $parts[] = $loc['city'];
+                                if (!empty($loc['county']))  $parts[] = $loc['county'];
+                                if (!empty($loc['name']))    $parts[] = $loc['name'];
+                                echo '<li>' . esc_html(implode(', ', $parts));
+                                if (!empty($loc['notes'])) {
+                                    echo ' <em>(' . esc_html($loc['notes']) . ')</em>';
+                                }
+                                echo '</li>';
+                            }
+                            echo '</ul>';
+                        }
+                        break;
+
                     case 'session_group':
                     case 'ast_group':
-                    case 'location_group':
                     case 'document_links_group':
                     case 'social_links_group':
                     case 'email_lists_group':
@@ -107,7 +154,7 @@ function owbn_render_chronicle_full($post_id) {
             <?php echo wp_kses_post($content); ?>
         </div>
     </div>
-    <?php
+<?php
 
     return ob_get_clean();
 }
@@ -115,7 +162,8 @@ function owbn_render_chronicle_full($post_id) {
 /**
  * Render grouped fields (repeatable sets)
  */
-function owbn_render_group_field($group_data, $field_def) {
+function owbn_render_group_field($group_data, $field_def)
+{
     if (!is_array($group_data)) return '';
 
     ob_start();
@@ -124,6 +172,9 @@ function owbn_render_group_field($group_data, $field_def) {
         echo '<div class="owbn-group-entry">';
 
         foreach ($field_def['fields'] as $sub_key => $sub_def) {
+            // NEVER output actual_email to client - sensitive data
+            if ($sub_key === 'actual_email') continue;
+
             if (empty($entry[$sub_key])) continue;
 
             echo '<div class="owbn-group-field">';
@@ -132,11 +183,19 @@ function owbn_render_group_field($group_data, $field_def) {
             switch ($sub_def['type']) {
                 case 'text':
                 case 'slug':
-                case 'email':
-                case 'url':
                 case 'date':
                 case 'time':
                     echo esc_html($entry[$sub_key]);
+                    break;
+
+                case 'url':
+                    $url = $entry[$sub_key];
+                    echo '<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html($url) . '</a>';
+                    break;
+
+                case 'email':
+                    $email = $entry[$sub_key];
+                    echo '<a href="mailto:' . esc_attr($email) . '">' . esc_html($email) . '</a>';
                     break;
 
                 case 'boolean':
