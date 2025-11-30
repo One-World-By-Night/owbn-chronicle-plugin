@@ -2,7 +2,8 @@
 if (!defined('ABSPATH')) exit;
 
 // Render the user info fields for the Chronicle custom post typ
-function owbn_render_user_info($key, $value, $meta) {
+function owbn_render_user_info($key, $value, $meta)
+{
     $is_cm = ($key === 'cm_info');
 
     if ($is_cm) {
@@ -71,7 +72,8 @@ function owbn_render_user_info($key, $value, $meta) {
 }
 
 // Render the AST group fields for the Chronicle custom post type using user_info fields
-function owbn_render_ast_group($key, $value, $meta) {
+function owbn_render_ast_group($key, $value, $meta)
+{
     $fields = $meta['fields'] ?? [];
     $value = is_array($value) ? $value : [];
     $users = get_users(['fields' => ['ID', 'display_name']]);
@@ -118,7 +120,7 @@ function owbn_render_ast_group($key, $value, $meta) {
         echo "</label>\n</div>\n";
         echo "</div>\n";
 
-        echo "<button type=\"button\" class=\"button owbn-remove-ast\">" . esc_html__('Remove AST', 'owbn-chronicle-manager') . "</button>\n";
+        echo "<button type=\"button\" class=\"button owbn-remove-ast\">" . esc_html__('Remove Account', 'owbn-chronicle-manager') . "</button>\n";
         echo "</div>\n"; // .owbn-ast-block
     }
 
@@ -162,9 +164,9 @@ function owbn_render_ast_group($key, $value, $meta) {
     echo "</label>\n</div>\n";
     echo "</div>\n";
 
-    echo "<button type=\"button\" class=\"button owbn-remove-ast\">" . esc_html__('Remove AST', 'owbn-chronicle-manager') . "</button>\n";
+    echo "<button type=\"button\" class=\"button owbn-remove-ast\">" . esc_html__('Remove Account', 'owbn-chronicle-manager') . "</button>\n";
     echo "</div>\n"; // end template
 
-    echo "<button type=\"button\" class=\"button button-primary owbn-add-ast\">" . esc_html__('Add AST', 'owbn-chronicle-manager') . "</button>\n";
+    echo "<button type=\"button\" class=\"button button-primary owbn-add-ast\">" . esc_html__('Add User', 'owbn-chronicle-manager') . "</button>\n";
     echo "</div>\n"; // .owbn-repeatable-group
 }

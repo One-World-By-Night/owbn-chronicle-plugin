@@ -2,12 +2,12 @@
 
 /** File: includes/admin/settings.php
  * Text Domain: accessschema-client
- * version 1.5.0
+ * version 1.2.0
  * @author greghacke
  * Function: Define admin settings page for AccessSchema client
  */
 
-defined('ABSPATH') || exit;
+defined( 'ABSPATH' ) || exit;
 
 /**  Add a custom admin menu page for AccessSchema client settings.
  * This function adds a new page under the Users menu in the WordPress admin dashboard.
@@ -34,8 +34,7 @@ add_action('admin_menu', function () {
  * and provides a manual cache clear option for user roles.
  */
 if (!function_exists('accessSchema_render_admin_page')) {
-    function accessSchema_render_admin_page()
-    {
+    function accessSchema_render_admin_page() {
         if (!defined('ASC_PREFIX') || !defined('ASC_LABEL')) return;
 
         $client_id   = strtolower(ASC_PREFIX) . '_client';        // Group

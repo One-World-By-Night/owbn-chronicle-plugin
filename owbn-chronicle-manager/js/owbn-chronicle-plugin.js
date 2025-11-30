@@ -188,7 +188,7 @@
     });
 
     // -----------------------------
-    // AST BLOCKS
+    // AST BLOCKS (Chronicles)
     // -----------------------------
     $(document).on('click', '.owbn-add-ast', function () {
         const wrapper = $('#ast-group-wrapper');
@@ -211,6 +211,29 @@
     });
 
     // -----------------------------
+    // SUBCOORD BLOCKS (Coordinators)
+    // -----------------------------
+    $(document).on('click', '.owbn-add-subcoord', function () {
+        const wrapper = $('#subcoord-group-wrapper');
+        const template = wrapper.find('.owbn-subcoord-template').clone().removeClass('owbn-subcoord-template').show();
+        const index = wrapper.find('.owbn-subcoord-block').not('.owbn-subcoord-template').length;
+
+        template.find('[name]').each(function () {
+            const name = $(this).attr('name');
+            if (name) {
+                $(this).attr('name', name.replace('__INDEX__', index));
+            }
+        });
+
+        wrapper.find('.owbn-add-subcoord').before(template);
+        template.find('.owbn-select2').select2({ width: '100%' });
+    });
+
+    $(document).on('click', '.owbn-remove-subcoord', function () {
+        $(this).closest('.owbn-subcoord-block').remove();
+    });
+
+    // -----------------------------
     // Utility: Select2 Init
     // -----------------------------
     function initializeSelect2(scope = $(document)) {
@@ -222,7 +245,7 @@
                 $el.select2({
                     width: '100%',
                     closeOnSelect: false,
-                    placeholder: $el.find('option:first').text(), // dynamic placeholder
+                    placeholder: $el.find('option:first').text(),
                     allowClear: true,
                     minimumResultsForSearch: 0
                 });
@@ -235,7 +258,7 @@
                 $el.select2({
                     width: '100%',
                     closeOnSelect: true,
-                    placeholder: $el.find('option:first').text(), // dynamic placeholder
+                    placeholder: $el.find('option:first').text(),
                     allowClear: true,
                     minimumResultsForSearch: 0
                 });
@@ -248,12 +271,28 @@
                 $el.select2({
                     width: '100%',
                     closeOnSelect: true,
-                    placeholder: $el.find('option:first').text(), // dynamic placeholder
+                    placeholder: $el.find('option:first').text(),
                     allowClear: true,
                     minimumResultsForSearch: 0
                 });
             }
         });
+    }
+
+    // -----------------------------
+    // Satellite Toggle (Chronicles)
+    // -----------------------------
+    function toggleSatelliteDependentFields() {
+        const isSatellite = $('#chronicle_satellite').is(':checked');
+        if (isSatellite) {
+            $('#owbn-cm-info-wrapper').hide();
+            $('#owbn-cm-info-message').show();
+            $('.owbn-parent-chronicle-field').show();
+        } else {
+            $('#owbn-cm-info-wrapper').show();
+            $('#owbn-cm-info-message').hide();
+            $('.owbn-parent-chronicle-field').hide();
+        }
     }
 
     // -----------------------------
@@ -274,20 +313,19 @@
             let visible = true;
 
             $.each(filters, function (key, value) {
-                if (!value) return; // Skip empty filters
+                if (!value) return;
 
                 const dataAttr = $row.data(key);
                 if (key === 'genre') {
-                    // genre is space-separated list like "vampire-sabbat kuei-jin"
                     const genres = (dataAttr || '').toString().split(' ');
                     if (!genres.includes(value)) {
                         visible = false;
-                        return false; // break loop
+                        return false;
                     }
                 } else {
                     if ((dataAttr || '').toString() !== value) {
                         visible = false;
-                        return false; // break loop
+                        return false;
                     }
                 }
             });
@@ -297,118 +335,86 @@
     }
 
     function populateFilterOptions() {
-        const allRows = $('.chron-wrapper');
-
         const filters = {
-            country: new Set(),
-            'chronicle-region': new Set(),
-            genre: new Set()
+            '#filter-country': 'country',
+            '#filter-chronicle-region': 'chronicle-region',
+            '#filter-genre': 'genre',
+            '#filter-type': 'game-type',
+            '#filter-probationary': 'probationary',
+            '#filter-satellite': 'satellite'
         };
 
-        allRows.each(function () {
-            const $row = $(this);
+        $.each(filters, function (selectId, dataAttr) {
+            const $select = $(selectId);
+            if (!$select.length) return;
 
-            // Collect countries
-            const country = $row.data('country');
-            if (country && country !== '—') {
-                filters.country.add(country);
-            }
+            const values = new Set();
 
-            // Collect chronicle-region
-            const region = $row.data('chronicle-region');
-            if (region && region !== '—') {
-                filters['chronicle-region'].add(region);
-            }
+            $('.chron-wrapper').each(function () {
+                const raw = $(this).data(dataAttr);
+                if (!raw) return;
 
-            // Collect genre (may contain multiple, space-separated classes)
-            const genreData = $row.data('genre');
-            if (genreData && genreData !== '—') {
-                genreData.toString().split(/\s+/).forEach(g => {
-                    if (g) filters.genre.add(g);
-                });
-            }
-        });
-
-        // Populate each <select> element with sorted values
-        for (const key in filters) {
-            const $select = $('#filter-' + key);
-            if ($select.length === 0) {
-                console.error(`Missing select element for key: #filter-${key}`);
-                continue;
-            }
-
-            const sorted = Array.from(filters[key]).sort((a, b) => a.localeCompare(b));
-            sorted.forEach(value => {
-                $select.append(`<option value="${value}">${value}</option>`);
-            });
-        }
-    }
-
-    // -----------------------------
-    // Satellite Toggle Logic
-    // -----------------------------
-    function toggleSatelliteDependentFields() {
-        const isSatellite = $('#chronicle_satellite').is(':checked');
-        $('#owbn-cm-info-message').toggle(isSatellite);
-        $('#owbn-cm-info-wrapper').toggle(!isSatellite);
-        $('#owbn-parent-chronicle-select').toggle(isSatellite);
-        $('#owbn-parent-chronicle-message').toggle(!isSatellite);
-    }
-
-    // -----------------------------
-    // New OWBN Chronicles List Filters
-    // -----------------------------
-
-    function initChroniclesListFilterBlock() {
-        const allRows = $('.chron-list-wrapper');
-
-        // Dynamically detect filters
-        const filterKeys = [];
-        $('.owbn-chronicles-list-filters select').each(function () {
-            const filterKey = $(this).data('filter');
-            if (filterKey) filterKeys.push(filterKey);
-        });
-
-        const filters = {};
-        filterKeys.forEach(key => filters[key] = new Set());
-
-        // Collect unique values for each filter from the data-* attributes
-        allRows.each(function () {
-            const $row = $(this);
-
-            filterKeys.forEach(key => {
-                const val = $row.data(key);
-                if (!val || val === '—') return;
-
-                if (key === 'genre' || key === 'genres') {
-                    val.toString().split(',').map(v => v.trim()).forEach(part => {
-                        if (part) filters[key].add(part);
+                if (dataAttr === 'genre') {
+                    raw.toString().split(' ').forEach(g => {
+                        if (g) values.add(g);
                     });
                 } else {
-                    filters[key].add(val.toString());
+                    values.add(raw.toString());
+                }
+            });
+
+            const sorted = Array.from(values).sort();
+            sorted.forEach(value => {
+                let label = value;
+                if (dataAttr === 'probationary' || dataAttr === 'satellite') {
+                    label = value === '1' ? 'Yes' : 'No';
+                }
+                $select.append(`<option value="${value}">${label}</option>`);
+            });
+        });
+    }
+
+    // -----------------------------
+    // Chronicles List Filter Block
+    // -----------------------------
+    function initChroniclesListFilterBlock() {
+        const filterKeys = new Set();
+        const filterValues = {};
+
+        $('.chron-list-wrapper').each(function () {
+            const $row = $(this);
+            $.each($row.data(), function (key, val) {
+                if (key === 'slug' || key === 'id') return;
+                filterKeys.add(key);
+                if (!filterValues[key]) filterValues[key] = new Set();
+
+                if (key === 'genre' || key === 'genres') {
+                    (val || '').toString().split(',').forEach(v => {
+                        if (v.trim()) filterValues[key].add(v.trim());
+                    });
+                } else {
+                    if (val !== '' && val !== undefined) {
+                        filterValues[key].add(val.toString());
+                    }
                 }
             });
         });
 
-        // Populate <select>s dynamically
         filterKeys.forEach(key => {
-            const $select = $(`.owbn-chronicles-list-filters [data-filter="${key}"]`);
+            const $select = $(`.owbn-chronicles-list-filters select[data-filter="${key}"]`);
             if (!$select.length) return;
 
-            const sorted = Array.from(filters[key]).sort((a, b) => a.localeCompare(b));
+            const sorted = Array.from(filterValues[key]).sort();
             sorted.forEach(value => {
                 let label = value;
-
-                // Pretty print for boolean-like
-                if (['yes', 'no'].includes(value.toLowerCase())) {
-                    label = value.toLowerCase() === 'yes' ? 'Yes' : 'No';
+                if (key === 'probationary' || key === 'satellite') {
+                    label = value === '1' ? 'Yes' : 'No';
                 }
 
                 $select.append(`<option value="${value}">${label}</option>`);
             });
         });
 
-        // Wire up filters
         $('.owbn-chronicles-list-filters select').on('change', applyChroniclesListFilters);
         $('#clear-filters').on('click', function (e) {
             e.preventDefault();
@@ -461,9 +467,8 @@
         toggleSatelliteDependentFields();
         $('#chronicle_satellite').on('change', toggleSatelliteDependentFields);
 
-        // ---- Browser validation fix for hidden required inputs ----
+        // Browser validation fix for hidden required inputs
         $('form').on('submit', function () {
-            // Show all hidden containers that include required inputs so browser validation doesn't choke
             $(this).find(':input[required]').each(function () {
                 if (!this.offsetParent) {
                     $(this).closest('.owbn-document-body, .owbn-email-body, .owbn-social-body, .owbn-location-body, .owbn-session-body')
@@ -472,18 +477,18 @@
             });
         });
 
-        // ---- Chronicle Filters Init ----
+        // Chronicle Filters Init
         if ($('.owbn-chronicle-filters').length) {
             populateFilterOptions();
             $('.owbn-chronicle-filters select').on('change', applyChronicleFilters);
 
-        // ---- Clear Filters Button ----
-        $('#clear-filters').on('click', function (e) {
-            e.preventDefault();
-            $('.owbn-chronicle-filters select').val(null).trigger('change');
-        });
+            $('#clear-filters').on('click', function (e) {
+                e.preventDefault();
+                $('.owbn-chronicle-filters select').val(null).trigger('change');
+            });
         }
-        // ---- New Chronicles List Filters Init ----
+
+        // New Chronicles List Filters Init
         if ($('.owbn-chronicles-list-filters').length) {
             initChroniclesListFilterBlock();
         }

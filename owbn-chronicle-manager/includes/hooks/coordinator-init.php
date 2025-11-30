@@ -44,19 +44,19 @@ function owbn_register_coordinator_cpt()
         'capability_type'    => 'owbn_coordinator',
         'map_meta_cap'       => true,
         'capabilities'       => [
-            'edit_post'             => 'edit_owbn_coordinator',
-            'read_post'             => 'read_owbn_coordinator',
-            'delete_post'           => 'delete_owbn_coordinator',
-            'edit_posts'            => 'ocm_view_list',
-            'edit_others_posts'     => 'edit_owbn_coordinator',
-            'publish_posts'         => 'ocm_create_coordinator',
-            'read_private_posts'    => 'read_owbn_coordinator',
-            'delete_posts'          => 'delete_owbn_coordinator',
-            'delete_others_posts'   => 'delete_owbn_coordinator',
+            'edit_post'              => 'edit_owbn_coordinator',
+            'read_post'              => 'read_owbn_coordinator',
+            'delete_post'            => 'delete_owbn_coordinator',
+            'edit_posts'             => 'ocm_view_list',
+            'edit_others_posts'      => 'edit_owbn_coordinator',
+            'publish_posts'          => 'ocm_create_coordinator',
+            'read_private_posts'     => 'read_owbn_coordinator',
+            'delete_posts'           => 'delete_owbn_coordinator',
+            'delete_others_posts'    => 'delete_owbn_coordinator',
             'delete_published_posts' => 'delete_owbn_coordinator',
-            'delete_private_posts'  => 'delete_owbn_coordinator',
-            'edit_published_posts'  => 'edit_owbn_coordinator',
-            'edit_private_posts'    => 'edit_owbn_coordinator',
+            'delete_private_posts'   => 'delete_owbn_coordinator',
+            'edit_published_posts'   => 'edit_owbn_coordinator',
+            'edit_private_posts'     => 'edit_owbn_coordinator',
         ],
     ]);
 }
@@ -93,8 +93,8 @@ function owbn_register_coordinator_meta()
 {
     if (!owbn_coordinators_enabled()) return;
 
-    $complex = ['subcoord_list', 'social_urls', 'document_links', 'email_lists'];
-    $simple  = ['coordinator_slug', 'coordinator_title', 'coordinator_email', 'coordinator_user', 'coordinator_display_name', 'office_description', 'term_start_date', 'term_end_date', 'web_url'];
+    $complex = ['coord_info', 'subcoord_list', 'document_links', 'email_lists'];
+    $simple  = ['coordinator_slug', 'coordinator_title', 'office_description', 'term_start_date', 'term_end_date', 'web_url'];
 
     foreach ($complex as $field) {
         register_post_meta('owbn_coordinator', $field, ['type' => 'array', 'single' => true, 'show_in_rest' => true, 'sanitize_callback' => null]);
@@ -104,6 +104,110 @@ function owbn_register_coordinator_meta()
     }
 }
 add_action('init', 'owbn_register_coordinator_meta');
+
+// ══════════════════════════════════════════════════════════════════════════════
+// COORDINATOR FIELD DEFINITIONS (mirrors chronicle fields.php pattern)
+// ══════════════════════════════════════════════════════════════════════════════
+
+function owbn_get_coordinator_field_definitions()
+{
+    return [
+        'Basic Info' => [
+            'coordinator_slug' => [
+                'label' => __('Coordinator Slug', 'owbn-chronicle-manager'),
+                'type'  => 'text',
+            ],
+            'coordinator_title' => [
+                'label' => __('Office Title', 'owbn-chronicle-manager'),
+                'type'  => 'text',
+            ],
+            'term_start_date' => [
+                'label' => __('Term Start Date', 'owbn-chronicle-manager'),
+                'type'  => 'date',
+            ],
+            'web_url' => [
+                'label' => __('Website URL', 'owbn-chronicle-manager'),
+                'type'  => 'text',
+            ],
+            'office_description' => [
+                'label' => __('Office Description', 'owbn-chronicle-manager'),
+                'type'  => 'wysiwyg',
+            ],
+        ],
+        'Coordinator' => [
+            'coord_info' => [
+                'label' => __('Coordinator', 'owbn-chronicle-manager'),
+                'type'  => 'user_info',
+            ],
+        ],
+        'Staff' => [
+            'subcoord_list' => [
+                'label' => __('Sub-Coordinators', 'owbn-chronicle-manager'),
+                'type'  => 'ast_group',
+                'fields' => [
+                    'user' => [
+                        'label' => __('User', 'owbn-chronicle-manager'),
+                        'type'  => 'user',
+                    ],
+                    'display_name' => [
+                        'label' => __('Display Name', 'owbn-chronicle-manager'),
+                        'type'  => 'text',
+                    ],
+                    'role' => [
+                        'label' => __('Role/Title', 'owbn-chronicle-manager'),
+                        'type'  => 'text',
+                    ],
+                    'actual_email' => [
+                        'label' => __('Actual Email', 'owbn-chronicle-manager'),
+                        'type'  => 'email',
+                    ],
+                    'display_email' => [
+                        'label' => __('Display Email', 'owbn-chronicle-manager'),
+                        'type'  => 'email',
+                    ],
+                ],
+            ],
+        ],
+        'Links' => [
+            'document_links' => [
+                'label' => __('Document Links', 'owbn-chronicle-manager'),
+                'type'  => 'document_links_group',
+                'fields' => [
+                    'title' => [
+                        'label' => __('Title', 'owbn-chronicle-manager'),
+                        'type'  => 'text',
+                    ],
+                    'link' => [
+                        'label' => __('External URL', 'owbn-chronicle-manager'),
+                        'type'  => 'url',
+                    ],
+                    'upload' => [
+                        'label' => __('Upload File', 'owbn-chronicle-manager'),
+                        'type'  => 'file',
+                    ],
+                ],
+            ],
+            'email_lists' => [
+                'label' => __('Email Lists', 'owbn-chronicle-manager'),
+                'type'  => 'email_lists_group',
+                'fields' => [
+                    'list_name' => [
+                        'label' => __('List Name', 'owbn-chronicle-manager'),
+                        'type'  => 'text',
+                    ],
+                    'email_address' => [
+                        'label' => __('Email Address', 'owbn-chronicle-manager'),
+                        'type'  => 'email',
+                    ],
+                    'description' => [
+                        'label' => __('Description', 'owbn-chronicle-manager'),
+                        'type'  => 'textarea',
+                    ],
+                ],
+            ],
+        ],
+    ];
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // COORDINATOR METABOX
@@ -121,41 +225,87 @@ function owbn_render_coordinator_fields_metabox($post)
 {
     wp_nonce_field('owbn_coordinator_meta_nonce', 'owbn_coordinator_nonce');
 
-    $slug         = get_post_meta($post->ID, 'coordinator_slug', true);
-    $title        = get_post_meta($post->ID, 'coordinator_title', true);
-    $email        = get_post_meta($post->ID, 'coordinator_email', true);
-    $display_name = get_post_meta($post->ID, 'coordinator_display_name', true);
-    $description  = get_post_meta($post->ID, 'office_description', true);
-    $term_start   = get_post_meta($post->ID, 'term_start_date', true);
-    $web_url      = get_post_meta($post->ID, 'web_url', true);
+    $field_groups = owbn_get_coordinator_field_definitions();
 
-    echo '<table class="form-table"><tbody>';
+    echo '<div class="owbn-coordinator-metabox">';
 
-    echo '<tr><th><label for="coordinator_slug">Coordinator Slug</label></th>';
-    echo '<td><input type="text" id="coordinator_slug" name="coordinator_slug" value="' . esc_attr($slug) . '" class="regular-text" />';
-    echo '<p class="description">URL identifier (e.g., "assamite"). Used for AccessSchema: Coordinator/{slug}/Coordinator</p></td></tr>';
+    foreach ($field_groups as $group_label => $fields) {
+        echo '<div class="owbn-field-group">';
+        echo '<h3>' . esc_html($group_label) . '</h3>';
+        echo '<table class="form-table"><tbody>';
 
-    echo '<tr><th><label for="coordinator_title">Office Title</label></th>';
-    echo '<td><input type="text" id="coordinator_title" name="coordinator_title" value="' . esc_attr($title) . '" class="regular-text" />';
-    echo '<p class="description">e.g., "Assamite Coordinator"</p></td></tr>';
+        foreach ($fields as $key => $meta) {
+            $value = get_post_meta($post->ID, $key, true);
+            $label = $meta['label'] ?? $key;
+            $type  = $meta['type'] ?? 'text';
 
-    echo '<tr><th><label for="coordinator_display_name">Coordinator Name</label></th>';
-    echo '<td><input type="text" id="coordinator_display_name" name="coordinator_display_name" value="' . esc_attr($display_name) . '" class="regular-text" /></td></tr>';
+            echo '<tr>';
+            echo '<th><label for="' . esc_attr($key) . '">' . esc_html($label) . '</label></th>';
+            echo '<td>';
 
-    echo '<tr><th><label for="coordinator_email">Contact Email</label></th>';
-    echo '<td><input type="email" id="coordinator_email" name="coordinator_email" value="' . esc_attr($email) . '" class="regular-text" /></td></tr>';
+            switch ($type) {
+                case 'wysiwyg':
+                    wp_editor(
+                        is_scalar($value) ? $value : '',
+                        $key,
+                        [
+                            'textarea_name' => $key,
+                            'textarea_rows' => 6,
+                            'media_buttons' => false,
+                        ]
+                    );
+                    break;
 
-    echo '<tr><th><label for="term_start_date">Term Start Date</label></th>';
-    echo '<td><input type="date" id="term_start_date" name="term_start_date" value="' . esc_attr($term_start) . '" /></td></tr>';
+                case 'date':
+                    echo '<input type="date" name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" value="' . esc_attr($value) . '" class="regular-text">';
+                    break;
 
-    echo '<tr><th><label for="web_url">Website URL</label></th>';
-    echo '<td><input type="url" id="web_url" name="web_url" value="' . esc_attr($web_url) . '" class="regular-text" /></td></tr>';
+                case 'user_info':
+                    echo '</td></tr><tr><td colspan="2">';
+                    if (function_exists('owbn_render_user_info')) {
+                        owbn_render_user_info($key, is_array($value) ? $value : [], $meta);
+                    }
+                    break;
 
-    echo '<tr><th><label for="office_description">Office Description</label></th><td>';
-    wp_editor($description, 'office_description', ['textarea_name' => 'office_description', 'media_buttons' => false, 'textarea_rows' => 8, 'teeny' => true]);
-    echo '</td></tr>';
+                case 'ast_group':
+                    echo '</td></tr><tr><td colspan="2">';
+                    if (function_exists('owbn_render_ast_group')) {
+                        owbn_render_ast_group($key, is_array($value) ? $value : [], $meta);
+                    }
+                    break;
 
-    echo '</tbody></table>';
+                case 'document_links_group':
+                    echo '</td></tr><tr><td colspan="2">';
+                    if (function_exists('owbn_render_document_links_field')) {
+                        owbn_render_document_links_field($key, is_array($value) ? $value : [], $meta);
+                    }
+                    break;
+
+                case 'email_lists_group':
+                    echo '</td></tr><tr><td colspan="2">';
+                    if (function_exists('owbn_render_email_lists_field')) {
+                        owbn_render_email_lists_field($key, is_array($value) ? $value : [], $meta);
+                    }
+                    break;
+
+                default:
+                    echo '<input type="text" name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" value="' . esc_attr($value) . '" class="regular-text">';
+                    break;
+            }
+
+            if ($key === 'coordinator_slug') {
+                echo '<p class="description">URL identifier (e.g., "assamite"). Used for AccessSchema: Coordinator/{slug}/Coordinator</p>';
+            }
+
+            echo '</td>';
+            echo '</tr>';
+        }
+
+        echo '</tbody></table>';
+        echo '</div>';
+    }
+
+    echo '</div>';
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -183,15 +333,16 @@ function owbn_coordinator_map_meta_cap($caps, $cap, $user_id, $args)
         return [$cap === 'edit_post' ? 'edit_owbn_coordinator' : ($cap === 'delete_post' ? 'delete_owbn_coordinator' : 'read_owbn_coordinator')];
     }
 
-    // Check AccessSchema
+    // Check AccessSchema: Coordinator/{slug}/Coordinator
     $coord_slug = get_post_meta($post_id, 'coordinator_slug', true);
-    if ($coord_slug && current_user_can('asc_has_access_to_group', "Coordinator/{$coord_slug}")) {
+    if ($coord_slug && function_exists('current_user_can') && current_user_can('asc_has_access_to_group', "Coordinator/{$coord_slug}")) {
         return [$cap === 'edit_post' ? 'edit_owbn_coordinator' : ($cap === 'delete_post' ? 'delete_owbn_coordinator' : 'read_owbn_coordinator')];
     }
 
-    // Fallback: coordinator_user meta
-    $coord_user = get_post_meta($post_id, 'coordinator_user', true);
-    if ($coord_user && $user_id === (int) $coord_user) {
+    // Fallback: coord_info user
+    $coord_info = get_post_meta($post_id, 'coord_info', true);
+    $coord_user_id = isset($coord_info['user']) ? (int) $coord_info['user'] : 0;
+    if ($coord_user_id && $user_id === $coord_user_id) {
         return [$cap === 'edit_post' ? 'edit_owbn_coordinator' : ($cap === 'delete_post' ? 'delete_owbn_coordinator' : 'read_owbn_coordinator')];
     }
 
@@ -214,7 +365,7 @@ function owbn_user_can_edit_coordinator($user_id, $post_id)
 
     // Check AccessSchema
     $coord_slug = get_post_meta($post_id, 'coordinator_slug', true);
-    if ($coord_slug) {
+    if ($coord_slug && function_exists('current_user_can')) {
         $old_user = wp_get_current_user();
         wp_set_current_user($user_id);
         $has_access = current_user_can('asc_has_access_to_group', "Coordinator/{$coord_slug}");
@@ -222,10 +373,11 @@ function owbn_user_can_edit_coordinator($user_id, $post_id)
         if ($has_access) return true;
     }
 
-    // Fallback: coordinator_user meta
+    // Fallback: coord_info user
     if (in_array('coord_staff', $user->roles, true)) {
-        $coord_user = get_post_meta($post_id, 'coordinator_user', true);
-        return $coord_user && (int)$user_id === (int)$coord_user;
+        $coord_info = get_post_meta($post_id, 'coord_info', true);
+        $coord_user_id = isset($coord_info['user']) ? (int) $coord_info['user'] : 0;
+        return $coord_user_id && (int)$user_id === $coord_user_id;
     }
 
     return false;
@@ -238,7 +390,112 @@ function owbn_user_can_edit_coordinator($user_id, $post_id)
 add_filter('template_include', function ($template) {
     if (is_singular('owbn_coordinator') && owbn_coordinators_enabled()) {
         $plugin_template = plugin_dir_path(__FILE__) . '../templates/single-owbn_coordinator.php';
-        if (file_exists($plugin_template)) return $plugin_template;
+        if (file_exists($plugin_template)) {
+            return $plugin_template;
+        }
     }
     return $template;
 });
+
+// ══════════════════════════════════════════════════════════════════════════════
+// COORDINATOR SAVE HANDLER
+// ══════════════════════════════════════════════════════════════════════════════
+
+add_action('save_post_owbn_coordinator', 'owbn_save_coordinator_meta', 10, 2);
+function owbn_save_coordinator_meta($post_id, $post)
+{
+    // Verify nonce
+    if (!isset($_POST['owbn_coordinator_nonce']) || !wp_verify_nonce($_POST['owbn_coordinator_nonce'], 'owbn_coordinator_meta_nonce')) {
+        return;
+    }
+
+    // Skip autosave
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+
+    // Check permissions
+    if (!current_user_can('edit_post', $post_id)) return;
+
+    // Simple text/date fields
+    $simple_fields = ['coordinator_slug', 'coordinator_title', 'term_start_date', 'web_url'];
+    foreach ($simple_fields as $field) {
+        if (isset($_POST[$field])) {
+            update_post_meta($post_id, $field, sanitize_text_field($_POST[$field]));
+        }
+    }
+
+    // Office description (WYSIWYG)
+    if (isset($_POST['office_description'])) {
+        update_post_meta($post_id, 'office_description', wp_kses_post($_POST['office_description']));
+    }
+
+    // Coordinator info (user_info pattern)
+    if (isset($_POST['coord_info']) && is_array($_POST['coord_info'])) {
+        $info = $_POST['coord_info'];
+        $cleaned = [
+            'user'          => sanitize_text_field($info['user'] ?? ''),
+            'display_name'  => sanitize_text_field($info['display_name'] ?? ''),
+            'actual_email'  => sanitize_email($info['actual_email'] ?? ''),
+            'display_email' => sanitize_email($info['display_email'] ?? ''),
+        ];
+        update_post_meta($post_id, 'coord_info', $cleaned);
+    }
+
+    // Subcoord list (ast_group pattern) - note: uses 'subcoord_list' key but AST render uses 'ast_list'
+    // The shared render function hardcodes 'ast_list', so we need to check for that key
+    $subcoord_key = isset($_POST['subcoord_list']) ? 'subcoord_list' : (isset($_POST['ast_list']) ? 'ast_list' : null);
+    if ($subcoord_key && is_array($_POST[$subcoord_key])) {
+        $cleaned = [];
+        foreach ($_POST[$subcoord_key] as $index => $row) {
+            if ($index === '__INDEX__') continue;
+            if (empty($row['display_name']) && empty($row['user'])) continue;
+
+            $cleaned[] = [
+                'user'          => sanitize_text_field($row['user'] ?? ''),
+                'display_name'  => sanitize_text_field($row['display_name'] ?? ''),
+                'role'          => sanitize_text_field($row['role'] ?? ''),
+                'actual_email'  => sanitize_email($row['actual_email'] ?? ''),
+                'display_email' => sanitize_email($row['display_email'] ?? ''),
+            ];
+        }
+        update_post_meta($post_id, 'subcoord_list', $cleaned);
+    }
+
+    // Document links (document_links_group pattern)
+    if (isset($_POST['document_links']) && is_array($_POST['document_links'])) {
+        $cleaned = [];
+        foreach ($_POST['document_links'] as $index => $row) {
+            if ($index === '__INDEX__') continue;
+            if (empty($row['title']) && empty($row['link'])) continue;
+
+            $entry = [
+                'title' => sanitize_text_field($row['title'] ?? ''),
+                'link'  => esc_url_raw($row['link'] ?? ''),
+            ];
+
+            // Preserve existing file_id
+            $existing = get_post_meta($post_id, 'document_links', true);
+            if (is_array($existing) && isset($existing[$index]['file_id'])) {
+                $entry['file_id'] = $existing[$index]['file_id'];
+            }
+
+            $cleaned[] = $entry;
+        }
+        update_post_meta($post_id, 'document_links', $cleaned);
+    }
+
+    // Email lists (email_lists_group pattern)
+    if (isset($_POST['email_lists']) && is_array($_POST['email_lists'])) {
+        $cleaned = [];
+        foreach ($_POST['email_lists'] as $index => $row) {
+            if ($index === '__INDEX__') continue;
+            if (empty($row['list_name']) && empty($row['email_address'])) continue;
+
+            $cleaned[] = [
+                'list_name'     => sanitize_text_field($row['list_name'] ?? ''),
+                'email_address' => sanitize_email($row['email_address'] ?? ''),
+                'description'   => wp_kses_post($row['description'] ?? ''),
+            ];
+        }
+        update_post_meta($post_id, 'email_lists', $cleaned);
+    }
+}

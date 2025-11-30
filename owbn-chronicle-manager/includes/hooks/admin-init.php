@@ -223,3 +223,26 @@ add_action('init', function () {
         ]);
     }
 });
+
+// ══════════════════════════════════════════════════════════════════════════════
+// REGION LIST INIT
+// ══════════════════════════════════════════════════════════════════════════════
+
+add_action('init', function () {
+    if (owbn_chronicles_enabled() && !get_option('owbn_region_list')) {
+        update_option('owbn_region_list', [
+            'Central and West Brazil',
+            'Great Lakes',
+            'International',
+            'Mid Atlantic',
+            'Mississippi Valley',
+            'New York and New England',
+            'Northeast Brazil',
+            'Northern California',
+            'Southeast',
+            'Southeast Brazil',
+            'Southern Brazil',
+            'Southern CA and Southwest',
+        ]);
+    }
+});
