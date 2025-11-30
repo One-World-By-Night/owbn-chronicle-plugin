@@ -30,6 +30,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/render/render-location-fields
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-session-fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-user-fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-links-uploads-fields.php';
+require_once plugin_dir_path(__FILE__) . 'includes/render/render-chronicle-full.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/chronicles-shortcode.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/chronicle-shortcode.php';
 require_once plugin_dir_path(__FILE__) . 'includes/accessschema-client/accessSchema-client.php';
