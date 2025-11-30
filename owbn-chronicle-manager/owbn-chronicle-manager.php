@@ -21,6 +21,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/render/render-chronicle-box.p
 require_once plugin_dir_path(__FILE__) . 'includes/fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/hooks/save-and-validate.php';
 require_once plugin_dir_path(__FILE__) . 'includes/helpers/countries.php';
+require_once plugin_dir_path(__FILE__) . 'includes/admin/cc-settings.php';
 require_once plugin_dir_path(__FILE__) . 'includes/admin/enqueue-scripts.php';
 require_once plugin_dir_path(__FILE__) . 'includes/admin/options-page.php';
 require_once plugin_dir_path(__FILE__) . 'includes/editor/editor-init.php';
