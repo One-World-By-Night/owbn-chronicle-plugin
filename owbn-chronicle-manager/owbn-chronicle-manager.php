@@ -33,6 +33,8 @@ require_once plugin_dir_path(__FILE__) . 'includes/render/render-links-uploads-f
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-chronicle-full.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/chronicles-shortcode.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/chronicle-shortcode.php';
+require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/coordinator-shortcode.php';
+require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/coordinators-shortcode.php';
 require_once plugin_dir_path(__FILE__) . 'includes/accessschema-client/accessSchema-client.php';
 // require_once plugin_dir_path(__FILE__) . 'languages/i18n.php';
 

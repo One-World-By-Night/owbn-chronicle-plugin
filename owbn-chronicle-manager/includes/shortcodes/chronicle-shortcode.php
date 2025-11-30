@@ -2,7 +2,7 @@
 if (!defined('ABSPATH')) exit;
 
 // Shortcode to display a single chronicle as a card
-add_shortcode('owbn-chronicle', function($atts) {
+add_shortcode('owbn-chronicle', function ($atts) {
     $atts = shortcode_atts([
         'plug' => '',
     ], $atts);
@@ -27,7 +27,7 @@ add_shortcode('owbn-chronicle', function($atts) {
     return '<div class="owbn-chronicle-wrapper">' . wp_kses_post(owbn_render_chronicle_card($post_id)) . '</div>';
 });
 
-add_shortcode('owbn-chronicle-meta', function($atts) {
+add_shortcode('owbn-chronicle-meta', function ($atts) {
     $atts = shortcode_atts([
         'plug'  => '',
         'term'  => '',
@@ -91,7 +91,8 @@ add_shortcode('owbn-chronicle-meta', function($atts) {
     return owbn_chronicle_output_wrapper($term, $content, $show_label);
 });
 
-function owbn_chronicle_output_simple_meta($post, $term) {
+function owbn_chronicle_output_simple_meta($post, $term)
+{
     $output = '';
 
     switch ($term) {
@@ -240,7 +241,8 @@ function owbn_chronicle_output_simple_meta($post, $term) {
     return $output;
 }
 
-function owbn_render_title($post) {
+function owbn_render_title($post)
+{
     if (!$post instanceof WP_Post) {
         return '';
     }
@@ -253,19 +255,20 @@ function owbn_render_title($post) {
 
     return sprintf(
         "<div class=\"elementor-widget-container owbn-chronicle-title-container\">\n" .
-        "  <h2 class=\"owbn-chronicle-title elementor-heading-title elementor-size-large\">%s</h2>\n" .
-        "</div>\n",
+            "  <h2 class=\"owbn-chronicle-title elementor-heading-title elementor-size-large\">%s</h2>\n" .
+            "</div>\n",
         $title
     );
 }
 
-function owbn_render_session_list($post) {
+function owbn_render_session_list($post)
+{
     $session_list = get_post_meta($post->ID, 'session_list', true);
 
     if (!is_array($session_list) || empty($session_list)) {
         return "<div class=\"owbn-chronicle-session-list-empty elementor-widget-container\">\n" .
-               "  <p>No sessions available.</p>\n" .
-               "</div>\n";
+            "  <p>No sessions available.</p>\n" .
+            "</div>\n";
     }
 
     ob_start();
@@ -302,7 +305,7 @@ function owbn_render_session_list($post) {
         // Notes
         if (!empty($session['notes'])) {
             echo "    <div class=\"chronicle-session-notes\"><strong>Notes:</strong><br />\n" .
-                 wp_kses_post(wpautop($session['notes'])) . "</div>\n";
+                wp_kses_post(wpautop($session['notes'])) . "</div>\n";
         }
 
         // Genres
@@ -319,7 +322,8 @@ function owbn_render_session_list($post) {
     return ob_get_clean();
 }
 
-function owbn_render_hst_info($post) {
+function owbn_render_hst_info($post)
+{
     if (!$post instanceof WP_Post) return '';
 
     $meta = get_post_meta($post->ID, 'hst_info', true);
@@ -354,7 +358,8 @@ function owbn_render_hst_info($post) {
     );
 }
 
-function owbn_render_cm_info($post) {
+function owbn_render_cm_info($post)
+{
     if (!$post instanceof WP_Post) return '';
 
     $meta = get_post_meta($post->ID, 'cm_info', true);
@@ -387,7 +392,8 @@ function owbn_render_cm_info($post) {
     );
 }
 
-function owbn_render_ast_list($post) {
+function owbn_render_ast_list($post)
+{
     if (!$post instanceof WP_Post) {
         return '<!-- Post is not a WP_Post -->';
     }
@@ -434,7 +440,8 @@ function owbn_render_ast_list($post) {
     return ob_get_clean();
 }
 
-function owbn_render_ooc_locations($post) {
+function owbn_render_ooc_locations($post)
+{
     if (!$post instanceof WP_Post) {
         return '';
     }
@@ -443,8 +450,8 @@ function owbn_render_ooc_locations($post) {
 
     if (!is_array($location) || empty(array_filter($location))) {
         return "<div class=\"owbn-chronicle-ooc-list-empty elementor-widget-container\">\n" .
-               "  <p>No locations listed.</p>\n" .
-               "</div>\n";
+            "  <p>No locations listed.</p>\n" .
+            "</div>\n";
     }
 
     ob_start();
@@ -482,7 +489,8 @@ function owbn_render_ooc_locations($post) {
     return ob_get_clean();
 }
 
-function owbn_render_ic_location_list($post) {
+function owbn_render_ic_location_list($post)
+{
     if (!$post instanceof WP_Post) {
         return '';
     }
@@ -491,8 +499,8 @@ function owbn_render_ic_location_list($post) {
 
     if (!is_array($locations) || empty($locations)) {
         return "<div class=\"owbn-chronicle-ic-location-empty elementor-widget-container\">\n" .
-               "  <p>No IC locations listed.</p>\n" .
-               "</div>\n";
+            "  <p>No IC locations listed.</p>\n" .
+            "</div>\n";
     }
 
     ob_start();
@@ -537,7 +545,8 @@ function owbn_render_ic_location_list($post) {
     return ob_get_clean();
 }
 
-function owbn_render_game_site_list($post) {
+function owbn_render_game_site_list($post)
+{
     if (!$post instanceof WP_Post) {
         return '';
     }
@@ -546,8 +555,8 @@ function owbn_render_game_site_list($post) {
 
     if (!is_array($sites) || empty($sites)) {
         return "<div class=\"owbn-chronicle-game-site-empty elementor-widget-container\">\n" .
-               "  <p>No Game Sites listed.</p>\n" .
-               "</div>\n";
+            "  <p>No Game Sites listed.</p>\n" .
+            "</div>\n";
     }
 
     ob_start();
@@ -618,7 +627,8 @@ function owbn_render_game_site_list($post) {
     return ob_get_clean();
 }
 
-function owbn_render_document_links($post) {
+function owbn_render_document_links($post)
+{
     if (!$post instanceof WP_Post) {
         return '';
     }
@@ -627,8 +637,8 @@ function owbn_render_document_links($post) {
 
     if (!is_array($document_links) || empty($document_links)) {
         return "<div class=\"owbn-chronicle-document-links-empty elementor-widget-container\">\n" .
-               "  <p>No documents available.</p>\n" .
-               "</div>\n";
+            "  <p>No documents available.</p>\n" .
+            "</div>\n";
     }
 
     $document_icons = [
@@ -672,7 +682,8 @@ function owbn_render_document_links($post) {
     return ob_get_clean();
 }
 
-function owbn_render_social_urls($post) {
+function owbn_render_social_urls($post)
+{
     if (!$post instanceof WP_Post) {
         return '';
     }
@@ -681,8 +692,8 @@ function owbn_render_social_urls($post) {
 
     if (!is_array($social_links) || empty($social_links)) {
         return "<div class=\"owbn-chronicle-social-urls-empty elementor-widget-container\">\n" .
-               "  <p>No social media links available.</p>\n" .
-               "</div>\n";
+            "  <p>No social media links available.</p>\n" .
+            "</div>\n";
     }
 
     $platform_icons = [
@@ -723,7 +734,8 @@ function owbn_render_social_urls($post) {
     return ob_get_clean();
 }
 
-function owbn_render_email_lists($post) {
+function owbn_render_email_lists($post)
+{
     if (!$post instanceof WP_Post) {
         return '';
     }
@@ -732,8 +744,8 @@ function owbn_render_email_lists($post) {
 
     if (!is_array($email_lists) || empty($email_lists)) {
         return "<div class=\"owbn-chronicle-email-lists-empty elementor-widget-container\">\n" .
-               "  <p>No email lists available.</p>\n" .
-               "</div>\n";
+            "  <p>No email lists available.</p>\n" .
+            "</div>\n";
     }
 
     ob_start();
@@ -764,7 +776,8 @@ function owbn_render_email_lists($post) {
     return ob_get_clean();
 }
 
-function owbn_render_chronicle_status($post) {
+function owbn_render_chronicle_status($post)
+{
     if (!$post instanceof WP_Post) return '';
 
     $lines = [];
@@ -799,7 +812,8 @@ function owbn_render_chronicle_status($post) {
     return implode("<br />\n", array_map('wp_kses_post', $lines));
 }
 
-function owbn_chronicle_output_wrapper($term, $content, $show_label = true) {
+function owbn_chronicle_output_wrapper($term, $content, $show_label = true)
+{
     if (empty(trim($content))) return ''; // Skip rendering if content is empty
 
     // Load field definitions

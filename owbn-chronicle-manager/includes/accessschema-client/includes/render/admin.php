@@ -2,7 +2,7 @@
 
 /** File: includes/render/admin.php
  * Text Domain: accessschema-client
- * version 1.5.0
+ * version 1.2.0
  * @author greghacke
  * Function: Renders the admin settings and user cache management interface
  */
@@ -10,8 +10,7 @@
 defined('ABSPATH') || exit;
 
 if (!function_exists('accessSchema_client_register_render_admin')) {
-    function accessSchema_client_register_render_admin($client_id, $label)
-    {
+    function accessSchema_client_register_render_admin($client_id, $label) {
         add_action("accessschema_render_admin_{$client_id}", function () use ($client_id, $label) {
             echo '<div class="wrap">';
             echo '<h1>' . esc_html($label) . ' AccessSchema Client</h1>';
@@ -38,8 +37,7 @@ add_action('edit_user_profile', function ($user) {
 }, 15);
 
 if (!function_exists('accessSchema_render_slug_settings_form')) {
-    function accessSchema_render_slug_settings_form($client_id)
-    {
+    function accessSchema_render_slug_settings_form($client_id) {
         echo '<form method="post" action="options.php">';
         settings_fields("{$client_id}_client");
         do_settings_sections("{$client_id}_client_settings");
@@ -49,8 +47,7 @@ if (!function_exists('accessSchema_render_slug_settings_form')) {
 }
 
 if (!function_exists('accessSchema_render_slug_cache_clear')) {
-    function accessSchema_render_slug_cache_clear($client_id, $label)
-    {
+    function accessSchema_render_slug_cache_clear($client_id, $label) {
         if (!current_user_can('manage_options')) return;
 
         $key_roles = "{$client_id}_accessschema_cached_roles";
@@ -79,8 +76,7 @@ if (!function_exists('accessSchema_render_slug_cache_clear')) {
 }
 
 if (!function_exists('accessSchema_render_user_cache_block')) {
-    function accessSchema_render_user_cache_block($client_id, $label, $user)
-    {
+    function accessSchema_render_user_cache_block($client_id, $label, $user) {
         if (!current_user_can('list_users')) return;
 
         $roles_key = "{$client_id}_accessschema_cached_roles";

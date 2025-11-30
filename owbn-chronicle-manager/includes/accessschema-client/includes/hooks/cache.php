@@ -2,7 +2,7 @@
 
 /** File: includes/hooks/cache.php
  * Text Domain: accessschema-client
- * version 1.5.0
+ * version 1.2.0
  * @author greghacke
  * Function: Cache user roles on login
  */

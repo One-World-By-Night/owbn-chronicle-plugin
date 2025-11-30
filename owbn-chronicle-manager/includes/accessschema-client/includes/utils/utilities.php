@@ -2,12 +2,12 @@
 
 /** File: includes/utils/utilities.php
  * Text Domain: accessschema-client
- * version 1.5.0
+ * version 1.2.0
  * @author greghacke
  * Function: Utility functions for AccessSchema client plugin
- */
+ */ 
 
-defined('ABSPATH') || exit;
+defined( 'ABSPATH' ) || exit;
 
 
 if (!function_exists('accessSchema_client_access_granted')) {
@@ -18,8 +18,7 @@ if (!function_exists('accessSchema_client_access_granted')) {
      * @param string $client_id Unique plugin slug.
      * @return bool
      */
-    function accessSchema_client_access_granted($patterns, $client_id)
-    {
+    function accessSchema_client_access_granted($patterns, $client_id) {
         if (!is_user_logged_in() || empty($client_id)) {
             return apply_filters('accessSchema_client_access_granted', false, $patterns, 0, $client_id);
         }
@@ -48,8 +47,7 @@ if (!function_exists('accessSchema_client_access_denied')) {
      * @param string $client_id
      * @return bool
      */
-    function accessSchema_client_access_denied($patterns, $client_id)
-    {
+    function accessSchema_client_access_denied($patterns, $client_id) {
         return !accessSchema_client_access_granted($patterns, $client_id);
     }
 }
@@ -63,8 +61,7 @@ if (!function_exists('accessSchema_client_remote_user_matches_any')) {
      * @param string $client_id
      * @return bool
      */
-    function accessSchema_client_remote_user_matches_any($email, array $patterns, $client_id)
-    {
+    function accessSchema_client_remote_user_matches_any($email, array $patterns, $client_id) {
         $response = apply_filters('accessschema_get_roles_for_slug', null, $email, $client_id);
 
         if (
@@ -94,8 +91,7 @@ if (!function_exists('accessSchema_client_roles_match_pattern')) {
      * @param string $pattern
      * @return bool
      */
-    function accessSchema_client_roles_match_pattern(array $roles, $pattern)
-    {
+    function accessSchema_client_roles_match_pattern(array $roles, $pattern) {
         $regex = accessSchema_client_pattern_to_regex($pattern);
         foreach ($roles as $role) {
             if (preg_match($regex, $role)) {
@@ -113,8 +109,7 @@ if (!function_exists('accessSchema_client_pattern_to_regex')) {
      * @param string $pattern
      * @return string
      */
-    function accessSchema_client_pattern_to_regex($pattern)
-    {
+    function accessSchema_client_pattern_to_regex($pattern) {
         $escaped = preg_quote($pattern, '#');
         $regex = str_replace(['\*\*', '\*'], ['.*', '[^/]+'], $escaped);
         return "#^{$regex}$#i";  // Add 'i' flag
@@ -130,8 +125,7 @@ if (!function_exists('accessSchema_client_roles_match_pattern_from_email')) {
      * @param string $client_id
      * @return bool
      */
-    function accessSchema_client_roles_match_pattern_from_email($email, $pattern, $client_id)
-    {
+    function accessSchema_client_roles_match_pattern_from_email($email, $pattern, $client_id) {
         $response = apply_filters('accessschema_get_roles_for_slug', null, $email, $client_id);
 
         if (

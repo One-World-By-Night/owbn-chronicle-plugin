@@ -1,8 +1,7 @@
 <?php
-
 /** File: includes/admin/settings-fields.php
  * Text Domain: accessschema-client
- * @version 1.5.0
+ * @version 1.2.0
  * @author greghacke
  * Function: Define admin settings fields for AccessSchema client (per-plugin basis)
  */
@@ -41,11 +40,11 @@ add_action('admin_init', function () {
             'Connection Mode',
             function () use ($mode_key) {
                 $mode = get_option($mode_key, 'remote');
-?>
-            <label><input type="radio" name="<?php echo esc_attr($mode_key); ?>" value="remote" <?php checked($mode, 'remote'); ?> /> Remote</label><br>
-            <label><input type="radio" name="<?php echo esc_attr($mode_key); ?>" value="local" <?php checked($mode, 'local'); ?> /> Local</label><br>
-            <label><input type="radio" name="<?php echo esc_attr($mode_key); ?>" value="none" <?php checked($mode, 'none'); ?> /> None – use WP Permissions</label>
-<?php
+                ?>
+                <label><input type="radio" name="<?php echo esc_attr($mode_key); ?>" value="remote" <?php checked($mode, 'remote'); ?> /> Remote</label><br>
+                <label><input type="radio" name="<?php echo esc_attr($mode_key); ?>" value="local" <?php checked($mode, 'local'); ?> /> Local</label><br>
+                <label><input type="radio" name="<?php echo esc_attr($mode_key); ?>" value="none" <?php checked($mode, 'none'); ?> /> None – use WP Permissions</label>
+                <?php
             },
             $page,
             "{$client_id}_accessschema_mode_section"
@@ -136,8 +135,7 @@ add_action('admin_init', function () {
 
 // Sanitize callback (must be defined once)
 if (!function_exists('asc_sanitize_capability_map')) {
-    function asc_sanitize_capability_map($input)
-    {
+    function asc_sanitize_capability_map($input) {
         $output = [];
         foreach ($input as $cap => $raw) {
             $lines = preg_split('/[\r\n]+/', $raw);

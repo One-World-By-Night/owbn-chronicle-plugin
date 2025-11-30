@@ -1,15 +1,16 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-function owbn_enqueue_admin_assets($hook) {
-    // Optional: restrict to post edit screen
+function owbn_enqueue_admin_assets($hook)
+{
+    // Only load for post edit screen
     if ($hook !== 'post.php' && $hook !== 'post-new.php') {
         return;
     }
 
-    // Only load for the correct post type
+    // Load for both chronicle and coordinator post types
     global $post;
-    if (!isset($post->post_type) || $post->post_type !== 'owbn_chronicle') {
+    if (!isset($post->post_type) || !in_array($post->post_type, ['owbn_chronicle', 'owbn_coordinator'], true)) {
         return;
     }
 
@@ -47,7 +48,8 @@ function owbn_enqueue_admin_assets($hook) {
 }
 add_action('admin_enqueue_scripts', 'owbn_enqueue_admin_assets');
 
-function owbn_enqueue_plugin_assets() {
+function owbn_enqueue_plugin_assets()
+{
     wp_enqueue_style(
         'owbn-chronicle-style',
         plugin_dir_url(dirname(__FILE__, 2)) . 'css/style.css',
@@ -79,7 +81,8 @@ function owbn_enqueue_plugin_assets() {
     );
 }
 
-function owbn_enqueue_frontend_assets() {
+function owbn_enqueue_frontend_assets()
+{
     // Get global post content (if available)
     global $post;
 
