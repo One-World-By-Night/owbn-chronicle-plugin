@@ -60,7 +60,7 @@ add_action('init', function () {
 // SHARED CAPABILITIES & ROLES
 // ══════════════════════════════════════════════════════════════════════════════
 
-function owbn_grant_admin_caps()
+function owbn_grant_admin_chronicle_caps()
 {
     $role = get_role('administrator');
     if (!$role) return;
@@ -101,7 +101,7 @@ function owbn_grant_admin_caps()
         }
     }
 }
-add_action('admin_init', 'owbn_grant_admin_caps');
+add_action('admin_init', 'owbn_grant_admin_chronicle_caps');
 
 function owbn_create_custom_roles()
 {
