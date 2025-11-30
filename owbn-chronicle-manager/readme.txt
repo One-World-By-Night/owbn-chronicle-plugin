@@ -1,21 +1,22 @@
-=== OWBN Chronicle Manager ===
+=== OWBN Chronicle & Coordinator Manager ===
 Contributors: gregwhacke, owbnwebteam
 Donate link: https://www.owbn.net/
 Tags: chronicle, nested content, information, custom post types
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-OWBN Chronicle management tool for updating and maintaining chronicles in the organization.
+OWBN Chronicle management tool for updating and maintaining chronicles & coordindators in the organization.
 
 ## Purpose
 
 This plugin aims to:
 
-- Centralize all OWbN Chronicle data using a native WordPress custom post type (`owbn_chronicle`)
+- Centralize all OWbN Chronicle & Coordinator data using a native WordPress custom post type (`owbn_chronicle`)
 - Allow Chronicle owners to manage and update their chronicle profiles
+- Allow Coordinators to manage and update their coordinator profiles
 - Provide admins with oversight and editorial control
 - Offer shortcode-based filtering and rendering for public-facing displays
 - Store all data internally without external form builders or plugins
