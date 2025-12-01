@@ -270,7 +270,7 @@ function owbn_render_coordinator_fields_metabox($post)
                 case 'ast_group':
                     echo '</td></tr><tr><td colspan="2">';
                     if (function_exists('owbn_render_ast_group')) {
-                        owbn_render_ast_group($key, is_array($value) ? $value : [], $meta);
+                        owbn_render_ast_group($key, is_array($value) ? $value : [], $meta, $key);
                     }
                     break;
 
@@ -440,12 +440,10 @@ function owbn_save_coordinator_meta($post_id, $post)
         update_post_meta($post_id, 'coord_info', $cleaned);
     }
 
-    // Subcoord list (ast_group pattern) - note: uses 'subcoord_list' key but AST render uses 'ast_list'
-    // The shared render function hardcodes 'ast_list', so we need to check for that key
-    $subcoord_key = isset($_POST['subcoord_list']) ? 'subcoord_list' : (isset($_POST['ast_list']) ? 'ast_list' : null);
-    if ($subcoord_key && is_array($_POST[$subcoord_key])) {
+    // Subcoord list (ast_group pattern)
+    if (isset($_POST['subcoord_list']) && is_array($_POST['subcoord_list'])) {
         $cleaned = [];
-        foreach ($_POST[$subcoord_key] as $index => $row) {
+        foreach ($_POST['subcoord_list'] as $index => $row) {
             if ($index === '__INDEX__') continue;
             if (empty($row['display_name']) && empty($row['user'])) continue;
 
