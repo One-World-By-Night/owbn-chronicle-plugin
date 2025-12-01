@@ -335,7 +335,7 @@ function owbn_coordinator_map_meta_cap($caps, $cap, $user_id, $args)
 
     // Check AccessSchema: Coordinator/{slug}/Coordinator
     $coord_slug = get_post_meta($post_id, 'coordinator_slug', true);
-    if ($coord_slug && function_exists('current_user_can') && current_user_can('asc_has_access_to_group', "Coordinator/{$coord_slug}")) {
+    if ($coord_slug && function_exists('current_user_can') && current_user_can('asc_has_access_to_group', "Coordinator/{$coord_slug}/Coordinator")) {
         return [$cap === 'edit_post' ? 'edit_owbn_coordinator' : ($cap === 'delete_post' ? 'delete_owbn_coordinator' : 'read_owbn_coordinator')];
     }
 
@@ -368,7 +368,7 @@ function owbn_user_can_edit_coordinator($user_id, $post_id)
     if ($coord_slug && function_exists('current_user_can')) {
         $old_user = wp_get_current_user();
         wp_set_current_user($user_id);
-        $has_access = current_user_can('asc_has_access_to_group', "Coordinator/{$coord_slug}");
+        $has_access = current_user_can('asc_has_access_to_group', "Coordinator/{$coord_slug}/Coordinator");
         wp_set_current_user($old_user->ID);
         if ($has_access) return true;
     }
