@@ -1,18 +1,4 @@
 <?php
-/**
- * Plugin Name: accessSchema Client
- * Text Domain: accessschema-client
- * Plugin URI: https://www.github.com/One-World-By-Night/accessschema-client
- * Description: Leveraging a hosted accessSchema instance, this plugin provides a WordPress client for the accessSchema API.
- * Version: 1.2.0
- * Author: greghacke
- * Contributors: list, of, contributors, separated, by, commas
- * Author URI: https://www.github.com/One-World-By-Night
- * License: GPL-2.0-or-later
- * License URI: http://www.gnu.org/licenses/gpl-2.0.html
- * Domain Path: /includes/languages
- * GitHub Branch: main
- */
 
 defined('ABSPATH') || exit;
 
@@ -29,8 +15,8 @@ $prefix_file = __DIR__ . '/prefix.php';
 
 if (!file_exists($prefix_file)) {
     wp_die(
-        esc_html__('accessSchema-client requires a prefix.php file that defines ASC_PREFIX.', 'accessschema-client'),
-        esc_html__('Missing File: prefix.php', 'accessschema-client'),
+        esc_html__('accessSchema-client requires a prefix.php file that defines ASC_PREFIX.', 'owbn-chronicle-manager'),
+        esc_html__('Missing File: prefix.php', 'owbn-chronicle-manager'),
         ['response' => 500]
     );
 }
@@ -39,16 +25,16 @@ require_once $prefix_file;
 
 if (!defined('ASC_PREFIX')) {
     wp_die(
-        esc_html__('accessSchema-client requires ASC_PREFIX to be defined in prefix.php.', 'accessschema-client'),
-        esc_html__('Missing Constant: ASC_PREFIX', 'accessschema-client'),
+        esc_html__('accessSchema-client requires ASC_PREFIX to be defined in prefix.php.', 'owbn-chronicle-manager'),
+        esc_html__('Missing Constant: ASC_PREFIX', 'owbn-chronicle-manager'),
         ['response' => 500]
     );
 }
 
 if (!defined('ASC_LABEL')) {
     wp_die(
-        esc_html__('accessSchema-client requires ASC_LABEL to be defined in prefix.php.', 'accessschema-client'),
-        esc_html__('Missing Constant: ASC_LABEL', 'accessschema-client'),
+        esc_html__('accessSchema-client requires ASC_LABEL to be defined in prefix.php.', 'owbn-chronicle-manager'),
+        esc_html__('Missing Constant: ASC_LABEL', 'owbn-chronicle-manager'),
         ['response' => 500]
     );
 }
@@ -70,7 +56,7 @@ if (!defined($prefix . 'VERSION')) {
     define($prefix . 'VERSION', '1.0.0');
 }
 if (!defined($prefix . 'TEXTDOMAIN')) {
-    define($prefix . 'TEXTDOMAIN', 'accessschema-client');
+    define($prefix . 'TEXTDOMAIN', 'owbn-chronicle-manager');
 }
 if (!defined($prefix . 'ASSETS_URL')) {
     define($prefix . 'ASSETS_URL', constant($prefix . 'URL') . 'includes/assets/');
