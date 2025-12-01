@@ -7,7 +7,7 @@
  * Function: Define shortcodes for accessSchema client to handle user access based on roles or patterns.
  */
 
-defined( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 
 
 add_action('init', function () {
@@ -23,16 +23,18 @@ add_action('init', function () {
                 'role'     => '',       // Single role path (exact or pattern)
                 'any'      => '',       // Comma-separated list of paths/patterns
                 'wildcard' => 'false',  // true/false for wildcard/glob mode
+                'children' => 'false',  // true/false to include child roles
                 'fallback' => '',       // Optional fallback if user doesn't match
             ], $atts, "access_schema_{$client_id}");
 
             $wildcard = filter_var($atts['wildcard'], FILTER_VALIDATE_BOOLEAN);
+            $children = filter_var($atts['children'], FILTER_VALIDATE_BOOLEAN);
             $email = $user->user_email;
 
             // === Handle 'any' multiple patterns ===
             if (!empty($atts['any'])) {
                 $patterns = array_map('trim', explode(',', $atts['any']));
-                if (accessSchema_remote_user_matches_any($email, $patterns, $client_id)) {
+                if (accessSchema_client_remote_user_matches_any($email, $patterns, $client_id)) {
                     return do_shortcode($content);
                 }
                 return $atts['fallback'] ?? '';
@@ -43,11 +45,12 @@ add_action('init', function () {
             if (!$role) return '';
 
             if ($wildcard) {
-                if (accessSchema_roles_match_pattern_from_email($email, $role, $client_id)) {
+                if (accessSchema_client_roles_match_pattern_from_email($email, $role, $client_id)) {
                     return do_shortcode($content);
                 }
             } else {
-                $granted = accessSchema_client_remote_check_access($email, $role, false, $client_id);
+                // Correct parameter order: email, role_path, client_id, include_children
+                $granted = accessSchema_client_remote_check_access($email, $role, $client_id, $children);
                 if (!is_wp_error($granted) && $granted) {
                     return do_shortcode($content);
                 }

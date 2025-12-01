@@ -27,25 +27,6 @@ require_once plugin_dir_path(__FILE__) . 'chronicle-init.php';
 require_once plugin_dir_path(__FILE__) . 'coordinator-init.php';
 
 // ══════════════════════════════════════════════════════════════════════════════
-// OPTIONS MENU (under Chronicles)
-// ══════════════════════════════════════════════════════════════════════════════
-
-function owbn_register_options_menu()
-{
-    if (!owbn_chronicles_enabled()) return;
-
-    add_submenu_page(
-        'edit.php?post_type=owbn_chronicle',
-        __('OWbN Options', 'owbn-chronicle-manager'),
-        __('Options', 'owbn-chronicle-manager'),
-        'manage_options',
-        'owbn-options',
-        'owbn_render_options_page'
-    );
-}
-add_action('admin_menu', 'owbn_register_options_menu');
-
-// ══════════════════════════════════════════════════════════════════════════════
 // FLUSH REWRITE RULES
 // ══════════════════════════════════════════════════════════════════════════════
 
