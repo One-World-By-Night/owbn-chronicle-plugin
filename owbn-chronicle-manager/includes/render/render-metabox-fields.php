@@ -2,7 +2,8 @@
 if (!defined('ABSPATH')) exit;
 
 // Render the metabox fields for the Chronicle custom post type
-function owbn_render_chronicle_fields_metabox($post) {
+function owbn_render_chronicle_fields_metabox($post)
+{
     $user_id = get_current_user_id();
 
     if (!owbn_user_can_edit_chronicle($user_id, $post->ID)) {
@@ -81,7 +82,7 @@ function owbn_render_chronicle_fields_metabox($post) {
                     break;
 
                 case 'ast_group':
-                    owbn_render_ast_group($key, $value, $meta);
+                    owbn_render_ast_group($key, $value, $meta, $key);
                     break;
 
                 case 'boolean':
@@ -128,7 +129,8 @@ function owbn_render_chronicle_fields_metabox($post) {
 
 
 // Render the slug field with optional disabling
-function owbn_render_slug_field($key, $value, $disabled_attr = '') {
+function owbn_render_slug_field($key, $value, $disabled_attr = '')
+{
     $disabled_html = $disabled_attr ? ' disabled' : '';
 
     echo "<input type=\"text\" class=\"regular-text\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\" " .
@@ -139,7 +141,8 @@ function owbn_render_slug_field($key, $value, $disabled_attr = '') {
 }
 
 // Render the boolean field as a switch, with optional disabling
-function owbn_render_boolean_field($key, $value, $disabled_attr = '') {
+function owbn_render_boolean_field($key, $value, $disabled_attr = '')
+{
     $is_checked = ($value === '1');
     $disabled_html = $disabled_attr ? ' disabled' : '';
 
@@ -154,7 +157,8 @@ function owbn_render_boolean_field($key, $value, $disabled_attr = '') {
 }
 
 // Render the select field with optional disabling support
-function owbn_render_select_field($key, $value, $meta, $disabled_attr = '') {
+function owbn_render_select_field($key, $value, $meta, $disabled_attr = '')
+{
     $options = $meta['options'] ?? [];
 
     echo "<select name=\"" . esc_attr($key) . "\" id=\"" . esc_attr($key) . "\" class=\"regular-text owbn-select2 single\" " . esc_attr($disabled_attr) . ">\n";
@@ -168,7 +172,8 @@ function owbn_render_select_field($key, $value, $meta, $disabled_attr = '') {
 }
 
 // Render the multi-select field with AJAX loading
-function owbn_render_multi_select_field($key, $value, $meta) {
+function owbn_render_multi_select_field($key, $value, $meta)
+{
     $selected = is_array($value) ? $value : [];
     $options = [];
 
@@ -186,7 +191,8 @@ function owbn_render_multi_select_field($key, $value, $meta) {
 }
 
 // Render the wysiwyg editor field
-function owbn_render_wysiwyg_editor($key, $value) {
+function owbn_render_wysiwyg_editor($key, $value)
+{
     wp_editor(
         is_scalar($value) ? $value : '',
         $key,
@@ -199,7 +205,8 @@ function owbn_render_wysiwyg_editor($key, $value) {
 }
 
 // Render repeatable group fields for generating groups
-function owbn_render_repeatable_group($key, $value, $meta) {
+function owbn_render_repeatable_group($key, $value, $meta)
+{
     $groups = is_array($value) ? $value : [];
     $subfields = $meta['fields'] ?? [];
 
@@ -307,7 +314,8 @@ function owbn_render_repeatable_group($key, $value, $meta) {
 }
 
 // Render the chronicle select field for selecting parent chronicles
-function owbn_render_chronicle_select_field($key, $value, $meta, $label, $error_class, $disabled_attr = '') {
+function owbn_render_chronicle_select_field($key, $value, $meta, $label, $error_class, $disabled_attr = '')
+{
     global $post;
     $value = is_scalar($value) ? $value : '';
     $disabled_html = $disabled_attr ? ' disabled' : '';
