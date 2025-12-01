@@ -7,8 +7,8 @@
  * Function: 
  */
 
-defined('ABSPATH') || exit;
+defined( 'ABSPATH' ) || exit;
 
 // Unique constant prefix for this embedded instance of accessSchema-client
-define('ASC_PREFIX', 'CCP');                // Change 'YPP' to your plugin's unique prefix
-define('ASC_LABEL', 'OWBN C&C');   // Change 'Your Plugin Label' to your plugin's label
+define('ASC_PREFIX', 'YPP');                // Change 'YPP' to your plugin's unique prefix
+define('ASC_LABEL', 'Your Plugin Label');   // Change 'Your Plugin Label' to your plugin's label
