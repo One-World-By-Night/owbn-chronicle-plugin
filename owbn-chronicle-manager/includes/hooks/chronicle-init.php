@@ -145,7 +145,15 @@ function owbn_chronicle_map_meta_cap($caps, $cap, $user_id, $args)
     $is_admin = array_intersect($user->roles, ['administrator', 'exec_team']);
     $is_staff = ($user_id === $hst_id || $user_id === $cm_id);
 
-    if (!empty($is_admin) || $is_staff) {
+    // Check AccessSchema: Chronicle/{slug}/HST or Chronicle/{slug}/CM
+    $chronicle_slug = get_post_meta($post_id, 'chronicle_slug', true);
+    $has_asc_access = false;
+    if ($chronicle_slug && function_exists('current_user_can')) {
+        $has_asc_access = current_user_can('asc_has_access_to_group', "Chronicle/{$chronicle_slug}/HST")
+            || current_user_can('asc_has_access_to_group', "Chronicle/{$chronicle_slug}/CM");
+    }
+
+    if (!empty($is_admin) || $is_staff || $has_asc_access) {
         return [$cap === 'edit_post' ? 'edit_owbn_chronicle' : ($cap === 'delete_post' ? 'delete_owbn_chronicle' : 'read_owbn_chronicle')];
     }
 
@@ -166,6 +174,18 @@ function owbn_user_can_edit_chronicle($user_id, $post_id)
 
     if (array_intersect($user->roles, ['administrator', 'exec_team'])) return true;
 
+    // Check AccessSchema
+    $chronicle_slug = get_post_meta($post_id, 'chronicle_slug', true);
+    if ($chronicle_slug && function_exists('current_user_can')) {
+        $old_user = wp_get_current_user();
+        wp_set_current_user($user_id);
+        $has_access = current_user_can('asc_has_access_to_group', "Chronicle/{$chronicle_slug}/HST")
+            || current_user_can('asc_has_access_to_group', "Chronicle/{$chronicle_slug}/CM");
+        wp_set_current_user($old_user->ID);
+        if ($has_access) return true;
+    }
+
+    // Fallback: direct user assignment
     if (in_array('chron_staff', $user->roles, true)) {
         $hst_info = get_post_meta($post_id, 'hst_info', true);
         $cm_info  = get_post_meta($post_id, 'cm_info', true);
