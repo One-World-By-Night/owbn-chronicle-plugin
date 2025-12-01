@@ -347,6 +347,12 @@ if (!function_exists('asc_hook_user_has_cap_filter')) {
 
             // Use existing function - it handles both local and remote modes internally
             $roles_data = accessSchema_client_remote_get_roles_by_email($email, $client_id);
+
+            // Handle error case - return allcaps unchanged (fail open for non-configured mode)
+            if (is_wp_error($roles_data) || !is_array($roles_data)) {
+                return $allcaps;
+            }
+
             $roles = $roles_data['roles'] ?? [];
 
             $has_access = in_array($group_path, $roles, true) ||
