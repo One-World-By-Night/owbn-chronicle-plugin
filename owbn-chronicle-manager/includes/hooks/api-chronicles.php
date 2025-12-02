@@ -80,17 +80,37 @@ function owbn_format_chronicle_list_data($post_id)
 {
     $slug = get_post_meta($post_id, 'chronicle_slug', true) ?: null;
 
-    // Get first OOC location
+    // Get OOC location
     $ooc_locations_raw = get_post_meta($post_id, 'ooc_locations', true);
-    $ooc_location = null;
+    $ooc_location = [
+        'country' => '',
+        'region'  => '',
+        'city'    => '',
+        'notes'   => '',
+    ];
+
     if (is_array($ooc_locations_raw) && !empty($ooc_locations_raw)) {
-        $first = reset($ooc_locations_raw);
-        $ooc_location = [
-            'country' => $first['country'] ?? '',
-            'region'  => $first['region'] ?? '',
-            'city'    => $first['city'] ?? '',
-            'notes'   => $first['notes'] ?? '',
-        ];
+        // Check if single location object (has 'country' key) or array of locations
+        if (isset($ooc_locations_raw['country'])) {
+            // Single location object
+            $ooc_location = [
+                'country' => $ooc_locations_raw['country'] ?? '',
+                'region'  => $ooc_locations_raw['region'] ?? '',
+                'city'    => $ooc_locations_raw['city'] ?? '',
+                'notes'   => $ooc_locations_raw['notes'] ?? '',
+            ];
+        } else {
+            // Array of locations - get first
+            $first = reset($ooc_locations_raw);
+            if (is_array($first)) {
+                $ooc_location = [
+                    'country' => $first['country'] ?? '',
+                    'region'  => $first['region'] ?? '',
+                    'city'    => $first['city'] ?? '',
+                    'notes'   => $first['notes'] ?? '',
+                ];
+            }
+        }
     }
 
     // Get parent info
