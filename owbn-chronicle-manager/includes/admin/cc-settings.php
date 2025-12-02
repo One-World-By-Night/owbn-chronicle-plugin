@@ -6,6 +6,7 @@ if (!defined('ABSPATH')) exit;
  * 
  * Includes:
  * - Feature toggles (Chronicles, Coordinators)
+ * - API Settings
  * - Genre list management
  * - Region list management
  */
@@ -29,6 +30,12 @@ add_action('admin_menu', function () {
 // ══════════════════════════════════════════════════════════════════════════════
 
 add_action('admin_init', function () {
+    // // API Key
+    // register_setting('owbn_cc_settings', 'owbn_api_key_readonly', [
+    //     'type' => 'string',
+    //     'sanitize_callback' => 'sanitize_text_field'
+    // ]);
+
     // Feature toggles
     register_setting('owbn_cc_settings', 'owbn_enable_chronicles', [
         'type' => 'boolean',
@@ -122,6 +129,16 @@ function owbn_render_cc_settings_page()
         add_settings_error('owbn_cc_messages', 'owbn_regions_message', __('Regions updated.', 'owbn-chronicle-manager'), 'updated');
     }
 
+    // Process API Key form submission
+    if (
+        isset($_POST['owbn_api_nonce']) &&
+        wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['owbn_api_nonce'])), 'save_owbn_api')
+    ) {
+        $api_key = sanitize_text_field(wp_unslash($_POST['owbn_api_key_readonly'] ?? ''));
+        update_option('owbn_api_key_readonly', $api_key);
+        add_settings_error('owbn_cc_messages', 'owbn_api_message', __('API settings saved.', 'owbn-chronicle-manager'), 'updated');
+    }
+
     // Fetch current values
     $genres = get_option('owbn_genre_list', []);
     $regions = get_option('owbn_region_list', []);
@@ -140,6 +157,43 @@ function owbn_render_cc_settings_page()
             submit_button(__('Save Features', 'owbn-chronicle-manager'));
             ?>
         </form>
+
+        <hr />
+
+        <!-- API Settings -->
+        <h2><?php esc_html_e('API Settings', 'owbn-chronicle-manager'); ?></h2>
+        <form method="post">
+            <?php wp_nonce_field('save_owbn_api', 'owbn_api_nonce'); ?>
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><?php esc_html_e('API URL', 'owbn-chronicle-manager'); ?></th>
+                    <td>
+                        <code id="owbn_api_url"><?php echo esc_url(rest_url('owbn-cc/v1/')); ?></code>
+                        <button type="button" class="button" onclick="navigator.clipboard.writeText(document.getElementById('owbn_api_url').textContent)"><?php esc_html_e('Copy', 'owbn-chronicle-manager'); ?></button>
+                        <p class="description"><?php esc_html_e('Base URL for client connections', 'owbn-chronicle-manager'); ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php esc_html_e('Read-Only API Key', 'owbn-chronicle-manager'); ?></th>
+                    <td>
+                        <input type="text" name="owbn_api_key_readonly" id="owbn_api_key_ro"
+                            value="<?php echo esc_attr(get_option('owbn_api_key_readonly', '')); ?>"
+                            class="regular-text code" readonly />
+                        <button type="button" class="button" onclick="owbnGenerateApiKey('owbn_api_key_ro')"><?php esc_html_e('Generate New', 'owbn-chronicle-manager'); ?></button>
+                        <p class="description"><?php esc_html_e('Use this key for read-only API access', 'owbn-chronicle-manager'); ?></p>
+                    </td>
+                </tr>
+            </table>
+            <?php submit_button(__('Save API Settings', 'owbn-chronicle-manager')); ?>
+        </form>
+        <script>
+            function owbnGenerateApiKey(fieldId) {
+                const field = document.getElementById(fieldId);
+                const key = 'cc_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                field.value = key;
+                field.removeAttribute('readonly');
+            }
+        </script>
 
         <hr />
 
