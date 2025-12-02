@@ -1,0 +1,514 @@
+/* === FILTER CONTROLS – SUPPORT BOTH LEGACY AND MODERN === */
+.owbn-chronicle-filters,
+.owbn-chronicles-list-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.owbn-chronicle-filters select,
+.owbn-chronicles-list-filters select {
+  width: 100%;
+}
+
+#clear-filters {
+  padding: 0.5rem 1rem;
+  border: 2px solid #b3004b;
+  background: #fff;
+  color: #b3004b;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  width: 100%;
+}
+
+#clear-filters:hover {
+  background: #b3004b;
+  color: #fff;
+}
+
+/* === HEADER GRID === */
+.owbn-chronicle-legend {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+  background: #222;
+  color: #fff;
+  font-weight: bold;
+  text-transform: uppercase;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.owbn-chronicle-legend .chron-header {
+  padding: 0.25rem 0.5rem;
+}
+
+/* === UNIVERSAL ROW WRAPPER === */
+.chron-wrapper {
+  display: block; /* base fallback */
+  margin-bottom: 0.75rem;
+}
+
+.chron-wrapper.even,
+.chron-wrapper.odd,
+.chron-list-wrapper.even,
+.chron-list-wrapper.odd {
+  border-radius: 4px;
+}
+
+.chron-wrapper.even,
+.chron-list-wrapper.even {
+  background-color: #f8f9fa;
+}
+
+.chron-wrapper.odd,
+.chron-list-wrapper.odd {
+  background-color: #e9ecef;
+}
+
+.chron-wrapper:hover,
+.chron-list-wrapper:hover {
+  background-color: #dee2e6;
+}
+
+/* === MODERN INNER GRID WRAPPER === */
+.chron-list-wrapper {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+}
+
+/* === LEGACY: APPLY SAME GRID TO CHRON-WRAPPER DIRECTLY IF NO INNER WRAPPER === */
+.chron-wrapper:not(:has(.chron-list-wrapper)) {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+}
+
+/* === CONTENT === */
+.chron-field,
+.chron-title {
+  padding: 0.25rem 0.5rem;
+}
+
+.chron-wrapper a {
+  font-weight: 600;
+  color: #0073aa;
+  text-decoration: none;
+}
+
+.chron-wrapper a:hover {
+  text-decoration: underline;
+}
+
+/* === CARD LAYOUT (UNRELATED TO TABLE) === */
+.owbn-chronicle-card {
+  margin: 1em auto;
+  width: 450px;
+  font-family: sans-serif;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: #333;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.owbn-chronicle-card-wrapper {
+  background-color: #fff;
+  padding: 1.25em;
+}
+
+.owbn-chronicle-title {
+  background-color: #412234;
+  text-align: center;
+  padding: 1em;
+}
+
+.owbn-chronicle-title h2 {
+  margin: 0;
+  font-size: 1.6em;
+  color: #fff;
+}
+
+.owbn-chronicle-title h2 a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.owbn-chronicle-title h2 a:hover {
+  text-decoration: underline;
+  color: #EA5B3A;
+}
+
+.owbn-chronicle-card--meta {
+  margin-top: 1em;
+  font-size: 0.95em;
+  line-height: 1.4;
+}
+
+.owbn-chronicle-card-genre strong {
+  color: #EA5B3A;
+}
+
+.chronicle-description {
+  margin-top: 1em;
+  font-size: 0.95em;
+  line-height: 1.6;
+}
+
+.chronicle-documents a {
+  display: inline-block;
+  margin-bottom: 0.5em;
+  color: #EA5B3A;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.chronicle-documents a:hover {
+  text-decoration: underline;
+}
+
+.chronicle-social-links {
+  text-align: center;
+  margin-top: 0.75em;
+}
+
+.chronicle-social-links a {
+  margin: 0 0.4em;
+  font-size: 1.25em;
+  color: #EA5B3A;
+}
+
+.chronicle-social-links a:hover {
+  color: #D2242C;
+}
+
+/* === MOBILE ADAPTATION === */
+@media screen and (max-width: 768px) {
+  .owbn-chronicle-legend,
+  .chron-list-wrapper,
+  .chron-wrapper:not(:has(.chron-list-wrapper)),
+  .owbn-chronicles-list-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* === REPEATABLE GROUP BLOCK STYLING === */
+.owbn-repeatable-group {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  border: 1px solid #ccc;
+  background: #fdfdfd;
+  border-radius: 8px;
+}
+
+.owbn-repeatable-group > .owbn-location-block,
+.owbn-repeatable-group > .owbn-document-block,
+.owbn-repeatable-group > .owbn-social-block,
+.owbn-repeatable-group > .owbn-email-block {
+  margin-bottom: 1rem;
+  border: 1px solid #e1e1e1;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* === BLOCK HEADER === */
+.owbn-location-header,
+.owbn-document-header,
+.owbn-social-header,
+.owbn-email-header {
+  background: #efefef;
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ccc;
+}
+
+.owbn-location-header strong,
+.owbn-document-header strong,
+.owbn-social-header strong,
+.owbn-email-header strong {
+  font-size: 1.1em;
+  color: #333;
+}
+
+/* === BODY WRAPPERS === */
+.owbn-location-body,
+.owbn-document-body,
+.owbn-social-body,
+.owbn-email-body {
+  padding: 1rem;
+  background: #fafafa;
+}
+
+/* === FIELDS + ROWS === */
+.owbn-location-row,
+.owbn-document-row,
+.owbn-social-row,
+.owbn-email-row,
+.owbn-email-row-full {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.owbn-location-field,
+.owbn-document-row,
+.owbn-social-row,
+.owbn-email-field {
+  flex: 1;
+  min-width: 220px;
+}
+
+.owbn-location-field label,
+.owbn-document-row label,
+.owbn-social-row label,
+.owbn-email-field label {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  display: inline-block;
+}
+
+/* === ADD / REMOVE BUTTONS === */
+.owbn-repeatable-group button.button {
+  margin-top: 0.5rem;
+  margin-right: 0.5rem;
+}
+
+button.remove-location,
+button.remove-document-link,
+button.remove-social-link,
+button.remove-email-list {
+  background-color: #d63638;
+  color: #fff;
+  border-color: #d63638;
+}
+
+button.remove-location:hover,
+button.remove-document-link:hover,
+button.remove-social-link:hover,
+button.remove-email-list:hover {
+  background-color: #a51c1c;
+  border-color: #a51c1c;
+}
+
+button.add-location,
+button.add-document-link,
+button.add-social-link,
+button.add-email-list {
+  background-color: #0073aa;
+  color: #fff;
+  border-color: #0073aa;
+}
+
+button.add-location:hover,
+button.add-document-link:hover,
+button.add-social-link:hover,
+button.add-email-list:hover {
+  background-color: #005177;
+  border-color: #005177;
+}
+
+/* === BOOLEAN SWITCH === */
+.owbn-boolean-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.owbn-boolean-switch .switch-label {
+  font-size: 0.85em;
+  color: #555;
+}
+
+.owbn-boolean-switch .switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+}
+
+.owbn-boolean-switch .switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.owbn-boolean-switch .slider {
+  position: absolute;
+  cursor: pointer;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 34px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.owbn-boolean-switch .slider::before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+.owbn-boolean-switch input:checked + .slider {
+  background-color: #0073aa;
+}
+
+.owbn-boolean-switch input:checked + .slider::before {
+  transform: translateX(20px);
+}
+
+/* === FLEXIBLE GRID ROW FOR INPUT GROUPS === */
+.owbn-location-row,
+.owbn-document-row-wrap,
+.owbn-social-row-wrap,
+.owbn-email-row,
+.owbn-email-row-full {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+/* === FIELD CONTAINERS === */
+.owbn-location-field,
+.owbn-document-row,
+.owbn-social-row,
+.owbn-email-field {
+  display: flex;
+  flex-direction: column;
+}
+
+/* === LABELS === */
+.owbn-location-field label,
+.owbn-document-row label,
+.owbn-social-row label,
+.owbn-email-field label {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: #333;
+}
+
+/* === INPUT WIDTH CONTROL === */
+.owbn-location-field input[type="text"],
+.owbn-location-field input[type="url"],
+.owbn-location-field select,
+.owbn-document-row input,
+.owbn-social-row input,
+.owbn-social-row select,
+.owbn-email-field input,
+.owbn-email-field textarea {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* === BOOLEAN SWITCH (TOGGLE) === */
+.owbn-boolean-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.owbn-boolean-switch .switch {
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 22px;
+}
+
+.owbn-boolean-switch .slider {
+  position: absolute;
+  cursor: pointer;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 34px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.owbn-boolean-switch .slider::before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+.owbn-boolean-switch input:checked + .slider {
+  background-color: #0073aa;
+}
+
+.owbn-boolean-switch input:checked + .slider::before {
+  transform: translateX(20px);
+}
+
+.owbn-user-info-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.owbn-user-info-field {
+  flex: 1 1 45%;
+  min-width: 240px;
+}
+
+.owbn-user-info-field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.owbn-user-info-field input[type="text"],
+.owbn-user-info-field input[type="email"],
+.owbn-user-info-field select {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.owbn-ast-block {
+  border: 1px solid #ddd;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 6px;
+  background-color: #fafafa;
+}
+
+.owbn-remove-ast {
+  margin-top: 0.5rem;
+}
