@@ -81,10 +81,14 @@ function owbn_render_ast_group($key, $value, $meta, $field_key = null)
     $value = is_array($value) ? $value : [];
     $users = get_users(['fields' => ['ID', 'display_name']]);
 
-    echo "<div class=\"owbn-repeatable-group\" id=\"" . esc_attr($field_key) . "-group-wrapper\">\n";
+    // Determine if this is subcoord or ast based on field_key
+    $is_subcoord = (strpos($field_key, 'subcoord') !== false);
+    $prefix = $is_subcoord ? 'subcoord' : 'ast';
+
+    echo "<div class=\"owbn-repeatable-group\" id=\"" . esc_attr($prefix) . "-group-wrapper\">\n";
 
     foreach ($value as $index => $entry) {
-        echo "<div class=\"owbn-ast-block\">\n";
+        echo "<div class=\"owbn-" . esc_attr($prefix) . "-block\">\n";
 
         // Row 1: User
         echo "<div class=\"owbn-user-info-row\">\n";
@@ -123,12 +127,12 @@ function owbn_render_ast_group($key, $value, $meta, $field_key = null)
         echo "</label>\n</div>\n";
         echo "</div>\n";
 
-        echo "<button type=\"button\" class=\"button owbn-remove-ast\">" . esc_html__('Remove Account', 'owbn-chronicle-manager') . "</button>\n";
-        echo "</div>\n"; // .owbn-ast-block
+        echo "<button type=\"button\" class=\"button owbn-remove-" . esc_attr($prefix) . "\">" . esc_html__('Remove Account', 'owbn-chronicle-manager') . "</button>\n";
+        echo "</div>\n"; // .owbn-{$prefix}-block
     }
 
     // Template for JS clone
-    echo "<div class=\"owbn-ast-block owbn-ast-template\" style=\"display:none;\" data-field-key=\"" . esc_attr($field_key) . "\">\n";
+    echo "<div class=\"owbn-" . esc_attr($prefix) . "-block owbn-" . esc_attr($prefix) . "-template\" style=\"display:none;\" data-field-key=\"" . esc_attr($field_key) . "\">\n";
 
     // Row 1: User
     echo "<div class=\"owbn-user-info-row\">\n";
@@ -167,9 +171,9 @@ function owbn_render_ast_group($key, $value, $meta, $field_key = null)
     echo "</label>\n</div>\n";
     echo "</div>\n";
 
-    echo "<button type=\"button\" class=\"button owbn-remove-ast\">" . esc_html__('Remove Account', 'owbn-chronicle-manager') . "</button>\n";
+    echo "<button type=\"button\" class=\"button owbn-remove-" . esc_attr($prefix) . "\">" . esc_html__('Remove Account', 'owbn-chronicle-manager') . "</button>\n";
     echo "</div>\n"; // end template
 
-    echo "<button type=\"button\" class=\"button button-primary owbn-add-ast\">" . esc_html__('Add User', 'owbn-chronicle-manager') . "</button>\n";
+    echo "<button type=\"button\" class=\"button button-primary owbn-add-" . esc_attr($prefix) . "\">" . esc_html__('Add User', 'owbn-chronicle-manager') . "</button>\n";
     echo "</div>\n"; // .owbn-repeatable-group
 }
