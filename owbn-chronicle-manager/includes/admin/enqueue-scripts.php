@@ -50,23 +50,31 @@ add_action('admin_enqueue_scripts', 'owbn_enqueue_admin_assets');
 
 function owbn_enqueue_plugin_assets()
 {
+    // Prevent duplicate enqueuing
+    if (wp_script_is('owbn-chronicle-js', 'enqueued')) {
+        return;
+    }
+
+    $plugin_url  = plugin_dir_url(dirname(__FILE__, 2));
+    $plugin_path = plugin_dir_path(dirname(__FILE__, 2));
+
     wp_enqueue_style(
         'owbn-chronicle-style',
-        plugin_dir_url(dirname(__FILE__, 2)) . 'css/style.css',
+        $plugin_url . 'css/style.css',
         [],
-        filemtime(plugin_dir_path(dirname(__FILE__, 2)) . 'css/style.css')
+        filemtime($plugin_path . 'css/style.css')
     );
 
     wp_enqueue_style(
         'select2-css',
-        plugin_dir_url(dirname(__FILE__, 2)) . 'css/select2.min.css',
+        $plugin_url . 'css/select2.min.css',
         [],
         '4.0.13'
     );
 
     wp_enqueue_script(
         'select2-js',
-        plugin_dir_url(dirname(__FILE__, 2)) . 'js/select2.min.js',
+        $plugin_url . 'js/select2.min.js',
         ['jquery'],
         '4.0.13',
         true
@@ -74,7 +82,7 @@ function owbn_enqueue_plugin_assets()
 
     wp_enqueue_script(
         'owbn-chronicle-js',
-        plugin_dir_url(dirname(__FILE__, 2)) . 'js/owbn-chronicle-plugin.js',
+        $plugin_url . 'js/owbn-chronicle-plugin.js',
         ['jquery', 'select2-js'],
         '1.0.0',
         true
