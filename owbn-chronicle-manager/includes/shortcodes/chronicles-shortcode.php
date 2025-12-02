@@ -2,7 +2,7 @@
 if (!defined('ABSPATH')) exit;
 
 // Shortcode to display a list of chronicles with filters
-add_shortcode('owbn-chronicles', function($atts) {
+add_shortcode('owbn-chronicles', function ($atts) {
     $atts = shortcode_atts([
         'plug' => '',
         'region' => '',
@@ -18,17 +18,19 @@ add_shortcode('owbn-chronicles', function($atts) {
     // Prepare meta_query
     $meta_query = [];
 
-    foreach ([
-        'plug' => 'chronicle_slug',
-        'region' => 'region',
-        'genre' => 'genres',
-        'country' => 'country',
-        'state' => 'state',
-        'game_type' => 'game_type',
-        'probationary' => 'chronicle_probationary',
-        'satellite' => 'chronicle_satellite',
-        'chronicle_region' => 'chronicle_region',
-    ] as $att_key => $meta_key) {
+    foreach (
+        [
+            'plug' => 'chronicle_slug',
+            'region' => 'region',
+            'genre' => 'genres',
+            'country' => 'country',
+            'state' => 'state',
+            'game_type' => 'game_type',
+            'probationary' => 'chronicle_probationary',
+            'satellite' => 'chronicle_satellite',
+            'chronicle_region' => 'chronicle_region',
+        ] as $att_key => $meta_key
+    ) {
         if (!empty($atts[$att_key])) {
             $value = $atts[$att_key];
             if ($att_key === 'genre') {
@@ -61,7 +63,7 @@ add_shortcode('owbn-chronicles', function($atts) {
     ob_start();
 
     echo '<div class="owbn-chronicle-list">';
-    
+
     // Placeholder for filters – will be replaced with Select2 UI
     echo '<div class="owbn-chronicle-filters">';
     echo '<!-- Filters coming soon -->';
@@ -81,7 +83,8 @@ add_shortcode('owbn-chronicles', function($atts) {
 });
 
 // Render a list of chronicles as a table
-function owbn_render_chronicle_list($query) {
+function owbn_render_chronicle_list($query)
+{
     ob_start();
 
     $row_index = 0;
@@ -143,6 +146,9 @@ function owbn_render_chronicle_list($query) {
     echo "</div>\n";
 
     echo "\n<div class=\"chronicle-rows\">\n";
+
+    update_postmeta_cache(wp_list_pluck($query->posts, 'ID'));
+
     while ($query->have_posts()) {
         $query->the_post();
         $post_id = get_the_ID();
@@ -238,7 +244,8 @@ function owbn_render_chronicle_list($query) {
 ////////////////////////////////////
 // owbn-chronicles-list shortcode //
 ////////////////////////////////////
-function owbn_force_enqueue_assets() {
+function owbn_force_enqueue_assets()
+{
     static $loaded = false;
     if ($loaded) return;
     $loaded = true;
@@ -246,7 +253,7 @@ function owbn_force_enqueue_assets() {
     owbn_enqueue_plugin_assets();
 }
 
-add_shortcode('owbn-chronicles-list', function($atts) {
+add_shortcode('owbn-chronicles-list', function ($atts) {
     owbn_force_enqueue_assets(); // ← this ensures scripts/styles are loaded
 
     $atts = shortcode_atts([
@@ -294,7 +301,8 @@ add_shortcode('owbn-chronicles-list', function($atts) {
     return ob_get_clean();
 });
 
-function owbn_get_chronicle_query($atts) {
+function owbn_get_chronicle_query($atts)
+{
     $meta_map = [
         'plug' => 'chronicle_slug',
         'region' => 'region',
@@ -350,7 +358,8 @@ function owbn_get_chronicle_query($atts) {
     return new WP_Query($args);
 }
 
-function owbn_render_chronicle_filters($filter_keys) {
+function owbn_render_chronicle_filters($filter_keys)
+{
     ob_start();
     echo "<div class=\"owbn-chronicles-list-filters\">\n";
 
@@ -386,7 +395,8 @@ function owbn_render_chronicle_filters($filter_keys) {
     return ob_get_clean();
 }
 
-function owbn_render_chronicle_table($query, $column_keys) {
+function owbn_render_chronicle_table($query, $column_keys)
+{
     ob_start();
 
     echo "<div class=\"owbn-chronicle-legend\">\n";
@@ -398,6 +408,8 @@ function owbn_render_chronicle_table($query, $column_keys) {
 
     echo "<div class=\"chronicle-rows\">\n";
     $index = 0;
+
+    update_postmeta_cache(wp_list_pluck($query->posts, 'ID'));
 
     while ($query->have_posts()) {
         $query->the_post();
@@ -417,7 +429,8 @@ function owbn_render_chronicle_table($query, $column_keys) {
     return ob_get_clean();
 }
 
-function owbn_extract_data_attributes($post_id, $column_keys) {
+function owbn_extract_data_attributes($post_id, $column_keys)
+{
     $attrs = [];
 
     foreach ($column_keys as $key) {
@@ -483,12 +496,14 @@ function owbn_extract_data_attributes($post_id, $column_keys) {
     return implode(' ', $attrs);
 }
 
-function owbn_render_chronicle_column($post_id, $col_key) {
+function owbn_render_chronicle_column($post_id, $col_key)
+{
     $value = owbn_get_chronicle_field_value($post_id, $col_key);
     return "<div class=\"chron-field chron-{$col_key}\">{$value}</div>\n";
 }
 
-function owbn_get_chronicle_field_value($post_id, $field_key) {
+function owbn_get_chronicle_field_value($post_id, $field_key)
+{
     // 1. Dot Notation Support (e.g. ast_list.role,display_name)
     if (strpos($field_key, '.') !== false) {
         list($group_key, $field_keys) = parse_nested_meta_key($field_key);
@@ -538,7 +553,7 @@ function owbn_get_chronicle_field_value($post_id, $field_key) {
         case 'region':
             return esc_html(trim((string) get_post_meta($post_id, $field_key, true)));
 
-        // Grouped Fields (no dot notation)
+            // Grouped Fields (no dot notation)
         case 'ast_list':
             return owbn_render_nested_meta($post_id, 'ast_list');
 
@@ -571,7 +586,8 @@ function owbn_get_chronicle_field_value($post_id, $field_key) {
     return esc_html(trim((string) $meta));
 }
 
-function owbn_render_nested_meta($post_id, $group_key, $sub_keys = null) {
+function owbn_render_nested_meta($post_id, $group_key, $sub_keys = null)
+{
     $data = get_post_meta($post_id, $group_key, true);
     if (!is_array($data)) return '';
 
@@ -617,7 +633,8 @@ function owbn_render_nested_meta($post_id, $group_key, $sub_keys = null) {
     return implode("<br>\n", array_filter($parts));
 }
 
-function owbn_get_chronicle_location($post_id, $meta_key, &$data_attrs = null) {
+function owbn_get_chronicle_location($post_id, $meta_key, &$data_attrs = null)
+{
     $meta = get_post_meta($post_id, $meta_key, true);
 
     // Normalize: convert flat structure to array of one

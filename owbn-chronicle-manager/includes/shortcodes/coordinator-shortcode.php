@@ -82,13 +82,24 @@ add_shortcode('owbn-coordinator-meta', function ($atts) {
             'post_status'    => 'publish',
         ]);
 
-        if ($query->have_posts()) {
-            $query->the_post();
-            $post = get_post();
-            wp_reset_postdata();
-        } else {
-            $post = get_page_by_path($plug, OBJECT, 'owbn_coordinator');
+        // NEW - Single lookup
+        $query = new WP_Query([
+            'post_type'      => 'owbn_coordinator',
+            'posts_per_page' => 1,
+            'post_status'    => 'publish',
+            'meta_query'     => [[
+                'key'   => 'coordinator_slug',
+                'value' => $plug,
+            ]],
+            'no_found_rows'          => true,
+            'update_post_term_cache' => false,
+        ]);
+
+        if (!$query->have_posts()) {
+            return '';
         }
+
+        $post = $query->posts[0];
     }
 
     if (!$post) {
