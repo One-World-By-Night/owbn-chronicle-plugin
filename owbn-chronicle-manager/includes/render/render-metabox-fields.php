@@ -77,6 +77,10 @@ function owbn_render_chronicle_fields_metabox($post)
                     owbn_render_email_lists_field($key, $value, $meta);
                     break;
 
+                case 'player_lists_group':
+                    owbn_render_player_lists_field($key, $value, $meta);
+                    break;
+
                 case 'user_info':
                     owbn_render_user_info($key, $value, $meta);
                     break;
