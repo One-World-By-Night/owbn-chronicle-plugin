@@ -2,7 +2,8 @@
 if (!defined('ABSPATH')) exit;
 
 // Save the Chronicle meta fields
-function owbn_save_chronicle_meta($post_id) {
+function owbn_save_chronicle_meta($post_id)
+{
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (get_post_type($post_id) !== 'owbn_chronicle') return;
     $staff_user_dirty = false;
@@ -16,10 +17,10 @@ function owbn_save_chronicle_meta($post_id) {
     foreach ($definitions as $fields) {
         foreach ($fields as $key => $meta) {
             if (
-                !isset($_POST['owbn_chronicle_nonce']) || 
+                !isset($_POST['owbn_chronicle_nonce']) ||
                 !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['owbn_chronicle_nonce'])), 'owbn_chronicle_save')
             )
-            if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+                if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
 
             $raw = owbn_safe_post_value($key);
 
@@ -52,7 +53,7 @@ function owbn_save_chronicle_meta($post_id) {
                             if (
                                 $index === '__INDEX__' ||
                                 (empty($row['user']) && empty($row['display_name']) &&
-                                empty($row['email']) && empty($row['role']))
+                                    empty($row['email']) && empty($row['role']))
                             ) {
                                 continue;
                             }
@@ -334,6 +335,30 @@ function owbn_save_chronicle_meta($post_id) {
                     update_post_meta($post_id, $key, $cleaned);
                     break;
 
+                case 'player_lists_group':
+                    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+                    $group_data = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : [];
+                    $cleaned = [];
+
+                    if (is_array($group_data)) {
+                        foreach ($group_data as $index => $row) {
+                            if ($index === '__INDEX__') continue;
+                            if (empty($row['list_name'])) continue;
+
+                            $cleaned[] = [
+                                'list_name'        => sanitize_text_field($row['list_name'] ?? ''),
+                                'access'           => sanitize_text_field($row['access'] ?? 'Public'),
+                                'address'          => sanitize_email($row['address'] ?? ''),
+                                'ic_ooc'           => sanitize_text_field($row['ic_ooc'] ?? 'OOC'),
+                                'moderate_address' => sanitize_email($row['moderate_address'] ?? ''),
+                                'signup_url'       => esc_url_raw($row['signup_url'] ?? ''),
+                            ];
+                        }
+                    }
+
+                    update_post_meta($post_id, $key, $cleaned);
+                    break;
+
                 case 'user_info':
                     // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
                     $info = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : [];
@@ -360,7 +385,7 @@ function owbn_save_chronicle_meta($post_id) {
 
                     update_post_meta($post_id, $key, $cleaned);
                     break;
-                    
+
                 case 'chronicle_select':
                     $parent_id = intval($raw);
                     if ($parent_id > 0 && get_post_type($parent_id) === 'owbn_chronicle') {
@@ -386,7 +411,7 @@ function owbn_save_chronicle_meta($post_id) {
                 case 'url':
                     update_post_meta($post_id, $key, esc_url_raw($raw));
                     break;
-                    
+
                 default:
                     update_post_meta($post_id, $key, sanitize_text_field($raw));
                     break;
@@ -418,7 +443,8 @@ function owbn_save_chronicle_meta($post_id) {
         $self_promoted = false;
 
         if ((is_array($hst) && isset($hst['user']) && $hst['user'] === $current_user_id) ||
-            (is_array($cm_info) && isset($cm_info['user']) && $cm_info['user'] === $current_user_id)) {
+            (is_array($cm_info) && isset($cm_info['user']) && $cm_info['user'] === $current_user_id)
+        ) {
             $self_promoted = true;
         }
 
@@ -440,7 +466,8 @@ function owbn_save_chronicle_meta($post_id) {
 add_action('save_post', 'owbn_save_chronicle_meta');
 
 // Safe post value retrieval
-function owbn_safe_post_value($key, $source = null) {
+function owbn_safe_post_value($key, $source = null)
+{
     // phpcs:ignore WordPress.Security.NonceVerification.Missing
     $source = $source ?? $_POST;
     if (!isset($source[$key])) return '';
@@ -448,7 +475,8 @@ function owbn_safe_post_value($key, $source = null) {
 }
 
 // Validate Chronicle submission fields
-function owbn_validate_chronicle_submission($postarr) {
+function owbn_validate_chronicle_submission($postarr)
+{
     $definitions = owbn_get_chronicle_field_definitions();
     // Normalize all boolean checkbox fields to '0' if not set
     foreach ($definitions as $fields) {
@@ -517,7 +545,8 @@ function owbn_validate_chronicle_submission($postarr) {
 }
 
 // Display admin notice for invalid fields
-function owbn_admin_notice_invalid_fields() {
+function owbn_admin_notice_invalid_fields()
+{
     global $post;
     $post_id = 0;
 
@@ -559,7 +588,8 @@ function owbn_admin_notice_invalid_fields() {
 add_action('admin_notices', 'owbn_admin_notice_invalid_fields');
 
 // Force Chronicle posts to draft status if validation fails
-function owbn_force_draft_on_error($data, $postarr) {
+function owbn_force_draft_on_error($data, $postarr)
+{
     // Only apply to our custom post type
     if ($data['post_type'] !== 'owbn_chronicle') {
         return $data;
@@ -596,7 +626,8 @@ function owbn_force_draft_on_error($data, $postarr) {
 }
 add_filter('wp_insert_post_data', 'owbn_force_draft_on_error', 10, 2);
 
-function owbn_users_changed($old, $new) {
+function owbn_users_changed($old, $new)
+{
     $old_users = array_filter(array_map(fn($u) => trim(strtolower((string)$u)), is_array($old) ? $old : []));
     $new_users = array_filter(array_map(fn($u) => trim(strtolower((string)$u)), is_array($new) ? $new : []));
     sort($old_users);
@@ -604,7 +635,8 @@ function owbn_users_changed($old, $new) {
     return $old_users !== $new_users;
 }
 
-function owbn_admin_notice_dirty_user_change() {
+function owbn_admin_notice_dirty_user_change()
+{
     global $post;
     $post_id = 0;
 
@@ -627,7 +659,8 @@ function owbn_admin_notice_dirty_user_change() {
 add_action('admin_notices', 'owbn_admin_notice_dirty_user_change');
 
 // Sync custom slug field with post_name
-function owbn_sync_custom_slug_with_post_name($data, $postarr) {
+function owbn_sync_custom_slug_with_post_name($data, $postarr)
+{
     if ($data['post_type'] !== 'owbn_chronicle') {
         return $data;
     }

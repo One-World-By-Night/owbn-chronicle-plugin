@@ -188,7 +188,7 @@ function owbn_get_coordinator_field_definitions()
                 ],
             ],
             'email_lists' => [
-                'label' => __('Email Lists', 'owbn-chronicle-manager'),
+                'label' => __('Staff Lists', 'owbn-chronicle-manager'),
                 'type'  => 'email_lists_group',
                 'fields' => [
                     'list_name' => [
