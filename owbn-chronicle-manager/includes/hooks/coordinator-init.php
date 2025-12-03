@@ -93,7 +93,7 @@ function owbn_register_coordinator_meta()
 {
     if (!owbn_coordinators_enabled()) return;
 
-    $complex = ['coord_info', 'subcoord_list', 'document_links', 'email_lists'];
+    $complex = ['coord_info', 'subcoord_list', 'document_links', 'email_lists', 'player_lists'];
     $simple  = ['coordinator_slug', 'coordinator_title', 'office_description', 'term_start_date', 'term_end_date', 'web_url'];
 
     foreach ($complex as $field) {
@@ -205,6 +205,38 @@ function owbn_get_coordinator_field_definitions()
                     ],
                 ],
             ],
+            'player_lists' => [
+                'label' => __('Player Lists', 'owbn-chronicle-manager'),
+                'type'  => 'player_lists_group',
+                'fields' => [
+                    'list_name' => [
+                        'label' => __('List Name', 'owbn-chronicle-manager'),
+                        'type'  => 'text',
+                    ],
+                    'access' => [
+                        'label'   => __('Access', 'owbn-chronicle-manager'),
+                        'type'    => 'select',
+                        'options' => ['Public' => 'Public', 'Private' => 'Private'],
+                    ],
+                    'address' => [
+                        'label' => __('Address', 'owbn-chronicle-manager'),
+                        'type'  => 'email',
+                    ],
+                    'ic_ooc' => [
+                        'label'   => __('IC/OOC', 'owbn-chronicle-manager'),
+                        'type'    => 'select',
+                        'options' => ['IC' => 'In Character', 'OOC' => 'Out of Character'],
+                    ],
+                    'moderate_address' => [
+                        'label' => __('Moderator Email', 'owbn-chronicle-manager'),
+                        'type'  => 'email',
+                    ],
+                    'signup_url' => [
+                        'label' => __('Sign Up URL', 'owbn-chronicle-manager'),
+                        'type'  => 'url',
+                    ],
+                ],
+            ],
         ],
     ];
 }
@@ -285,6 +317,13 @@ function owbn_render_coordinator_fields_metabox($post)
                     echo '</td></tr><tr><td colspan="2">';
                     if (function_exists('owbn_render_email_lists_field')) {
                         owbn_render_email_lists_field($key, is_array($value) ? $value : [], $meta);
+                    }
+                    break;
+
+                case 'player_lists_group':
+                    echo '</td></tr><tr><td colspan="2">';
+                    if (function_exists('owbn_render_player_lists_field')) {
+                        owbn_render_player_lists_field($key, is_array($value) ? $value : [], $meta);
                     }
                     break;
 
@@ -495,5 +534,23 @@ function owbn_save_coordinator_meta($post_id, $post)
             ];
         }
         update_post_meta($post_id, 'email_lists', $cleaned);
+    }
+    // Player lists
+    if (isset($_POST['player_lists']) && is_array($_POST['player_lists'])) {
+        $cleaned = [];
+        foreach ($_POST['player_lists'] as $index => $row) {
+            if ($index === '__INDEX__') continue;
+            if (empty($row['list_name'])) continue;
+
+            $cleaned[] = [
+                'list_name'        => sanitize_text_field($row['list_name'] ?? ''),
+                'access'           => sanitize_text_field($row['access'] ?? 'Public'),
+                'address'          => sanitize_email($row['address'] ?? ''),
+                'ic_ooc'           => sanitize_text_field($row['ic_ooc'] ?? 'OOC'),
+                'moderate_address' => sanitize_email($row['moderate_address'] ?? ''),
+                'signup_url'       => esc_url_raw($row['signup_url'] ?? ''),
+            ];
+        }
+        update_post_meta($post_id, 'player_lists', $cleaned);
     }
 }

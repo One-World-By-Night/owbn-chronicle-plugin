@@ -133,6 +133,9 @@ function owbn_format_coordinator_data($post_id, $include_full = false)
 
         $email_lists = get_post_meta($post_id, 'email_lists', true);
         $output['email_lists'] = is_array($email_lists) ? $email_lists : [];
+
+        $player_lists = get_post_meta($post_id, 'player_lists', true);
+        $output['player_lists'] = is_array($player_lists) ? $player_lists : [];
     }
 
     return $output;

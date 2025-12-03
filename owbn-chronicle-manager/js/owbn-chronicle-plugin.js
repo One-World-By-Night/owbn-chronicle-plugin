@@ -186,6 +186,27 @@
             });
         }
     });
+    // -----------------------------
+    // PLAyER EMAIL LIST BLOCKS
+    // -----------------------------
+
+    $(document).on('click', '.add-player-list', function() {
+        var wrapper = $(this).closest('.owbn-player-lists-wrapper');
+        var template = wrapper.find('.owbn-player-template').html();
+        var newIndex = wrapper.find('.owbn-player-block').length;
+        var newBlock = template.replace(/__INDEX__/g, newIndex);
+        var $newBlock = $(newBlock);
+        $newBlock.find('[disabled]').prop('disabled', false);
+        wrapper.find('.owbn-player-template').before($newBlock);
+    });
+
+    $(document).on('click', '.toggle-player', function() {
+        $(this).closest('.owbn-player-block').find('.owbn-player-body').toggle();
+    });
+
+    $(document).on('click', '.remove-player', function() {
+        $(this).closest('.owbn-player-block').remove();
+    });
 
     // -----------------------------
     // AST BLOCKS (Chronicles)
