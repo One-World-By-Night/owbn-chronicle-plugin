@@ -292,40 +292,44 @@ function render_player_list_block($key, $index, $group, $subfields)
     <div class="owbn-player-block">
         <div class="owbn-player-header">
             <strong><?php echo esc_html($header); ?></strong>
-            <button type="button" class="toggle-player button">Toggle</button>
-            <button type="button" class="remove-player button">Remove</button>
+            <button type="button" class="toggle-player button button-small">Toggle</button>
         </div>
         <div class="owbn-player-body" style="display:none;">
-            <p>
-                <label>List Name</label><br>
-                <input type="text" name="<?php echo esc_attr("{$key}[{$index}][list_name]"); ?>" value="<?php echo esc_attr($list_name); ?>" class="regular-text" <?php echo esc_attr($disabled_attr); ?>>
-            </p>
-            <p>
-                <label>Access</label><br>
-                <select name="<?php echo esc_attr("{$key}[{$index}][access]"); ?>" <?php echo esc_attr($disabled_attr); ?>>
-                    <option value="Public" <?php selected($access, 'Public'); ?>>Public</option>
-                    <option value="Private" <?php selected($access, 'Private'); ?>>Private</option>
-                </select>
-            </p>
-            <p>
-                <label>Address</label><br>
-                <input type="email" name="<?php echo esc_attr("{$key}[{$index}][address]"); ?>" value="<?php echo esc_attr($address); ?>" class="regular-text" <?php echo esc_attr($disabled_attr); ?>>
-            </p>
-            <p>
-                <label>IC/OOC</label><br>
-                <select name="<?php echo esc_attr("{$key}[{$index}][ic_ooc]"); ?>" <?php echo esc_attr($disabled_attr); ?>>
-                    <option value="IC" <?php selected($ic_ooc, 'IC'); ?>>In Character</option>
-                    <option value="OOC" <?php selected($ic_ooc, 'OOC'); ?>>Out of Character</option>
-                </select>
-            </p>
-            <p>
-                <label>Moderator Email</label><br>
-                <input type="email" name="<?php echo esc_attr("{$key}[{$index}][moderate_address]"); ?>" value="<?php echo esc_attr($moderate); ?>" class="regular-text" <?php echo esc_attr($disabled_attr); ?>>
-            </p>
-            <p>
-                <label>Sign Up URL</label><br>
-                <input type="url" name="<?php echo esc_attr("{$key}[{$index}][signup_url]"); ?>" value="<?php echo esc_attr($signup); ?>" class="regular-text" <?php echo esc_attr($disabled_attr); ?>>
-            </p>
+            <div class="owbn-player-row">
+                <div class="owbn-player-field">
+                    <label>List Name</label>
+                    <input type="text" name="<?php echo esc_attr("{$key}[{$index}][list_name]"); ?>" value="<?php echo esc_attr($list_name); ?>" class="regular-text" <?php echo esc_attr($disabled_attr); ?>>
+                </div>
+                <div class="owbn-player-field owbn-player-field--narrow">
+                    <label>Access</label>
+                    <select name="<?php echo esc_attr("{$key}[{$index}][access]"); ?>" <?php echo esc_attr($disabled_attr); ?>>
+                        <option value="Public" <?php selected($access, 'Public'); ?>>Public</option>
+                        <option value="Private" <?php selected($access, 'Private'); ?>>Private</option>
+                    </select>
+                </div>
+                <div class="owbn-player-field owbn-player-field--narrow">
+                    <label>IC/OOC</label>
+                    <select name="<?php echo esc_attr("{$key}[{$index}][ic_ooc]"); ?>" <?php echo esc_attr($disabled_attr); ?>>
+                        <option value="IC" <?php selected($ic_ooc, 'IC'); ?>>IC</option>
+                        <option value="OOC" <?php selected($ic_ooc, 'OOC'); ?>>OOC</option>
+                    </select>
+                </div>
+            </div>
+            <div class="owbn-player-row">
+                <div class="owbn-player-field">
+                    <label>Address</label>
+                    <input type="email" name="<?php echo esc_attr("{$key}[{$index}][address]"); ?>" value="<?php echo esc_attr($address); ?>" class="regular-text" <?php echo esc_attr($disabled_attr); ?>>
+                </div>
+                <div class="owbn-player-field">
+                    <label>Moderator Email</label>
+                    <input type="email" name="<?php echo esc_attr("{$key}[{$index}][moderate_address]"); ?>" value="<?php echo esc_attr($moderate); ?>" class="regular-text" <?php echo esc_attr($disabled_attr); ?>>
+                </div>
+                <div class="owbn-player-field">
+                    <label>Sign Up URL</label>
+                    <input type="url" name="<?php echo esc_attr("{$key}[{$index}][signup_url]"); ?>" value="<?php echo esc_attr($signup); ?>" class="regular-text" <?php echo esc_attr($disabled_attr); ?>>
+                </div>
+            </div>
+            <button type="button" class="button button-small remove-player">Remove</button>
         </div>
     </div>
 <?php

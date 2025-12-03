@@ -512,3 +512,105 @@ button.add-email-list:hover {
 .owbn-remove-ast {
   margin-top: 0.5rem;
 }
+
+/* === PLAYER LIST BLOCKS === */
+.owbn-player-lists-wrapper {
+    margin-bottom: 1rem;
+}
+
+.owbn-player-block {
+    margin-bottom: 0.5rem;
+    border: 1px solid #e1e1e1;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.owbn-player-header {
+    background: #efefef;
+    padding: 0.4rem 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ccc;
+}
+
+.owbn-player-body {
+    padding: 0.5rem 0.75rem;
+    background: #fafafa;
+}
+
+.owbn-player-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.4rem;
+}
+
+.owbn-player-field {
+    flex: 1;
+    min-width: 120px;
+}
+
+.owbn-player-field--narrow {
+    flex: 0 0 100px;
+    min-width: 80px;
+}
+
+.owbn-player-field label {
+    font-weight: 600;
+    font-size: 11px;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.owbn-player-field input,
+.owbn-player-field select {
+    width: 100%;
+    padding: 4px 6px;
+    font-size: 13px;
+}
+
+button.remove-player {
+    margin-top: 0.25rem;
+    background-color: #d63638;
+    color: #fff;
+    border-color: #d63638;
+}
+
+/* === TIGHTEN AST & SUBCOORD BLOCKS === */
+.owbn-ast-block,
+.owbn-subcoord-block {
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #ddd;
+    background: #fafafa;
+}
+
+.owbn-user-info-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.4rem;
+}
+
+.owbn-user-info-field {
+    flex: 1;
+    min-width: 120px;
+}
+
+.owbn-user-info-field label {
+    font-weight: 600;
+    font-size: 11px;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.owbn-user-info-field input,
+.owbn-user-info-field select {
+    width: 100%;
+    padding: 4px 6px;
+    font-size: 13px;
+}
+
+.owbn-ast-block .button,
+.owbn-subcoord-block .button {
+    margin-top: 0.25rem;
+}
