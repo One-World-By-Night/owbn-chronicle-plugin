@@ -2,7 +2,8 @@
 if (!defined('ABSPATH')) exit;
 
 // Render document links field
-function owbn_render_document_links_field($key, $value, $meta) {
+function owbn_render_document_links_field($key, $value, $meta)
+{
     $groups = is_array($value) ? $value : [];
     if (empty($groups)) $groups[] = [];
 
@@ -23,7 +24,8 @@ function owbn_render_document_links_field($key, $value, $meta) {
     echo '</div>' . "\n";
 }
 
-function render_document_link_block($key, $index, $group) {
+function render_document_link_block($key, $index, $group)
+{
     ob_start();
 
     $title = $group['title'] ?? '';
@@ -40,7 +42,7 @@ function render_document_link_block($key, $index, $group) {
     $required_attr = (!$is_template && !$is_empty) ? ' required' : '';
     $disabled_attr = $is_template ? ' disabled' : '';
 
-    ?>
+?>
     <div class="owbn-document-block">
         <div class="owbn-document-header">
             <strong><?php echo esc_html($header); ?></strong>
@@ -53,27 +55,27 @@ function render_document_link_block($key, $index, $group) {
                 <div class="owbn-document-row">
                     <label>Title (required)</label><br>
                     <input type="text"
-                            name="<?php echo esc_attr("{$key}[{$index}][title]"); ?>"
-                            value="<?php echo esc_attr($title); ?>"
-                            class="regular-text"
-                            <?php echo $required_attr ? esc_attr($required_attr) : ''; ?>
-                            <?php echo $disabled_attr ? esc_attr($disabled_attr) : ''; ?>>
+                        name="<?php echo esc_attr("{$key}[{$index}][title]"); ?>"
+                        value="<?php echo esc_attr($title); ?>"
+                        class="regular-text"
+                        <?php echo $required_attr ? esc_attr($required_attr) : ''; ?>
+                        <?php echo $disabled_attr ? esc_attr($disabled_attr) : ''; ?>>
                 </div>
 
                 <div class="owbn-document-row">
                     <label>External URL (if no upload)</label><br>
                     <input type="url"
-                           name="<?php echo esc_attr("{$key}[{$index}][link]"); ?>"
-                           value="<?php echo esc_url($link); ?>"
-                           class="regular-text"
-                           <?php echo esc_attr($disabled_attr); ?>>
+                        name="<?php echo esc_attr("{$key}[{$index}][link]"); ?>"
+                        value="<?php echo esc_url($link); ?>"
+                        class="regular-text"
+                        <?php echo esc_attr($disabled_attr); ?>>
                 </div>
 
                 <div class="owbn-document-row">
                     <label>Upload File</label><br>
                     <input type="file"
-                           name="<?php echo esc_attr("{$key}[{$index}][upload]"); ?>"
-                           <?php echo esc_attr($disabled_attr); ?>>
+                        name="<?php echo esc_attr("{$key}[{$index}][upload]"); ?>"
+                        <?php echo esc_attr($disabled_attr); ?>>
                     <?php if ($file_url): ?>
                         <p><a href="<?php echo esc_url($file_url); ?>" target="_blank">Current file</a></p>
                     <?php endif; ?>
@@ -83,13 +85,14 @@ function render_document_link_block($key, $index, $group) {
             <button type="button" class="button remove-document-link">Remove</button>
         </div>
     </div>
-    <?php
+<?php
 
     return ob_get_clean();
 }
 
 // Render social links field
-function owbn_render_social_links_field($key, $value, $meta) {
+function owbn_render_social_links_field($key, $value, $meta)
+{
     $groups = is_array($value) ? $value : [];
     if (empty($groups)) $groups[] = [];
 
@@ -110,7 +113,8 @@ function owbn_render_social_links_field($key, $value, $meta) {
     echo '</div>' . "\n";
 }
 
-function render_social_link_block($key, $index, $group) {
+function render_social_link_block($key, $index, $group)
+{
     ob_start();
 
     $platform = $group['platform'] ?? '';
@@ -122,7 +126,7 @@ function render_social_link_block($key, $index, $group) {
     $platform_meta = $definitions['Links']['social_urls']['fields']['platform'] ?? [];
     $platform_options = $platform_meta['options'] ?? [];
 
-    ?>
+?>
     <div class="owbn-social-block">
         <div class="owbn-social-header">
             <strong><?php echo esc_html($header); ?></strong>
@@ -151,13 +155,14 @@ function render_social_link_block($key, $index, $group) {
             <button type="button" class="button remove-social-link">Remove</button>
         </div>
     </div>
-    <?php
+<?php
 
     return ob_get_clean();
 }
 
 // Render email lists field
-function owbn_render_email_lists_field($key, $value, $meta) {
+function owbn_render_email_lists_field($key, $value, $meta)
+{
     $groups = is_array($value) ? $value : [];
     if (empty($groups)) $groups[] = [];
 
@@ -180,7 +185,8 @@ function owbn_render_email_lists_field($key, $value, $meta) {
     echo '</div>' . "\n";
 }
 
-function render_email_list_block($key, $index, $group, $subfields) {
+function render_email_list_block($key, $index, $group, $subfields)
+{
     ob_start();
 
     $list_name = $group['list_name'] ?? '';
@@ -195,7 +201,7 @@ function render_email_list_block($key, $index, $group, $subfields) {
     $required_attr = (!$is_template && !$is_empty) ? ' required' : '';
     $disabled_attr = $is_template ? ' disabled' : '';
 
-    ?>
+?>
     <div class="owbn-email-block">
         <div class="owbn-email-header">
             <strong><?php echo esc_html($header); ?></strong>
@@ -207,14 +213,14 @@ function render_email_list_block($key, $index, $group, $subfields) {
                 <div class="owbn-email-field">
                     <label><?php echo esc_html($subfields['list_name']['label']); ?></label><br>
                     <input type="text"
-                           name="<?php echo esc_attr("{$key}[{$index}][list_name]"); ?>"
-                           value="<?php echo esc_attr($list_name); ?>"
-                           <input type="text"
-                                name="<?php echo esc_attr("{$key}[{$index}][title]"); ?>"
-                                value="<?php echo esc_attr($title); ?>"
-                                class="regular-text"
-                                <?php echo $required_attr ? esc_attr($required_attr) : ''; ?>
-                                <?php echo $disabled_attr ? esc_attr($disabled_attr) : ''; ?>>
+                        name="<?php echo esc_attr("{$key}[{$index}][list_name]"); ?>"
+                        value="<?php echo esc_attr($list_name); ?>"
+                        <input type="text"
+                        name="<?php echo esc_attr("{$key}[{$index}][title]"); ?>"
+                        value="<?php echo esc_attr($title); ?>"
+                        class="regular-text"
+                        <?php echo $required_attr ? esc_attr($required_attr) : ''; ?>
+                        <?php echo $disabled_attr ? esc_attr($disabled_attr) : ''; ?>>
                 </div>
 
                 <div class="owbn-email-field">
@@ -243,7 +249,85 @@ function render_email_list_block($key, $index, $group, $subfields) {
             <button type="button" class="button remove-email-list">Remove</button>
         </div>
     </div>
-    <?php
+<?php
 
+    return ob_get_clean();
+}
+
+function owbn_render_player_lists_field($key, $groups, $meta)
+{
+    $subfields = $meta['fields'] ?? [];
+    $groups = is_array($groups) ? $groups : [];
+
+    echo '<div class="owbn-player-lists-wrapper" data-field="' . esc_attr($key) . '">' . "\n";
+    echo '<h4>' . esc_html($meta['label'] ?? 'Player Lists') . '</h4>' . "\n";
+
+    foreach ($groups as $i => $group) {
+        echo render_player_list_block($key, $i, $group, $subfields);
+    }
+
+    echo '<div class="owbn-player-template" style="display:none;">';
+    echo render_player_list_block($key, '__INDEX__', [], $subfields);
+    echo '</div>';
+
+    echo '<button type="button" class="button add-player-list" data-field="' . esc_attr($key) . '">Add Player List</button>' . "\n";
+    echo '</div>' . "\n";
+}
+
+function render_player_list_block($key, $index, $group, $subfields)
+{
+    ob_start();
+
+    $list_name = $group['list_name'] ?? '';
+    $access = $group['access'] ?? 'Public';
+    $address = $group['address'] ?? '';
+    $ic_ooc = $group['ic_ooc'] ?? 'OOC';
+    $moderate = $group['moderate_address'] ?? '';
+    $signup = $group['signup_url'] ?? '';
+    $header = $list_name ?: 'Player List';
+
+    $is_template = ($index === '__INDEX__');
+    $disabled_attr = $is_template ? ' disabled' : '';
+?>
+    <div class="owbn-player-block">
+        <div class="owbn-player-header">
+            <strong><?php echo esc_html($header); ?></strong>
+            <button type="button" class="toggle-player button">Toggle</button>
+            <button type="button" class="remove-player button">Remove</button>
+        </div>
+        <div class="owbn-player-body" style="display:none;">
+            <p>
+                <label>List Name</label><br>
+                <input type="text" name="<?php echo esc_attr("{$key}[{$index}][list_name]"); ?>" value="<?php echo esc_attr($list_name); ?>" class="regular-text" <?php echo esc_attr($disabled_attr); ?>>
+            </p>
+            <p>
+                <label>Access</label><br>
+                <select name="<?php echo esc_attr("{$key}[{$index}][access]"); ?>" <?php echo esc_attr($disabled_attr); ?>>
+                    <option value="Public" <?php selected($access, 'Public'); ?>>Public</option>
+                    <option value="Private" <?php selected($access, 'Private'); ?>>Private</option>
+                </select>
+            </p>
+            <p>
+                <label>Address</label><br>
+                <input type="email" name="<?php echo esc_attr("{$key}[{$index}][address]"); ?>" value="<?php echo esc_attr($address); ?>" class="regular-text" <?php echo esc_attr($disabled_attr); ?>>
+            </p>
+            <p>
+                <label>IC/OOC</label><br>
+                <select name="<?php echo esc_attr("{$key}[{$index}][ic_ooc]"); ?>" <?php echo esc_attr($disabled_attr); ?>>
+                    <option value="IC" <?php selected($ic_ooc, 'IC'); ?>>In Character</option>
+                    <option value="OOC" <?php selected($ic_ooc, 'OOC'); ?>>Out of Character</option>
+                </select>
+            </p>
+            <p>
+                <label>Moderator Email</label><br>
+                <input type="email" name="<?php echo esc_attr("{$key}[{$index}][moderate_address]"); ?>" value="<?php echo esc_attr($moderate); ?>" class="regular-text" <?php echo esc_attr($disabled_attr); ?>>
+            </p>
+            <p>
+                <label>Sign Up URL</label><br>
+                <input type="url" name="<?php echo esc_attr("{$key}[{$index}][signup_url]"); ?>" value="<?php echo esc_attr($signup); ?>" class="regular-text" <?php echo esc_attr($disabled_attr); ?>>
+            </p>
+        </div>
+    </div>
+<?php
     return ob_get_clean();
 }
