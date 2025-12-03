@@ -94,7 +94,7 @@ function owbn_register_coordinator_meta()
     if (!owbn_coordinators_enabled()) return;
 
     $complex = ['coord_info', 'subcoord_list', 'document_links', 'email_lists', 'player_lists'];
-    $simple  = ['coordinator_slug', 'coordinator_title', 'office_description', 'term_start_date', 'term_end_date', 'web_url'];
+    $simple  = ['coordinator_slug', 'coordinator_title', 'office_description', 'term_start_date', 'term_end_date', 'web_url', 'coordinator_appointment', 'coordinator_type'];
 
     foreach ($complex as $field) {
         register_post_meta('owbn_coordinator', $field, ['type' => 'array', 'single' => true, 'show_in_rest' => true, 'sanitize_callback' => null]);
@@ -132,6 +132,16 @@ function owbn_get_coordinator_field_definitions()
             'office_description' => [
                 'label' => __('Office Description', 'owbn-chronicle-manager'),
                 'type'  => 'wysiwyg',
+            ],
+            'coordinator_appointment' => [
+                'label'   => __('Appointment', 'owbn-chronicle-manager'),
+                'type'    => 'select',
+                'options' => ['' => '-- Select --', 'Elected' => 'Elected', 'Appointed' => 'Appointed'],
+            ],
+            'coordinator_type' => [
+                'label'   => __('Type', 'owbn-chronicle-manager'),
+                'type'    => 'select',
+                'options' => ['' => '-- Select --', 'Administrative' => 'Administrative', 'Genre' => 'Genre', 'Clan' => 'Clan'],
             ],
         ],
         'Coordinator' => [
@@ -327,6 +337,15 @@ function owbn_render_coordinator_fields_metabox($post)
                     }
                     break;
 
+                case 'select':
+                    $options = $meta['options'] ?? [];
+                    echo '<select name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" class="regular-text">';
+                    foreach ($options as $opt_value => $opt_label) {
+                        echo '<option value="' . esc_attr($opt_value) . '" ' . selected($value, $opt_value, false) . '>' . esc_html($opt_label) . '</option>';
+                    }
+                    echo '</select>';
+                    break;
+
                 default:
                     echo '<input type="text" name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" value="' . esc_attr($value) . '" class="regular-text">';
                     break;
@@ -455,7 +474,7 @@ function owbn_save_coordinator_meta($post_id, $post)
     if (!current_user_can('edit_post', $post_id)) return;
 
     // Simple text/date fields
-    $simple_fields = ['coordinator_slug', 'coordinator_title', 'term_start_date', 'web_url'];
+    $simple_fields = ['coordinator_slug', 'coordinator_title', 'term_start_date', 'web_url', 'coordinator_appointment', 'coordinator_type'];
     foreach ($simple_fields as $field) {
         if (isset($_POST[$field])) {
             update_post_meta($post_id, $field, sanitize_text_field($_POST[$field]));

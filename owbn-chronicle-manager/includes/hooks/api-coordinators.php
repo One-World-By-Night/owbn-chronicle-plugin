@@ -109,7 +109,7 @@ function owbn_format_coordinator_data($post_id, $include_full = false)
     ];
 
     // Basic fields (always included)
-    $basic_fields = ['coordinator_title', 'term_start_date', 'web_url'];
+    $basic_fields = ['coordinator_title', 'term_start_date', 'web_url', 'coordinator_appointment', 'coordinator_type'];
     foreach ($basic_fields as $field) {
         $value = get_post_meta($post_id, $field, true);
         $output[$field] = is_string($value) && strlen(trim($value)) > 0 ? wp_kses_post($value) : '';
