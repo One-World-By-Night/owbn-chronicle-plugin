@@ -1,5 +1,6 @@
 <?php
-function owbn_get_chronicle_field_definitions() {
+function owbn_get_chronicle_field_definitions()
+{
     return [
         'Chronicle Details' => [
             'chronicle_slug' => [
@@ -77,17 +78,17 @@ function owbn_get_chronicle_field_definitions() {
             'hst_selection' => [
                 'label' => __('HST Selection Method', 'owbn-chronicle-manager'),
                 'type' => 'select',
-                'options' => ['--Select Option--','Player Vote', 'HST Appointed', 'Vote/Consensus of Staff', 'Other']
+                'options' => ['--Select Option--', 'Player Vote', 'HST Appointed', 'Vote/Consensus of Staff', 'Other']
             ],
             'cm_selection' => [
                 'label' => __('CM Selection Method', 'owbn-chronicle-manager'),
                 'type' => 'select',
-                'options' => ['--Select Option--','Player Vote', 'HST Appointed', 'Vote/Consensus of Staff', 'Other']
+                'options' => ['--Select Option--', 'Player Vote', 'HST Appointed', 'Vote/Consensus of Staff', 'Other']
             ],
             'ast_selection' => [
                 'label' => __('AST Selection Method', 'owbn-chronicle-manager'),
                 'type' => 'select',
-                'options' => ['--Select Option--','Player Vote', 'HST Appointed', 'Vote/Consensus of Staff', 'Other']
+                'options' => ['--Select Option--', 'Player Vote', 'HST Appointed', 'Vote/Consensus of Staff', 'Other']
             ],
             'hst_info' => [
                 'label' => __('HST Info', 'owbn-chronicle-manager'),
@@ -282,7 +283,7 @@ function owbn_get_chronicle_field_definitions() {
                 ],
             ],
             'email_lists' => [
-                'label' => __('Email Lists', 'owbn-chronicle-manager'),
+                'label' => __('Staff Lists', 'owbn-chronicle-manager'),
                 'type' => 'email_lists_group',
                 'fields' => [
                     'list_name' => [
@@ -297,6 +298,38 @@ function owbn_get_chronicle_field_definitions() {
                     'description' => [
                         'label' => __('Description', 'owbn-chronicle-manager'),
                         'type' => 'wysiwyg',
+                    ],
+                ],
+            ],
+            'player_lists' => [
+                'label' => __('Player Lists', 'owbn-chronicle-manager'),
+                'type'  => 'player_lists_group',
+                'fields' => [
+                    'list_name' => [
+                        'label' => __('List Name', 'owbn-chronicle-manager'),
+                        'type'  => 'text',
+                    ],
+                    'access' => [
+                        'label'   => __('Access', 'owbn-chronicle-manager'),
+                        'type'    => 'select',
+                        'options' => ['Public' => 'Public', 'Private' => 'Private'],
+                    ],
+                    'address' => [
+                        'label' => __('Address', 'owbn-chronicle-manager'),
+                        'type'  => 'email',
+                    ],
+                    'ic_ooc' => [
+                        'label'   => __('IC/OOC', 'owbn-chronicle-manager'),
+                        'type'    => 'select',
+                        'options' => ['IC' => 'In Character', 'OOC' => 'Out of Character'],
+                    ],
+                    'moderate_address' => [
+                        'label' => __('Moderator Email', 'owbn-chronicle-manager'),
+                        'type'  => 'email',
+                    ],
+                    'signup_url' => [
+                        'label' => __('Sign Up URL', 'owbn-chronicle-manager'),
+                        'type'  => 'url',
                     ],
                 ],
             ],

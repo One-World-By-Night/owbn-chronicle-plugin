@@ -72,108 +72,73 @@ function owbn_render_user_info($key, $value, $meta)
 }
 
 // Render the AST/Subcoord group fields for Chronicle and Coordinator post types
-function owbn_render_ast_group($key, $value, $meta, $field_key = null)
+function owbn_render_ast_group($field_key, $entries, $meta, $context = 'ast_list')
 {
-    // Use provided field_key or fall back to $key for backwards compatibility
-    $field_key = $field_key ?: $key;
+    $prefix = ($context === 'subcoord_list') ? 'subcoord' : 'ast';
+    $entries = is_array($entries) ? $entries : [];
 
-    $fields = $meta['fields'] ?? [];
-    $value = is_array($value) ? $value : [];
-    $users = get_users(['fields' => ['ID', 'display_name']]);
+    $users = get_users(['orderby' => 'display_name', 'order' => 'ASC']);
 
-    // Determine if this is subcoord or ast based on field_key
-    $is_subcoord = (strpos($field_key, 'subcoord') !== false);
-    $prefix = $is_subcoord ? 'subcoord' : 'ast';
+    echo '<div id="' . esc_attr($prefix) . '-group-wrapper" class="owbn-' . esc_attr($prefix) . '-wrapper">' . "\n";
 
-    echo "<div class=\"owbn-repeatable-group\" id=\"" . esc_attr($prefix) . "-group-wrapper\">\n";
-
-    foreach ($value as $index => $entry) {
-        echo "<div class=\"owbn-" . esc_attr($prefix) . "-block\">\n";
-
-        // Row 1: User
-        echo "<div class=\"owbn-user-info-row\">\n";
-        echo "<div class=\"owbn-user-info-field\">\n";
-        echo "<label>" . esc_html__('User', 'owbn-chronicle-manager') . "<br>\n";
-        echo "<select name=\"" . esc_attr($field_key) . "[" . esc_attr($index) . "][user]\" class=\"owbn-select2 single\">\n";
-        echo "<option value=\"\">" . esc_html__('— Select —', 'owbn-chronicle-manager') . "</option>\n";
-        echo "<option value=\"__new__\" " . selected($entry['user'] ?? '', '__new__', false) . ">" . esc_html__('[New User]', 'owbn-chronicle-manager') . "</option>\n";
-        foreach ($users as $user) {
-            echo "<option value=\"" . esc_attr($user->ID) . "\" " . selected($entry['user'] ?? '', $user->ID, false) . ">" . esc_html($user->display_name) . "</option>\n";
-        }
-        echo "</select>\n</label>\n</div>\n";
-        echo "</div>\n";
-
-        // Row 2: Display Name + Role
-        echo "<div class=\"owbn-user-info-row\">\n";
-        echo "<div class=\"owbn-user-info-field\">\n";
-        echo "<label>" . esc_html__('Display Name', 'owbn-chronicle-manager') . "<br>\n";
-        echo "<input type=\"text\" name=\"" . esc_attr($field_key) . "[" . esc_attr($index) . "][display_name]\" value=\"" . esc_attr($entry['display_name'] ?? '') . "\" class=\"regular-text\">\n";
-        echo "</label>\n</div>\n";
-        echo "<div class=\"owbn-user-info-field\">\n";
-        echo "<label>" . esc_html__('Role', 'owbn-chronicle-manager') . "<br>\n";
-        echo "<input type=\"text\" name=\"" . esc_attr($field_key) . "[" . esc_attr($index) . "][role]\" value=\"" . esc_attr($entry['role'] ?? '') . "\" class=\"regular-text\">\n";
-        echo "</label>\n</div>\n";
-        echo "</div>\n";
-
-        // Row 3: Emails
-        echo "<div class=\"owbn-user-info-row\">\n";
-        echo "<div class=\"owbn-user-info-field\">\n";
-        echo "<label>" . esc_html__('Actual Email', 'owbn-chronicle-manager') . "<br>\n";
-        echo "<input type=\"email\" name=\"" . esc_attr($field_key) . "[" . esc_attr($index) . "][actual_email]\" value=\"" . esc_attr($entry['actual_email'] ?? '') . "\" class=\"regular-text\">\n";
-        echo "</label>\n</div>\n";
-        echo "<div class=\"owbn-user-info-field\">\n";
-        echo "<label>" . esc_html__('Display Email', 'owbn-chronicle-manager') . "<br>\n";
-        echo "<input type=\"email\" name=\"" . esc_attr($field_key) . "[" . esc_attr($index) . "][display_email]\" value=\"" . esc_attr($entry['display_email'] ?? '') . "\" class=\"regular-text\">\n";
-        echo "</label>\n</div>\n";
-        echo "</div>\n";
-
-        echo "<button type=\"button\" class=\"button owbn-remove-" . esc_attr($prefix) . "\">" . esc_html__('Remove Account', 'owbn-chronicle-manager') . "</button>\n";
-        echo "</div>\n"; // .owbn-{$prefix}-block
+    foreach ($entries as $index => $entry) {
+        render_ast_subcoord_block($prefix, $field_key, $index, $entry, $users);
     }
 
     // Template for JS clone
-    echo "<div class=\"owbn-" . esc_attr($prefix) . "-block owbn-" . esc_attr($prefix) . "-template\" style=\"display:none;\" data-field-key=\"" . esc_attr($field_key) . "\">\n";
+    echo '<div class="owbn-' . esc_attr($prefix) . '-block owbn-' . esc_attr($prefix) . '-template" style="display:none;">' . "\n";
+    render_ast_subcoord_block($prefix, $field_key, '__INDEX__', [], $users, true);
+    echo '</div>' . "\n";
 
-    // Row 1: User
-    echo "<div class=\"owbn-user-info-row\">\n";
-    echo "<div class=\"owbn-user-info-field\">\n";
-    echo "<label>" . esc_html__('User', 'owbn-chronicle-manager') . "<br>\n";
-    echo "<select name=\"" . esc_attr($field_key) . "[__INDEX__][user]\" class=\"owbn-select2 single\">\n";
-    echo "<option value=\"\">" . esc_html__('— Select —', 'owbn-chronicle-manager') . "</option>\n";
-    echo "<option value=\"__new__\">[New User]</option>\n";
-    foreach ($users as $user) {
-        echo "<option value=\"" . esc_attr($user->ID) . "\">" . esc_html($user->display_name) . "</option>\n";
-    }
-    echo "</select>\n</label>\n</div>\n";
-    echo "</div>\n";
+    echo '<button type="button" class="button owbn-add-' . esc_attr($prefix) . '">Add</button>' . "\n";
+    echo '</div>' . "\n";
+}
 
-    // Row 2: Display Name + Role
-    echo "<div class=\"owbn-user-info-row\">\n";
-    echo "<div class=\"owbn-user-info-field\">\n";
-    echo "<label>" . esc_html__('Display Name', 'owbn-chronicle-manager') . "<br>\n";
-    echo "<input type=\"text\" name=\"" . esc_attr($field_key) . "[__INDEX__][display_name]\" class=\"regular-text\">\n";
-    echo "</label>\n</div>\n";
-    echo "<div class=\"owbn-user-info-field\">\n";
-    echo "<label>" . esc_html__('Role', 'owbn-chronicle-manager') . "<br>\n";
-    echo "<input type=\"text\" name=\"" . esc_attr($field_key) . "[__INDEX__][role]\" class=\"regular-text\">\n";
-    echo "</label>\n</div>\n";
-    echo "</div>\n";
+function render_ast_subcoord_block($prefix, $field_key, $index, $entry, $users, $is_template = false)
+{
+    $user_id = $entry['user'] ?? '';
+    $display_name = $entry['display_name'] ?? '';
+    $role = $entry['role'] ?? '';
+    $actual_email = $entry['actual_email'] ?? '';
+    $display_email = $entry['display_email'] ?? '';
 
-    // Row 3: Emails
-    echo "<div class=\"owbn-user-info-row\">\n";
-    echo "<div class=\"owbn-user-info-field\">\n";
-    echo "<label>" . esc_html__('Actual Email', 'owbn-chronicle-manager') . "<br>\n";
-    echo "<input type=\"email\" name=\"" . esc_attr($field_key) . "[__INDEX__][actual_email]\" class=\"regular-text\">\n";
-    echo "</label>\n</div>\n";
-    echo "<div class=\"owbn-user-info-field\">\n";
-    echo "<label>" . esc_html__('Display Email', 'owbn-chronicle-manager') . "<br>\n";
-    echo "<input type=\"email\" name=\"" . esc_attr($field_key) . "[__INDEX__][display_email]\" class=\"regular-text\">\n";
-    echo "</label>\n</div>\n";
-    echo "</div>\n";
-
-    echo "<button type=\"button\" class=\"button owbn-remove-" . esc_attr($prefix) . "\">" . esc_html__('Remove Account', 'owbn-chronicle-manager') . "</button>\n";
-    echo "</div>\n"; // end template
-
-    echo "<button type=\"button\" class=\"button button-primary owbn-add-" . esc_attr($prefix) . "\">" . esc_html__('Add User', 'owbn-chronicle-manager') . "</button>\n";
-    echo "</div>\n"; // .owbn-repeatable-group
+?>
+    <div class="owbn-<?php echo esc_attr($prefix); ?>-block">
+        <div class="owbn-user-row">
+            <div class="owbn-user-field owbn-user-field--wide">
+                <label><?php esc_html_e('User', 'owbn-chronicle-manager'); ?></label>
+                <select name="<?php echo esc_attr("{$field_key}[{$index}][user]"); ?>" class="owbn-select2 single">
+                    <option value=""><?php esc_html_e('— Select —', 'owbn-chronicle-manager'); ?></option>
+                    <option value="__new__">[New User]</option>
+                    <?php foreach ($users as $user): ?>
+                        <option value="<?php echo esc_attr($user->ID); ?>" <?php selected($user_id, $user->ID); ?>>
+                            <?php echo esc_html($user->display_name); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="owbn-user-field owbn-user-field--action">
+                <button type="button" class="button button-small owbn-remove-<?php echo esc_attr($prefix); ?>">Remove</button>
+            </div>
+        </div>
+        <div class="owbn-user-row">
+            <div class="owbn-user-field">
+                <label><?php esc_html_e('Display Name', 'owbn-chronicle-manager'); ?></label>
+                <input type="text" name="<?php echo esc_attr("{$field_key}[{$index}][display_name]"); ?>" value="<?php echo esc_attr($display_name); ?>" class="regular-text">
+            </div>
+            <div class="owbn-user-field">
+                <label><?php esc_html_e('Role', 'owbn-chronicle-manager'); ?></label>
+                <input type="text" name="<?php echo esc_attr("{$field_key}[{$index}][role]"); ?>" value="<?php echo esc_attr($role); ?>" class="regular-text">
+            </div>
+            <div class="owbn-user-field">
+                <label><?php esc_html_e('Actual Email', 'owbn-chronicle-manager'); ?></label>
+                <input type="email" name="<?php echo esc_attr("{$field_key}[{$index}][actual_email]"); ?>" value="<?php echo esc_attr($actual_email); ?>" class="regular-text">
+            </div>
+            <div class="owbn-user-field">
+                <label><?php esc_html_e('Display Email', 'owbn-chronicle-manager'); ?></label>
+                <input type="email" name="<?php echo esc_attr("{$field_key}[{$index}][display_email]"); ?>" value="<?php echo esc_attr($display_email); ?>" class="regular-text">
+            </div>
+        </div>
+    </div>
+<?php
 }
