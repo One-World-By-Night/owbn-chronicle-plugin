@@ -36,7 +36,7 @@ function owbn_register_chronicle_cpt()
         'public'             => true,
         'show_ui'            => true,
         'show_in_menu'       => true,
-        'has_archive'        => true,
+        'has_archive'        => false,
         'rewrite'            => ['slug' => 'chronicles', 'with_front' => false],
         'supports'           => ['title', 'editor', 'author', 'revisions'],
         'show_in_rest'       => true,
