@@ -171,6 +171,8 @@ function owbn_format_chronicle_detail_data($post_id)
                 $output['chronicle_parent_id'] = $parent_id;
             } elseif (in_array($key, ['hst_info', 'cm_info', 'ast_list', 'admin_contact'], true)) {
                 $value = owbn_filter_personnel_list($raw_value);
+            } elseif ($key === 'document_links') {
+                $value = owbn_format_document_links($raw_value);
             } elseif (is_array($raw_value)) {
                 $value = owbn_strip_wysiwyg_subfields($raw_value, $definition);
             } elseif (is_string($raw_value) && strlen(trim($raw_value)) > 0) {
