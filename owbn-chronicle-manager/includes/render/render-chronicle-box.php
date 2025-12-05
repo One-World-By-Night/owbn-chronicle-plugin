@@ -1,7 +1,8 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-function owbn_render_chronicle_card($post_id) {
+function owbn_render_chronicle_card($post_id)
+{
     if (empty($post_id)) return '';
 
     $title = get_the_title($post_id);
@@ -117,8 +118,8 @@ function owbn_render_chronicle_card($post_id) {
             $icon  = $document_icons['default'];
 
             // Prioritize upload over external link
-            if (!empty($doc['upload'])) {
-                $url = wp_get_attachment_url($doc['upload']);
+            if (!empty($doc['file_id'])) {
+                $url = wp_get_attachment_url($doc['file_id']);
                 $ext = pathinfo($url, PATHINFO_EXTENSION);
                 $icon = $document_icons[strtolower($ext)] ?? $document_icons['default'];
             } elseif (!empty($doc['link'])) {
@@ -137,7 +138,7 @@ function owbn_render_chronicle_card($post_id) {
 
 
     ob_start();
-    ?>
+?>
     <div class="owbn-chronicle-card">
         <div class="owbn-chronicle-title">
             <h2 class="chronicle-title"><a href="<?php echo esc_url($view_url); ?>"><?php echo esc_html($title); ?></a></h2>
@@ -148,7 +149,7 @@ function owbn_render_chronicle_card($post_id) {
                     <strong>Genres:</strong> <?php echo esc_html($genre_display); ?>
                 </div>
                 <div class="owbn-chronicle-card-location">
-                    IC: <?php echo esc_html($ic_location); ?> | 
+                    IC: <?php echo esc_html($ic_location); ?> |
                     <?php echo esc_html($region); ?><br />
                     OOC: <?php echo esc_html($location); ?> |
                     <?php echo esc_html($game_type); ?><br />
@@ -174,6 +175,6 @@ function owbn_render_chronicle_card($post_id) {
             </div>
         </div>
     </div>
-    <?php
+<?php
     return ob_get_clean();
 }

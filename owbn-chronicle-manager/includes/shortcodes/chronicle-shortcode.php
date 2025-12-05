@@ -660,8 +660,8 @@ function owbn_render_document_links($post)
         $url       = '';
         $icon      = $document_icons['default'];
 
-        if (!empty($doc['upload'])) {
-            $url = wp_get_attachment_url($doc['upload']);
+        if (!empty($doc['file_id'])) {
+            $url = wp_get_attachment_url($doc['file_id']);
             $ext = strtolower(pathinfo($url, PATHINFO_EXTENSION));
             $icon = $document_icons[$ext] ?? $document_icons['default'];
         } elseif (!empty($doc['link'])) {

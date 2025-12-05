@@ -74,7 +74,7 @@ function render_document_link_block($key, $index, $group)
                 <div class="owbn-document-row">
                     <label>Upload File</label><br>
                     <input type="file"
-                        name="<?php echo esc_attr("{$key}[{$index}][upload]"); ?>"
+                        name="<?php echo esc_attr("{$key}_{$index}_upload"); ?>"
                         <?php echo esc_attr($disabled_attr); ?>>
                     <?php if ($file_url): ?>
                         <p><a href="<?php echo esc_url($file_url); ?>" target="_blank">Current file</a></p>
