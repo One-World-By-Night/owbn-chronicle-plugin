@@ -162,13 +162,9 @@ function owbn_format_chronicle_detail_data($post_id)
                 $parent_slug = get_post_meta($parent_id, 'chronicle_slug', true);
                 $parent_title = get_the_title($parent_id);
 
-                if ($parent_slug && $parent_title) {
-                    $value = "[{$parent_slug}] {$parent_title}";
-                } elseif ($parent_title) {
-                    $value = $parent_title;
-                }
-
+                $value = $parent_slug ?: '';
                 $output['chronicle_parent_id'] = $parent_id;
+                $output['chronicle_parent_title'] = $parent_title ? wp_kses_post($parent_title) : '';
             } elseif (in_array($key, ['hst_info', 'cm_info', 'ast_list', 'admin_contact'], true)) {
                 $value = owbn_filter_personnel_list($raw_value);
             } elseif ($key === 'document_links') {
@@ -179,7 +175,22 @@ function owbn_format_chronicle_detail_data($post_id)
                 $value = wp_kses_post($raw_value);
             }
 
-            $output[$key] = $value ?? '';
+            $array_fields = [
+                'session_list',
+                'ast_list',
+                'admin_contact',
+                'ic_location_list',
+                'game_site_list',
+                'social_urls',
+                'email_lists',
+                'player_lists',
+                'ooc_locations',
+                'genres',
+                'hst_info',
+                'cm_info',
+                'document_links'
+            ];
+            $output[$key] = $value ?? (in_array($key, $array_fields, true) ? [] : '');
         }
     }
 
@@ -196,7 +207,7 @@ function owbn_format_chronicle_detail_data($post_id)
 function owbn_filter_personnel_list($raw_value)
 {
     if (!is_array($raw_value)) {
-        return $raw_value;
+        return [];  // Return empty array instead
     }
 
     // Single user_info structure
