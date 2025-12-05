@@ -308,11 +308,13 @@
         if (isSatellite) {
             $('#owbn-cm-info-wrapper').hide();
             $('#owbn-cm-info-message').show();
-            $('.owbn-parent-chronicle-field').show();
+            $('#owbn-parent-chronicle-select').show();
+            $('#owbn-parent-chronicle-message').hide();
         } else {
             $('#owbn-cm-info-wrapper').show();
             $('#owbn-cm-info-message').hide();
-            $('.owbn-parent-chronicle-field').hide();
+            $('#owbn-parent-chronicle-select').hide();
+            $('#owbn-parent-chronicle-message').show();
         }
     }
 
