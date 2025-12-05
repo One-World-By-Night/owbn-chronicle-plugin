@@ -519,6 +519,8 @@ function owbn_save_coordinator_meta($post_id, $post)
     // Document links (document_links_group pattern)
     if (isset($_POST['document_links']) && is_array($_POST['document_links'])) {
         $cleaned = [];
+        $existing = get_post_meta($post_id, 'document_links', true);
+
         foreach ($_POST['document_links'] as $index => $row) {
             if ($index === '__INDEX__') continue;
             if (empty($row['title']) && empty($row['link'])) continue;
@@ -528,9 +530,19 @@ function owbn_save_coordinator_meta($post_id, $post)
                 'link'  => esc_url_raw($row['link'] ?? ''),
             ];
 
-            // Preserve existing file_id
-            $existing = get_post_meta($post_id, 'document_links', true);
-            if (is_array($existing) && isset($existing[$index]['file_id'])) {
+            // Handle uploaded file
+            $file_field = "document_links_{$index}_upload";
+            if (!empty($_FILES[$file_field]) && !empty($_FILES[$file_field]['tmp_name'])) {
+                require_once ABSPATH . 'wp-admin/includes/file.php';
+                require_once ABSPATH . 'wp-admin/includes/media.php';
+                require_once ABSPATH . 'wp-admin/includes/image.php';
+
+                $attachment_id = media_handle_upload($file_field, $post_id);
+                if (!is_wp_error($attachment_id)) {
+                    $entry['file_id'] = $attachment_id;
+                }
+            } elseif (is_array($existing) && isset($existing[$index]['file_id'])) {
+                // Preserve existing file_id if no new upload
                 $entry['file_id'] = $existing[$index]['file_id'];
             }
 

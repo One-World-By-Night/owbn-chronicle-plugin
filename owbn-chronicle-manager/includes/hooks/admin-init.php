@@ -227,3 +227,13 @@ add_action('init', function () {
         ]);
     }
 });
+
+// Enable file uploads in post editor
+add_action('post_edit_form_tag', 'owbn_add_enctype_to_edit_form');
+function owbn_add_enctype_to_edit_form()
+{
+    global $post;
+    if (in_array($post->post_type, ['owbn_chronicle', 'owbn_coordinator'], true)) {
+        echo ' enctype="multipart/form-data"';
+    }
+}
