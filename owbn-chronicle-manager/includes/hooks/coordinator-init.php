@@ -343,18 +343,39 @@ function owbn_render_coordinator_fields_metabox($post)
                     break;
 
                 case 'chronicle_select':
-                    $chronicles = get_posts([
-                        'post_type'      => 'owbn_chronicle',
-                        'posts_per_page' => -1,
-                        'post_status'    => 'publish',
-                        'orderby'        => 'title',
-                        'order'          => 'ASC',
-                    ]);
+                    $chronicles = [];
+
+                    // Try owbn-client first (respects local/remote mode)
+                    if (function_exists('owc_get_chronicles')) {
+                        $data = owc_get_chronicles();
+                        if (is_array($data) && !is_wp_error($data)) {
+                            $chronicles = $data;
+                        }
+                    }
+
+                    // Fallback to local if client not available or returned empty
+                    if (empty($chronicles) && post_type_exists('owbn_chronicle')) {
+                        $posts = get_posts([
+                            'post_type'      => 'owbn_chronicle',
+                            'posts_per_page' => -1,
+                            'post_status'    => 'publish',
+                            'orderby'        => 'title',
+                            'order'          => 'ASC',
+                        ]);
+                        foreach ($posts as $chron) {
+                            $chronicles[] = [
+                                'slug'  => get_post_meta($chron->ID, 'chronicle_slug', true) ?: sanitize_title($chron->post_title),
+                                'title' => $chron->post_title,
+                            ];
+                        }
+                    }
+
                     echo '<select name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" class="regular-text owbn-select2 single" style="width: 100%;">';
                     echo '<option value="">' . esc_html__('— Select —', 'owbn-chronicle-manager') . '</option>';
                     foreach ($chronicles as $chron) {
-                        $slug = get_post_meta($chron->ID, 'chronicle_slug', true) ?: sanitize_title($chron->post_title);
-                        echo '<option value="' . esc_attr($slug) . '" ' . selected($value, $slug, false) . '>' . esc_html($chron->post_title) . '</option>';
+                        $slug = $chron['slug'] ?? '';
+                        $title = $chron['title'] ?? $slug;
+                        echo '<option value="' . esc_attr($slug) . '" ' . selected($value, $slug, false) . '>' . esc_html($title) . '</option>';
                     }
                     echo '</select>';
                     echo '<p class="description">' . esc_html__('Chronicle used for scenes, house rules, etc.', 'owbn-chronicle-manager') . '</p>';
