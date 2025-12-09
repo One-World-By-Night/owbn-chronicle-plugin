@@ -124,6 +124,7 @@ add_shortcode('owbn-coordinator-meta', function ($atts) {
         'subcoord_list'   => 'owbn_render_coordinator_subcoord_list',
         'document_links'  => 'owbn_render_coordinator_document_links',
         'email_lists'     => 'owbn_render_coordinator_email_lists',
+        'hosting_chronicle'  => 'owbn_render_coordinator_hosting_chronicle',
     ];
 
     if (isset($term_handlers[$term]) && function_exists($term_handlers[$term])) {
@@ -191,4 +192,34 @@ function owbn_coordinator_output_simple_meta($post, $term)
     }
 
     return $output;
+}
+
+function owbn_render_coordinator_hosting_chronicle($post)
+{
+    if (!$post instanceof WP_Post) return '';
+
+    $slug = get_post_meta($post->ID, 'hosting_chronicle', true);
+    if (empty($slug)) return '';
+
+    // Find chronicle by slug
+    $query = new WP_Query([
+        'post_type'      => 'owbn_chronicle',
+        'posts_per_page' => 1,
+        'post_status'    => 'publish',
+        'meta_query'     => [[
+            'key'   => 'chronicle_slug',
+            'value' => $slug,
+        ]],
+        'no_found_rows'          => true,
+        'update_post_term_cache' => false,
+    ]);
+
+    if (!$query->have_posts()) {
+        return esc_html($slug);
+    }
+
+    $chron = $query->posts[0];
+    $url = home_url('/chronicles/' . $slug . '/');
+
+    return '<a href="' . esc_url($url) . '">' . esc_html($chron->post_title) . '</a>';
 }
