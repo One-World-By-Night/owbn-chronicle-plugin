@@ -570,8 +570,9 @@ function owbn_save_coordinator_meta($post_id, $post)
             if (empty($row['title']) && empty($row['link'])) continue;
 
             $entry = [
-                'title' => sanitize_text_field($row['title'] ?? ''),
-                'link'  => esc_url_raw($row['link'] ?? ''),
+                'title'        => sanitize_text_field($row['title'] ?? ''),
+                'link'         => esc_url_raw($row['link'] ?? ''),
+                'last_updated' => sanitize_text_field($row['last_updated'] ?? ''),
             ];
 
             // Handle uploaded file
@@ -584,6 +585,9 @@ function owbn_save_coordinator_meta($post_id, $post)
                 $attachment_id = media_handle_upload($file_field, $post_id);
                 if (!is_wp_error($attachment_id)) {
                     $entry['file_id'] = $attachment_id;
+                    if (empty($entry['last_updated'])) {
+                        $entry['last_updated'] = current_time('Y-m-d');
+                    }
                 }
             } elseif (is_array($existing) && isset($existing[$index]['file_id'])) {
                 // Preserve existing file_id if no new upload
