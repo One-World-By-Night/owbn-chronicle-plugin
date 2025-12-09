@@ -249,6 +249,10 @@ function owbn_get_chronicle_field_definitions()
                         'label' => __('Upload File (optional)', 'owbn-chronicle-manager'),
                         'type'  => 'upload',
                     ],
+                    'last_updated' => [
+                        'label' => __('Last Updated', 'owbn-chronicle-manager'),
+                        'type'  => 'date',
+                    ],
                 ],
             ],
             'social_urls' => [

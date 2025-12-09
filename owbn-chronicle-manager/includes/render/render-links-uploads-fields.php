@@ -80,6 +80,16 @@ function render_document_link_block($key, $index, $group)
                         <p><a href="<?php echo esc_url($file_url); ?>" target="_blank">Current file</a></p>
                     <?php endif; ?>
                 </div>
+
+                <div class="owbn-document-row">
+                    <label>Last Updated</label><br>
+                    <?php $last_updated = $group['last_updated'] ?? ''; ?>
+                    <input type="date"
+                        name="<?php echo esc_attr("{$key}[{$index}][last_updated]"); ?>"
+                        value="<?php echo esc_attr($last_updated); ?>"
+                        class="regular-text"
+                        <?php echo esc_attr($disabled_attr); ?>>
+                </div>
             </div>
 
             <button type="button" class="button remove-document-link">Remove</button>

@@ -254,9 +254,10 @@ function owbn_save_chronicle_meta($post_id)
                         foreach ($group_data as $index => $row) {
                             $row_cleaned = [];
 
-                            // Sanitize title and link
+                            // Sanitize title, link, and last_updated
                             $row_cleaned['title'] = isset($row['title']) ? sanitize_text_field($row['title']) : '';
                             $row_cleaned['link']  = isset($row['link']) ? esc_url_raw($row['link']) : '';
+                            $row_cleaned['last_updated'] = isset($row['last_updated']) ? sanitize_text_field($row['last_updated']) : '';
 
                             // Handle uploaded file
                             $file_field = "{$key}_{$index}_upload";
@@ -268,6 +269,10 @@ function owbn_save_chronicle_meta($post_id)
                                 $attachment_id = media_handle_upload($file_field, $post_id);
                                 if (!is_wp_error($attachment_id)) {
                                     $row_cleaned['file_id'] = $attachment_id;
+                                    // Auto-set last_updated on new upload if not manually set
+                                    if (empty($row_cleaned['last_updated'])) {
+                                        $row_cleaned['last_updated'] = current_time('Y-m-d');
+                                    }
                                 }
                             } else {
                                 // Preserve existing file_id if already saved

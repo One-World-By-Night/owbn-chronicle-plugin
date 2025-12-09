@@ -200,9 +200,10 @@ function owbn_format_document_links($document_links)
         }
 
         $formatted[] = [
-            'title'       => $doc['title'] ?? '',
-            'url'         => $url,
-            'description' => $doc['description'] ?? '',
+            'title'        => $doc['title'] ?? '',
+            'url'          => $url,
+            'description'  => $doc['description'] ?? '',
+            'last_updated' => $doc['last_updated'] ?? '',
         ];
     }
 
