@@ -12,6 +12,38 @@ if (!defined('ABSPATH')) exit;
 // CHRONICLE API HANDLERS
 // ══════════════════════════════════════════════════════════════════════════════
 
+/**
+ * Build WP_Query for chronicles
+ */
+function owbn_get_chronicle_query($atts = [])
+{
+    $args = [
+        'post_type'      => 'owbn_chronicle',
+        'post_status'    => 'publish',
+        'posts_per_page' => isset($atts['limit']) ? intval($atts['limit']) : -1,
+        'orderby'        => 'title',
+        'order'          => 'ASC',
+    ];
+
+    // Optional filters
+    if (!empty($atts['region'])) {
+        $args['meta_query'][] = [
+            'key'   => 'chronicle_region',
+            'value' => sanitize_text_field($atts['region']),
+        ];
+    }
+
+    if (!empty($atts['genre'])) {
+        $args['meta_query'][] = [
+            'key'     => 'genres',
+            'value'   => sanitize_text_field($atts['genre']),
+            'compare' => 'LIKE',
+        ];
+    }
+
+    return new WP_Query($args);
+}
+
 function owbn_api_get_chronicles($request)
 {
     if (!owbn_chronicles_enabled()) {
