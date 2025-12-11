@@ -1,4 +1,11 @@
 <?php
+/** File: includes/hooks/coordinator-init.php
+ * Text Domain: owbn-chronicle-manager
+ * @version 2.3.0
+ * @author greghacke
+ * Function: Coordinator CPT registration, permalinks, meta fields, metabox, and permissions
+ */
+
 if (!defined('ABSPATH')) exit;
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -96,7 +103,6 @@ function owbn_register_coordinator_meta()
     $complex = ['coord_info', 'subcoord_list', 'document_links', 'email_lists', 'player_lists'];
     $simple  = ['coordinator_slug', 'coordinator_title', 'office_description', 'term_start_date', 'term_end_date', 'web_url', 'coordinator_appointment', 'coordinator_type', 'hosting_chronicle'];
 
-
     foreach ($complex as $field) {
         register_post_meta('owbn_coordinator', $field, ['type' => 'array', 'single' => true, 'show_in_rest' => true, 'sanitize_callback' => null]);
     }
@@ -107,7 +113,7 @@ function owbn_register_coordinator_meta()
 add_action('init', 'owbn_register_coordinator_meta');
 
 // ══════════════════════════════════════════════════════════════════════════════
-// COORDINATOR FIELD DEFINITIONS (mirrors chronicle fields.php pattern)
+// COORDINATOR FIELD DEFINITIONS
 // ══════════════════════════════════════════════════════════════════════════════
 
 function owbn_get_coordinator_field_definitions()
@@ -199,6 +205,10 @@ function owbn_get_coordinator_field_definitions()
                     'upload' => [
                         'label' => __('Upload File', 'owbn-chronicle-manager'),
                         'type'  => 'file',
+                    ],
+                    'last_updated' => [
+                        'label' => __('Last Updated', 'owbn-chronicle-manager'),
+                        'type'  => 'date',
                     ],
                 ],
             ],
@@ -345,7 +355,6 @@ function owbn_render_coordinator_fields_metabox($post)
                 case 'chronicle_select':
                     $chronicles = [];
 
-                    // Try owbn-client first (respects local/remote mode)
                     if (function_exists('owc_get_chronicles')) {
                         $data = owc_get_chronicles();
                         if (is_array($data) && !is_wp_error($data)) {
@@ -353,7 +362,6 @@ function owbn_render_coordinator_fields_metabox($post)
                         }
                     }
 
-                    // Fallback to local if client not available or returned empty
                     if (empty($chronicles) && post_type_exists('owbn_chronicle')) {
                         $posts = get_posts([
                             'post_type'      => 'owbn_chronicle',
@@ -396,7 +404,7 @@ function owbn_render_coordinator_fields_metabox($post)
             }
 
             if ($key === 'coordinator_slug') {
-                echo '<p class="description">URL identifier (e.g., "assamite"). Used for AccessSchema: Coordinator/{slug}/Coordinator</p>';
+                echo '<p class="description">URL identifier (e.g., "assamite"). Used for AccessSchema: coordinator/{slug}/coordinator</p>';
             }
 
             echo '</td>';
@@ -421,8 +429,8 @@ function owbn_coordinator_map_meta_cap($caps, $cap, $user_id, $args)
     if (!in_array($cap, ['edit_post', 'delete_post', 'read_post'], true)) return $caps;
 
     $post_id = !empty($args[0]) ? (int) $args[0] : 0;
-    if (!$post_id && !empty($_REQUEST['post'])) $post_id = (int) $_REQUEST['post'];
-    if (!$post_id && !empty($_POST['post_ID'])) $post_id = (int) $_POST['post_ID'];
+    if (!$post_id && !empty($_REQUEST['post'])) $post_id = (int) $_REQUEST['post']; // phpcs:ignore WordPress.Security.NonceVerification
+    if (!$post_id && !empty($_POST['post_ID'])) $post_id = (int) $_POST['post_ID']; // phpcs:ignore WordPress.Security.NonceVerification
 
     $post = get_post($post_id);
     if (!$post || $post->post_type !== 'owbn_coordinator') return $caps;
@@ -432,20 +440,28 @@ function owbn_coordinator_map_meta_cap($caps, $cap, $user_id, $args)
 
     // Admin/exec always allowed
     if (array_intersect($user->roles, ['administrator', 'exec_team'])) {
-        return [$cap === 'edit_post' ? 'edit_owbn_coordinator' : ($cap === 'delete_post' ? 'delete_owbn_coordinator' : 'read_owbn_coordinator')];
+        return ['read'];
     }
 
-    // Check AccessSchema: Coordinator/{slug}/Coordinator
+    // Check AccessSchema directly (avoid current_user_can recursion)
     $coord_slug = get_post_meta($post_id, 'coordinator_slug', true);
-    if ($coord_slug && function_exists('current_user_can') && current_user_can('asc_has_access_to_group', "Coordinator/{$coord_slug}/Coordinator")) {
-        return [$cap === 'edit_post' ? 'edit_owbn_coordinator' : ($cap === 'delete_post' ? 'delete_owbn_coordinator' : 'read_owbn_coordinator')];
+    if ($coord_slug && function_exists('accessSchema_client_roles_match_pattern_from_email')) {
+        $client_id = defined('ASC_PREFIX') ? strtolower(str_replace('_', '-', ASC_PREFIX)) : 'ccs';
+        $email = $user->user_email;
+
+        $coord_access = accessSchema_client_roles_match_pattern_from_email($email, "coordinator/{$coord_slug}/coordinator", $client_id);
+        $sub_access   = accessSchema_client_roles_match_pattern_from_email($email, "coordinator/{$coord_slug}/sub-coordinator", $client_id);
+
+        if ($coord_access || $sub_access) {
+            return ['read'];
+        }
     }
 
     // Fallback: coord_info user
     $coord_info = get_post_meta($post_id, 'coord_info', true);
     $coord_user_id = isset($coord_info['user']) ? (int) $coord_info['user'] : 0;
     if ($coord_user_id && $user_id === $coord_user_id) {
-        return [$cap === 'edit_post' ? 'edit_owbn_coordinator' : ($cap === 'delete_post' ? 'delete_owbn_coordinator' : 'read_owbn_coordinator')];
+        return ['read'];
     }
 
     return ['do_not_allow'];
@@ -465,24 +481,23 @@ function owbn_user_can_edit_coordinator($user_id, $post_id)
 
     if (array_intersect($user->roles, ['administrator', 'exec_team'])) return true;
 
-    // Check AccessSchema
+    // Check AccessSchema directly
     $coord_slug = get_post_meta($post_id, 'coordinator_slug', true);
-    if ($coord_slug && function_exists('current_user_can')) {
-        $old_user = wp_get_current_user();
-        wp_set_current_user($user_id);
-        $has_access = current_user_can('asc_has_access_to_group', "Coordinator/{$coord_slug}/Coordinator");
-        wp_set_current_user($old_user->ID);
-        if ($has_access) return true;
+    if ($coord_slug && function_exists('accessSchema_client_roles_match_pattern_from_email')) {
+        $client_id = defined('ASC_PREFIX') ? strtolower(str_replace('_', '-', ASC_PREFIX)) : 'ccs';
+        $email = $user->user_email;
+
+        $coord_access = accessSchema_client_roles_match_pattern_from_email($email, "coordinator/{$coord_slug}/coordinator", $client_id);
+        $sub_access   = accessSchema_client_roles_match_pattern_from_email($email, "coordinator/{$coord_slug}/sub-coordinator", $client_id);
+
+        if ($coord_access || $sub_access) return true;
     }
 
     // Fallback: coord_info user
-    if (in_array('coord_staff', $user->roles, true)) {
-        $coord_info = get_post_meta($post_id, 'coord_info', true);
-        $coord_user_id = isset($coord_info['user']) ? (int) $coord_info['user'] : 0;
-        return $coord_user_id && (int)$user_id === $coord_user_id;
-    }
+    $coord_info = get_post_meta($post_id, 'coord_info', true);
+    $coord_user_id = isset($coord_info['user']) ? (int) $coord_info['user'] : 0;
 
-    return false;
+    return $coord_user_id && (int)$user_id === $coord_user_id;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -498,138 +513,3 @@ add_filter('template_include', function ($template) {
     }
     return $template;
 });
-
-// ══════════════════════════════════════════════════════════════════════════════
-// COORDINATOR SAVE HANDLER
-// ══════════════════════════════════════════════════════════════════════════════
-
-add_action('save_post_owbn_coordinator', 'owbn_save_coordinator_meta', 10, 2);
-function owbn_save_coordinator_meta($post_id, $post)
-{
-    // Verify nonce
-    if (!isset($_POST['owbn_coordinator_nonce']) || !wp_verify_nonce($_POST['owbn_coordinator_nonce'], 'owbn_coordinator_meta_nonce')) {
-        return;
-    }
-
-    // Skip autosave
-    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
-
-    // Check permissions
-    if (!current_user_can('edit_post', $post_id)) return;
-
-    // Simple text/date fields
-    $simple_fields = ['coordinator_slug', 'coordinator_title', 'term_start_date', 'web_url', 'coordinator_appointment', 'coordinator_type', 'hosting_chronicle'];
-    foreach ($simple_fields as $field) {
-        if (isset($_POST[$field])) {
-            update_post_meta($post_id, $field, sanitize_text_field($_POST[$field]));
-        }
-    }
-
-    // Office description (WYSIWYG)
-    if (isset($_POST['office_description'])) {
-        update_post_meta($post_id, 'office_description', wp_kses_post($_POST['office_description']));
-    }
-
-    // Coordinator info (user_info pattern)
-    if (isset($_POST['coord_info']) && is_array($_POST['coord_info'])) {
-        $info = $_POST['coord_info'];
-        $cleaned = [
-            'user'          => sanitize_text_field($info['user'] ?? ''),
-            'display_name'  => sanitize_text_field($info['display_name'] ?? ''),
-            'actual_email'  => sanitize_email($info['actual_email'] ?? ''),
-            'display_email' => sanitize_email($info['display_email'] ?? ''),
-        ];
-        update_post_meta($post_id, 'coord_info', $cleaned);
-    }
-
-    // Subcoord list (ast_group pattern)
-    if (isset($_POST['subcoord_list']) && is_array($_POST['subcoord_list'])) {
-        $cleaned = [];
-        foreach ($_POST['subcoord_list'] as $index => $row) {
-            if ($index === '__INDEX__') continue;
-            if (empty($row['display_name']) && empty($row['user'])) continue;
-
-            $cleaned[] = [
-                'user'          => sanitize_text_field($row['user'] ?? ''),
-                'display_name'  => sanitize_text_field($row['display_name'] ?? ''),
-                'role'          => sanitize_text_field($row['role'] ?? ''),
-                'actual_email'  => sanitize_email($row['actual_email'] ?? ''),
-                'display_email' => sanitize_email($row['display_email'] ?? ''),
-            ];
-        }
-        update_post_meta($post_id, 'subcoord_list', $cleaned);
-    }
-
-    // Document links (document_links_group pattern)
-    if (isset($_POST['document_links']) && is_array($_POST['document_links'])) {
-        $cleaned = [];
-        $existing = get_post_meta($post_id, 'document_links', true);
-
-        foreach ($_POST['document_links'] as $index => $row) {
-            if ($index === '__INDEX__') continue;
-            if (empty($row['title']) && empty($row['link'])) continue;
-
-            $entry = [
-                'title'        => sanitize_text_field($row['title'] ?? ''),
-                'link'         => esc_url_raw($row['link'] ?? ''),
-                'last_updated' => sanitize_text_field($row['last_updated'] ?? ''),
-            ];
-
-            // Handle uploaded file
-            $file_field = "document_links_{$index}_upload";
-            if (!empty($_FILES[$file_field]) && !empty($_FILES[$file_field]['tmp_name'])) {
-                require_once ABSPATH . 'wp-admin/includes/file.php';
-                require_once ABSPATH . 'wp-admin/includes/media.php';
-                require_once ABSPATH . 'wp-admin/includes/image.php';
-
-                $attachment_id = media_handle_upload($file_field, $post_id);
-                if (!is_wp_error($attachment_id)) {
-                    $entry['file_id'] = $attachment_id;
-                    if (empty($entry['last_updated'])) {
-                        $entry['last_updated'] = current_time('Y-m-d');
-                    }
-                }
-            } elseif (is_array($existing) && isset($existing[$index]['file_id'])) {
-                // Preserve existing file_id if no new upload
-                $entry['file_id'] = $existing[$index]['file_id'];
-            }
-
-            $cleaned[] = $entry;
-        }
-        update_post_meta($post_id, 'document_links', $cleaned);
-    }
-
-    // Email lists (email_lists_group pattern)
-    if (isset($_POST['email_lists']) && is_array($_POST['email_lists'])) {
-        $cleaned = [];
-        foreach ($_POST['email_lists'] as $index => $row) {
-            if ($index === '__INDEX__') continue;
-            if (empty($row['list_name']) && empty($row['email_address'])) continue;
-
-            $cleaned[] = [
-                'list_name'     => sanitize_text_field($row['list_name'] ?? ''),
-                'email_address' => sanitize_email($row['email_address'] ?? ''),
-                'description'   => wp_kses_post($row['description'] ?? ''),
-            ];
-        }
-        update_post_meta($post_id, 'email_lists', $cleaned);
-    }
-    // Player lists
-    if (isset($_POST['player_lists']) && is_array($_POST['player_lists'])) {
-        $cleaned = [];
-        foreach ($_POST['player_lists'] as $index => $row) {
-            if ($index === '__INDEX__') continue;
-            if (empty($row['list_name'])) continue;
-
-            $cleaned[] = [
-                'list_name'        => sanitize_text_field($row['list_name'] ?? ''),
-                'access'           => sanitize_text_field($row['access'] ?? 'Public'),
-                'address'          => sanitize_email($row['address'] ?? ''),
-                'ic_ooc'           => sanitize_text_field($row['ic_ooc'] ?? 'OOC'),
-                'moderate_address' => sanitize_email($row['moderate_address'] ?? ''),
-                'signup_url'       => esc_url_raw($row['signup_url'] ?? ''),
-            ];
-        }
-        update_post_meta($post_id, 'player_lists', $cleaned);
-    }
-}

@@ -137,24 +137,33 @@ function owbn_chronicle_map_meta_cap($caps, $cap, $user_id, $args)
     $user = get_userdata($user_id);
     if (!$user instanceof WP_User) return ['do_not_allow'];
 
+    // Admin/exec always allowed
+    if (array_intersect($user->roles, ['administrator', 'exec_team'])) {
+        return ['read'];
+    }
+
+    // Check AccessSchema directly (avoid current_user_can recursion)
+    $chron_slug = get_post_meta($post_id, 'chronicle_slug', true);
+    if ($chron_slug && function_exists('accessSchema_client_roles_match_pattern_from_email')) {
+        $client_id = defined('ASC_PREFIX') ? strtolower(str_replace('_', '-', ASC_PREFIX)) : 'ccs';
+        $email = $user->user_email;
+        
+        $cm_access  = accessSchema_client_roles_match_pattern_from_email($email, "chronicle/{$chron_slug}/cm", $client_id);
+        $hst_access = accessSchema_client_roles_match_pattern_from_email($email, "chronicle/{$chron_slug}/hst", $client_id);
+        
+        if ($cm_access || $hst_access) {
+            return ['read'];
+        }
+    }
+
+    // Fallback: direct user assignment
     $hst_info = get_post_meta($post_id, 'hst_info', true);
     $cm_info  = get_post_meta($post_id, 'cm_info', true);
     $hst_id   = isset($hst_info['user']) ? (int) $hst_info['user'] : 0;
     $cm_id    = isset($cm_info['user']) ? (int) $cm_info['user'] : 0;
 
-    $is_admin = array_intersect($user->roles, ['administrator', 'exec_team']);
-    $is_staff = ($user_id === $hst_id || $user_id === $cm_id);
-
-    // Check AccessSchema: Chronicle/{slug}/HST or Chronicle/{slug}/CM
-    $chronicle_slug = get_post_meta($post_id, 'chronicle_slug', true);
-    $has_asc_access = false;
-    if ($chronicle_slug && function_exists('current_user_can')) {
-        $has_asc_access = current_user_can('asc_has_access_to_group', "Chronicle/{$chronicle_slug}/HST")
-            || current_user_can('asc_has_access_to_group', "Chronicle/{$chronicle_slug}/CM");
-    }
-
-    if (!empty($is_admin) || $is_staff || $has_asc_access) {
-        return [$cap === 'edit_post' ? 'edit_owbn_chronicle' : ($cap === 'delete_post' ? 'delete_owbn_chronicle' : 'read_owbn_chronicle')];
+    if ($user_id === $hst_id || $user_id === $cm_id) {
+        return ['read'];
     }
 
     return ['do_not_allow'];
@@ -174,28 +183,25 @@ function owbn_user_can_edit_chronicle($user_id, $post_id)
 
     if (array_intersect($user->roles, ['administrator', 'exec_team'])) return true;
 
-    // Check AccessSchema
+    // Check AccessSchema directly
     $chronicle_slug = get_post_meta($post_id, 'chronicle_slug', true);
-    if ($chronicle_slug && function_exists('current_user_can')) {
-        $old_user = wp_get_current_user();
-        wp_set_current_user($user_id);
-        $has_access = current_user_can('asc_has_access_to_group', "Chronicle/{$chronicle_slug}/HST")
-            || current_user_can('asc_has_access_to_group', "Chronicle/{$chronicle_slug}/CM");
-        wp_set_current_user($old_user->ID);
-        if ($has_access) return true;
+    if ($chronicle_slug && function_exists('accessSchema_client_roles_match_pattern_from_email')) {
+        $client_id = defined('ASC_PREFIX') ? strtolower(str_replace('_', '-', ASC_PREFIX)) : 'ccs';
+        $email = $user->user_email;
+        
+        $cm_access  = accessSchema_client_roles_match_pattern_from_email($email, "chronicle/{$chronicle_slug}/cm", $client_id);
+        $hst_access = accessSchema_client_roles_match_pattern_from_email($email, "chronicle/{$chronicle_slug}/hst", $client_id);
+        
+        if ($cm_access || $hst_access) return true;
     }
 
     // Fallback: direct user assignment
-    if (in_array('chron_staff', $user->roles, true)) {
-        $hst_info = get_post_meta($post_id, 'hst_info', true);
-        $cm_info  = get_post_meta($post_id, 'cm_info', true);
-        $hst_id   = isset($hst_info['user']) ? (int) $hst_info['user'] : 0;
-        $cm_id    = isset($cm_info['user']) ? (int) $cm_info['user'] : 0;
+    $hst_info = get_post_meta($post_id, 'hst_info', true);
+    $cm_info  = get_post_meta($post_id, 'cm_info', true);
+    $hst_id   = isset($hst_info['user']) ? (int) $hst_info['user'] : 0;
+    $cm_id    = isset($cm_info['user']) ? (int) $cm_info['user'] : 0;
 
-        return (int)$user_id === $hst_id || (int)$user_id === $cm_id;
-    }
-
-    return false;
+    return (int)$user_id === $hst_id || (int)$user_id === $cm_id;
 }
 
 function owbn_user_can_edit_metadata_fields($user_id = null)
@@ -205,18 +211,10 @@ function owbn_user_can_edit_metadata_fields($user_id = null)
     $user = $user_id ? get_userdata($user_id) : wp_get_current_user();
     if (!$user instanceof WP_User) return false;
 
+    // Admin/exec can always edit metadata
     if (array_intersect($user->roles, ['administrator', 'exec_team'])) return true;
 
-    global $post;
-    if ($post instanceof WP_Post && $post->post_type === 'owbn_chronicle') {
-        $hst_info = get_post_meta($post->ID, 'hst_info', true);
-        $cm_info  = get_post_meta($post->ID, 'cm_info', true);
-        $hst_id   = isset($hst_info['user']) ? (int) $hst_info['user'] : 0;
-        $cm_id    = isset($cm_info['user']) ? (int) $cm_info['user'] : 0;
-
-        return in_array('chron_staff', $user->roles, true) && ((int)$user->ID === $hst_id || (int)$user->ID === $cm_id);
-    }
-
+    // Regular staff cannot edit restricted metadata fields (slug, region, etc.)
     return false;
 }
 

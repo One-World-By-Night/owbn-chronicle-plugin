@@ -6,21 +6,52 @@ function owbn_save_chronicle_meta($post_id)
 {
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (get_post_type($post_id) !== 'owbn_chronicle') return;
-    $staff_user_dirty = false;
+    if (
+        !isset($_POST['owbn_chronicle_nonce']) ||
+        !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['owbn_chronicle_nonce'])), 'owbn_chronicle_save')
+    ) {
+        return;
+    }
 
-    // $user_id = get_current_user_id();
-    // if (!owbn_user_can_edit_chronicle($user_id, $post_id)) return;
+    $staff_user_dirty = false;
 
     $definitions = owbn_get_chronicle_field_definitions();
     $errors = get_transient("owbn_chronicle_errors_{$post_id}") ?: [];
 
+    // Fields that can NEVER be changed after initial creation
+    $immutable_fields = ['chronicle_slug'];
+
+    // Fields that only admin/exec can modify (disabled for regular staff)
+    $restricted_fields = [
+        'chronicle_slug',
+        'chronicle_start_date',
+        'chronicle_region',
+        'chronicle_probationary',
+        'chronicle_satellite',
+        'chronicle_parent',
+    ];
+
+    // Check if current user is admin/exec
+    $current_user = wp_get_current_user();
+    $is_admin = array_intersect($current_user->roles, ['administrator', 'exec_team']);
+
     foreach ($definitions as $fields) {
         foreach ($fields as $key => $meta) {
-            if (
-                !isset($_POST['owbn_chronicle_nonce']) ||
-                !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['owbn_chronicle_nonce'])), 'owbn_chronicle_save')
-            )
-                if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+
+            // IMMUTABLE: chronicle_slug can NEVER be changed once set
+            if (in_array($key, $immutable_fields, true)) {
+                $existing = get_post_meta($post_id, $key, true);
+                if (!empty($existing)) {
+                    continue; // Never overwrite existing immutable field
+                }
+            }
+
+            // RESTRICTED: For non-admin users, skip if field wasn't submitted (was disabled)
+            if (in_array($key, $restricted_fields, true) && empty($is_admin)) {
+                if (!isset($_POST[$key])) {
+                    continue; // Field was disabled, preserve existing value
+                }
+            }
 
             $raw = owbn_safe_post_value($key);
 
@@ -61,20 +92,20 @@ function owbn_save_chronicle_meta($post_id)
                             $row_cleaned = [];
                             foreach ($meta['fields'] as $sub_key => $sub_meta) {
                                 if (!isset($row[$sub_key])) continue;
-                                $raw = $row[$sub_key];
+                                $raw_sub = $row[$sub_key];
 
                                 if (in_array($sub_key, ['email', 'actual_email', 'display_email'], true)) {
-                                    $row_cleaned[$sub_key] = sanitize_email($raw);
+                                    $row_cleaned[$sub_key] = sanitize_email($raw_sub);
                                 } else {
-                                    $row_cleaned[$sub_key] = is_array($raw)
-                                        ? array_map('sanitize_text_field', $raw)
-                                        : sanitize_text_field($raw);
+                                    $row_cleaned[$sub_key] = is_array($raw_sub)
+                                        ? array_map('sanitize_text_field', $raw_sub)
+                                        : sanitize_text_field($raw_sub);
                                 }
                             }
 
-                            // 🔸 Detect [New User] case here
+                            // Detect [New User] case here
                             if (!empty($row_cleaned['user']) && $row_cleaned['user'] === '__new__') {
-                                $staff_user_dirty = true; // flag as needing admin review
+                                $staff_user_dirty = true;
                             }
 
                             $cleaned[] = $row_cleaned;
@@ -100,29 +131,29 @@ function owbn_save_chronicle_meta($post_id)
                             $row_cleaned = [];
                             foreach ($meta['fields'] as $sub_key => $sub_meta) {
                                 if (!isset($row[$sub_key])) continue;
-                                $raw = $row[$sub_key];
+                                $raw_sub = $row[$sub_key];
 
                                 switch ($sub_meta['type']) {
                                     case 'wysiwyg':
-                                        $row_cleaned[$sub_key] = wp_kses_post($raw);
+                                        $row_cleaned[$sub_key] = wp_kses_post($raw_sub);
                                         break;
 
                                     case 'multi_select':
-                                        $row_cleaned[$sub_key] = is_array($raw)
-                                            ? array_map('sanitize_text_field', $raw)
+                                        $row_cleaned[$sub_key] = is_array($raw_sub)
+                                            ? array_map('sanitize_text_field', $raw_sub)
                                             : [];
                                         break;
 
                                     case 'email':
-                                        $row_cleaned[$sub_key] = sanitize_email($raw);
+                                        $row_cleaned[$sub_key] = sanitize_email($raw_sub);
                                         break;
 
                                     case 'time':
                                     case 'select':
                                     default:
-                                        $row_cleaned[$sub_key] = is_array($raw)
-                                            ? array_map('sanitize_text_field', $raw)
-                                            : sanitize_text_field($raw);
+                                        $row_cleaned[$sub_key] = is_array($raw_sub)
+                                            ? array_map('sanitize_text_field', $raw_sub)
+                                            : sanitize_text_field($raw_sub);
                                         break;
                                 }
                             }
@@ -141,31 +172,31 @@ function owbn_save_chronicle_meta($post_id)
                     if (is_array($group_data)) {
                         foreach ($meta['fields'] as $sub_key => $sub_meta) {
                             if (!isset($group_data[$sub_key])) continue;
-                            $raw = $group_data[$sub_key];
+                            $raw_sub = $group_data[$sub_key];
 
                             switch ($sub_meta['type']) {
                                 case 'wysiwyg':
-                                    $row_cleaned[$sub_key] = wp_kses_post($raw);
+                                    $row_cleaned[$sub_key] = wp_kses_post($raw_sub);
                                     break;
 
                                 case 'multi_select':
-                                    $row_cleaned[$sub_key] = is_array($raw)
-                                        ? array_map('sanitize_text_field', $raw)
+                                    $row_cleaned[$sub_key] = is_array($raw_sub)
+                                        ? array_map('sanitize_text_field', $raw_sub)
                                         : [];
                                     break;
 
                                 case 'email':
-                                    $row_cleaned[$sub_key] = sanitize_email($raw);
+                                    $row_cleaned[$sub_key] = sanitize_email($raw_sub);
                                     break;
 
                                 case 'boolean':
-                                    $row_cleaned[$sub_key] = ($raw === '1' || $raw === 1 || $raw === true) ? '1' : '0';
+                                    $row_cleaned[$sub_key] = ($raw_sub === '1' || $raw_sub === 1 || $raw_sub === true) ? '1' : '0';
                                     break;
 
                                 default:
-                                    $row_cleaned[$sub_key] = is_array($raw)
-                                        ? array_map('sanitize_text_field', $raw)
-                                        : sanitize_text_field($raw);
+                                    $row_cleaned[$sub_key] = is_array($raw_sub)
+                                        ? array_map('sanitize_text_field', $raw_sub)
+                                        : sanitize_text_field($raw_sub);
                                     break;
                             }
                         }
@@ -184,31 +215,31 @@ function owbn_save_chronicle_meta($post_id)
                             $row_cleaned = [];
                             foreach ($meta['fields'] as $sub_key => $sub_meta) {
                                 if (!isset($row[$sub_key])) continue;
-                                $raw = $row[$sub_key];
+                                $raw_sub = $row[$sub_key];
 
                                 switch ($sub_meta['type']) {
                                     case 'wysiwyg':
-                                        $row_cleaned[$sub_key] = wp_kses_post($raw);
+                                        $row_cleaned[$sub_key] = wp_kses_post($raw_sub);
                                         break;
 
                                     case 'multi_select':
-                                        $row_cleaned[$sub_key] = is_array($raw)
-                                            ? array_map('sanitize_text_field', $raw)
+                                        $row_cleaned[$sub_key] = is_array($raw_sub)
+                                            ? array_map('sanitize_text_field', $raw_sub)
                                             : [];
                                         break;
 
                                     case 'email':
-                                        $row_cleaned[$sub_key] = sanitize_email($raw);
+                                        $row_cleaned[$sub_key] = sanitize_email($raw_sub);
                                         break;
 
                                     case 'boolean':
-                                        $row_cleaned[$sub_key] = ($raw === '1' || $raw === 1 || $raw === true) ? '1' : '0';
+                                        $row_cleaned[$sub_key] = ($raw_sub === '1' || $raw_sub === 1 || $raw_sub === true) ? '1' : '0';
                                         break;
 
                                     default:
-                                        $row_cleaned[$sub_key] = is_array($raw)
-                                            ? array_map('sanitize_text_field', $raw)
-                                            : sanitize_text_field($raw);
+                                        $row_cleaned[$sub_key] = is_array($raw_sub)
+                                            ? array_map('sanitize_text_field', $raw_sub)
+                                            : sanitize_text_field($raw_sub);
                                         break;
                                 }
                             }
@@ -232,11 +263,11 @@ function owbn_save_chronicle_meta($post_id)
                             $row_cleaned = [];
                             foreach ($meta['fields'] as $sub_key => $sub_meta) {
                                 if (!isset($row[$sub_key])) continue;
-                                $raw = $row[$sub_key];
-                                if (is_array($raw)) {
-                                    $row_cleaned[$sub_key] = array_map('sanitize_text_field', $raw);
+                                $raw_sub = $row[$sub_key];
+                                if (is_array($raw_sub)) {
+                                    $row_cleaned[$sub_key] = array_map('sanitize_text_field', $raw_sub);
                                 } else {
-                                    $row_cleaned[$sub_key] = sanitize_text_field($raw);
+                                    $row_cleaned[$sub_key] = sanitize_text_field($raw_sub);
                                 }
                             }
                             $cleaned[] = $row_cleaned;
@@ -252,9 +283,10 @@ function owbn_save_chronicle_meta($post_id)
 
                     if (is_array($group_data)) {
                         foreach ($group_data as $index => $row) {
+                            if ($index === '__INDEX__') continue;
+
                             $row_cleaned = [];
 
-                            // Sanitize title, link, and last_updated
                             $row_cleaned['title'] = isset($row['title']) ? sanitize_text_field($row['title']) : '';
                             $row_cleaned['link']  = isset($row['link']) ? esc_url_raw($row['link']) : '';
                             $row_cleaned['last_updated'] = isset($row['last_updated']) ? sanitize_text_field($row['last_updated']) : '';
@@ -269,7 +301,6 @@ function owbn_save_chronicle_meta($post_id)
                                 $attachment_id = media_handle_upload($file_field, $post_id);
                                 if (!is_wp_error($attachment_id)) {
                                     $row_cleaned['file_id'] = $attachment_id;
-                                    // Auto-set last_updated on new upload if not manually set
                                     if (empty($row_cleaned['last_updated'])) {
                                         $row_cleaned['last_updated'] = current_time('Y-m-d');
                                     }
@@ -297,7 +328,6 @@ function owbn_save_chronicle_meta($post_id)
 
                     if (is_array($group_data)) {
                         foreach ($group_data as $index => $row) {
-                            // Skip template or fully empty rows
                             if (
                                 $index === '__INDEX__' ||
                                 (empty($row['platform']) && empty($row['url']))
@@ -324,7 +354,9 @@ function owbn_save_chronicle_meta($post_id)
                     $cleaned = [];
 
                     if (is_array($group_data)) {
-                        foreach ($group_data as $row) {
+                        foreach ($group_data as $index => $row) {
+                            if ($index === '__INDEX__') continue;
+
                             $row_cleaned = [];
 
                             $row_cleaned['list_name'] = isset($row['list_name']) ? sanitize_text_field($row['list_name']) : '';
@@ -385,7 +417,7 @@ function owbn_save_chronicle_meta($post_id)
                     }
 
                     if ($user_value === '__new__') {
-                        $staff_user_dirty = true; // mark draft
+                        $staff_user_dirty = true;
                     }
 
                     update_post_meta($post_id, $key, $cleaned);
@@ -423,9 +455,9 @@ function owbn_save_chronicle_meta($post_id)
             }
         }
     }
+
     // After all post_meta fields processed
     if ($staff_user_dirty) {
-        $current_user = wp_get_current_user();
         $current_user_id = (string) $current_user->ID;
         $user_roles = (array) $current_user->roles;
         $allowed_roles = ['administrator', 'exec_team', 'web_team'];
@@ -435,15 +467,13 @@ function owbn_save_chronicle_meta($post_id)
         $is_satellite = get_post_meta($post_id, 'chronicle_satellite', true) === '1';
 
         if ($is_satellite) {
-            // Remove CM info if it's a satellite
             delete_post_meta($post_id, 'cm_info');
         } else {
-            // Remove parent_chronicle if it's not a satellite
             delete_post_meta($post_id, 'chronicle_parent');
         }
 
         // Check for self-promotion
-        $hst = get_post_meta($post_id, 'hst', true);
+        $hst = get_post_meta($post_id, 'hst_info', true);
         $cm_info = get_post_meta($post_id, 'cm_info', true);
         $self_promoted = false;
 
@@ -454,15 +484,12 @@ function owbn_save_chronicle_meta($post_id)
         }
 
         if (empty($is_allowed) || $self_promoted) {
-            // Only change status if not already a draft
             $post = get_post($post_id);
             if ($post->post_status !== 'draft') {
-                // Draft the post
                 wp_update_post([
                     'ID' => $post_id,
                     'post_status' => 'draft',
                 ]);
-                // Set a flag to show the admin notice
                 set_transient("owbn_chronicle_dirty_notice_{$post_id}", true, 60);
             }
         }
@@ -483,6 +510,7 @@ function owbn_safe_post_value($key, $source = null)
 function owbn_validate_chronicle_submission($postarr)
 {
     $definitions = owbn_get_chronicle_field_definitions();
+    
     // Normalize all boolean checkbox fields to '0' if not set
     foreach ($definitions as $fields) {
         foreach ($fields as $key => $meta) {
@@ -521,8 +549,6 @@ function owbn_validate_chronicle_submission($postarr)
                 if (!$is_required && isset($meta['conditional_required'])) {
                     [$dep_key, $dep_value] = explode('=', $meta['conditional_required']);
                     $actual = owbn_safe_post_value($dep_key, $postarr);
-
-                    // Normalize checkbox value
                     $actual = is_array($actual) ? '' : trim($actual);
                     $dep_value = trim($dep_value);
 
@@ -544,8 +570,7 @@ function owbn_validate_chronicle_submission($postarr)
             }
         }
     }
-    // error_log("CM REQUIRED CHECK — Sat value: " . print_r(owbn_safe_post_value('chronicle_satellite', $postarr), true));
-    // error_log("CM REQUIRED? " . (in_array('cm_info', $errors, true) ? 'YES' : 'NO'));
+
     return $errors;
 }
 
@@ -556,11 +581,11 @@ function owbn_admin_notice_invalid_fields()
     $post_id = 0;
 
     if (isset($post->ID)) {
-        $post_id = $post->ID; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        $post_id = $post->ID;
     } elseif (!empty($_GET['post'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-        $post_id = intval($_GET['post']); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        $post_id = intval($_GET['post']);
     } elseif (!empty($_POST['post_ID'])) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        $post_id = intval($_POST['post_ID']); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        $post_id = intval($_POST['post_ID']);
     }
 
     if (!$post_id) return;
@@ -595,26 +620,21 @@ add_action('admin_notices', 'owbn_admin_notice_invalid_fields');
 // Force Chronicle posts to draft status if validation fails
 function owbn_force_draft_on_error($data, $postarr)
 {
-    // Only apply to our custom post type
     if ($data['post_type'] !== 'owbn_chronicle') {
         return $data;
     }
 
-    // Allow trashing or deleting
     if (isset($data['post_status']) && in_array($data['post_status'], ['trash', 'auto-draft'], true)) {
         return $data;
     }
 
-    // Skip validation if the post is being trashed or deleted
     if (
         (isset($_POST['action']) && $_POST['action'] === 'delete') || // phpcs:ignore WordPress.Security.NonceVerification.Missing
         (isset($_POST['action2']) && $_POST['action2'] === 'delete')  // phpcs:ignore WordPress.Security.NonceVerification.Missing
     ) {
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         return $data;
     }
 
-    // Skip validation if dirty changes already flagged
     if (!empty($postarr['ID']) && get_transient("owbn_chronicle_dirty_notice_{$postarr['ID']}")) {
         return $data;
     }
@@ -646,9 +666,8 @@ function owbn_admin_notice_dirty_user_change()
     $post_id = 0;
 
     if (isset($post->ID)) {
-        $post_id = $post->ID; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        $post_id = $post->ID;
     } elseif (!empty($_GET['post'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         $post_id = intval($_GET['post']);
     }
 
@@ -656,7 +675,7 @@ function owbn_admin_notice_dirty_user_change()
 
     if (get_transient("owbn_chronicle_dirty_notice_{$post_id}")) {
         echo '<div class="notice notice-warning is-dismissible">';
-        echo "<p>\n<strong>\n<span class='dashicons dashicons-lock'></span> Chronicle Staff changes require authentication from Exec or Web Teams.<br>\nUpon validation, this change will be published.\n</strong>\n</p>\n";
+        echo "<p><strong><span class='dashicons dashicons-lock'></span> Chronicle Staff changes require authentication from Exec or Web Teams.<br>Upon validation, this change will be published.</strong></p>";
         echo '</div>';
         delete_transient("owbn_chronicle_dirty_notice_{$post_id}");
     }
@@ -682,4 +701,4 @@ function owbn_sync_custom_slug_with_post_name($data, $postarr)
 
     return $data;
 }
-add_filter('wp_insert_post_data', 'owbn_sync_custom_slug_with_post_name', 5, 2); // Priority 5 so it runs BEFORE validation at 10
+add_filter('wp_insert_post_data', 'owbn_sync_custom_slug_with_post_name', 5, 2);
