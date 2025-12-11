@@ -25,6 +25,7 @@ if (!function_exists('owbn_coordinators_enabled')) {
 
 require_once plugin_dir_path(__FILE__) . 'chronicle-init.php';
 require_once plugin_dir_path(__FILE__) . 'coordinator-init.php';
+require_once plugin_dir_path(__FILE__) . 'admin-list-filters.php';
 require_once plugin_dir_path(__FILE__) . 'helpers.php';
 require_once plugin_dir_path(__FILE__) . 'chronicle-save.php';
 require_once plugin_dir_path(__FILE__) . 'chronicle-validate.php';
@@ -32,6 +33,7 @@ require_once plugin_dir_path(__FILE__) . 'chronicle-admin-notices.php';
 require_once plugin_dir_path(__FILE__) . 'coordinator-save.php';
 require_once plugin_dir_path(__FILE__) . 'coordinator-validate.php';
 require_once plugin_dir_path(__FILE__) . 'coordinator-admin-notices.php';
+require_once plugin_dir_path(__FILE__) . 'admin-remove-add.php';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // FLUSH REWRITE RULES
