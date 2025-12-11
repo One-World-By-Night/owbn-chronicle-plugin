@@ -1,7 +1,7 @@
 <?php
 /** File: includes/hooks/coordinator-admin-notices.php
  * Text Domain: owbn-chronicle-manager
- * @version 2.3.0
+ * @version 2.3.1
  * @author greghacke
  * Function: Coordinator admin notice handlers
  */

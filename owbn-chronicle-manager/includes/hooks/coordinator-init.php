@@ -1,7 +1,7 @@
 <?php
 /** File: includes/hooks/coordinator-init.php
  * Text Domain: owbn-chronicle-manager
- * @version 2.3.0
+ * @version 2.3.1
  * @author greghacke
  * Function: Coordinator CPT registration, permalinks, meta fields, metabox, and permissions
  */
@@ -280,9 +280,27 @@ add_action('add_meta_boxes', 'owbn_add_coordinator_meta_box');
 
 function owbn_render_coordinator_fields_metabox($post)
 {
+    $user_id = get_current_user_id();
+
+    // Permission check - must be able to edit this coordinator
+    if (!owbn_user_can_edit_coordinator($user_id, $post->ID)) {
+        echo '<p>' . esc_html__('You do not have permission to edit this Coordinator.', 'owbn-chronicle-manager') . '</p>';
+        return;
+    }
+
     wp_nonce_field('owbn_coordinator_meta_nonce', 'owbn_coordinator_nonce');
 
     $field_groups = owbn_get_coordinator_field_definitions();
+    $errors = get_transient("owbn_coordinator_errors_{$post->ID}") ?: [];
+
+    // Fields only admin/exec can modify
+    $restricted_fields = [
+        'coordinator_slug',
+        'coordinator_appointment',
+        'coordinator_type',
+    ];
+
+    $can_edit_metadata = owbn_user_can_edit_coordinator_metadata_fields($user_id);
 
     echo '<div class="owbn-coordinator-metabox">';
 
@@ -295,10 +313,12 @@ function owbn_render_coordinator_fields_metabox($post)
             $value = get_post_meta($post->ID, $key, true);
             $label = $meta['label'] ?? $key;
             $type  = $meta['type'] ?? 'text';
+            $error_class = in_array($key, $errors, true) ? ' owbn-error-field' : '';
+            $disabled_attr = in_array($key, $restricted_fields, true) && !$can_edit_metadata ? ' disabled' : '';
 
             echo '<tr>';
             echo '<th><label for="' . esc_attr($key) . '">' . esc_html($label) . '</label></th>';
-            echo '<td>';
+            echo '<td class="' . esc_attr(trim($error_class)) . '">';
 
             switch ($type) {
                 case 'wysiwyg':
@@ -314,7 +334,7 @@ function owbn_render_coordinator_fields_metabox($post)
                     break;
 
                 case 'date':
-                    echo '<input type="date" name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" value="' . esc_attr($value) . '" class="regular-text">';
+                    echo '<input type="date" name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" value="' . esc_attr($value) . '" class="regular-text"' . esc_attr($disabled_attr) . '>';
                     break;
 
                 case 'user_info':
@@ -378,7 +398,7 @@ function owbn_render_coordinator_fields_metabox($post)
                         }
                     }
 
-                    echo '<select name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" class="regular-text owbn-select2 single" style="width: 100%;">';
+                    echo '<select name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" class="regular-text owbn-select2 single" style="width: 100%;"' . esc_attr($disabled_attr) . '>';
                     echo '<option value="">' . esc_html__('— Select —', 'owbn-chronicle-manager') . '</option>';
                     foreach ($chronicles as $chron) {
                         $slug = $chron['slug'] ?? '';
@@ -391,7 +411,7 @@ function owbn_render_coordinator_fields_metabox($post)
 
                 case 'select':
                     $options = $meta['options'] ?? [];
-                    echo '<select name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" class="regular-text">';
+                    echo '<select name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" class="regular-text"' . esc_attr($disabled_attr) . '>';
                     foreach ($options as $opt_value => $opt_label) {
                         echo '<option value="' . esc_attr($opt_value) . '" ' . selected($value, $opt_value, false) . '>' . esc_html($opt_label) . '</option>';
                     }
@@ -399,7 +419,7 @@ function owbn_render_coordinator_fields_metabox($post)
                     break;
 
                 default:
-                    echo '<input type="text" name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" value="' . esc_attr($value) . '" class="regular-text">';
+                    echo '<input type="text" name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" value="' . esc_attr($value) . '" class="regular-text"' . esc_attr($disabled_attr) . '>';
                     break;
             }
 
@@ -498,6 +518,23 @@ function owbn_user_can_edit_coordinator($user_id, $post_id)
     $coord_user_id = isset($coord_info['user']) ? (int) $coord_info['user'] : 0;
 
     return $coord_user_id && (int)$user_id === $coord_user_id;
+}
+
+/**
+ * Check if user can edit restricted coordinator metadata fields (slug, type, appointment)
+ */
+function owbn_user_can_edit_coordinator_metadata_fields($user_id = null)
+{
+    if (!owbn_coordinators_enabled()) return false;
+
+    $user = $user_id ? get_userdata($user_id) : wp_get_current_user();
+    if (!$user instanceof WP_User) return false;
+
+    // Admin/exec can always edit metadata
+    if (array_intersect($user->roles, ['administrator', 'exec_team'])) return true;
+
+    // Regular staff cannot edit restricted metadata fields
+    return false;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
