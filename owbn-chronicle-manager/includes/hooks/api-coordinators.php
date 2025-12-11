@@ -178,34 +178,3 @@ function owbn_filter_subcoord_list($subcoord_list)
 
     return $filtered;
 }
-
-/**
- * Format document links for API response
- */
-function owbn_format_document_links($document_links)
-{
-    if (!is_array($document_links)) {
-        return [];
-    }
-
-    $formatted = [];
-    foreach ($document_links as $doc) {
-        if (!is_array($doc)) continue;
-
-        $url = '';
-        if (!empty($doc['file_id'])) {
-            $url = wp_get_attachment_url($doc['file_id']);
-        } elseif (!empty($doc['link'])) {
-            $url = $doc['link'];
-        }
-
-        $formatted[] = [
-            'title'        => $doc['title'] ?? '',
-            'url'          => $url,
-            'description'  => $doc['description'] ?? '',
-            'last_updated' => $doc['last_updated'] ?? '',
-        ];
-    }
-
-    return $formatted;
-}
