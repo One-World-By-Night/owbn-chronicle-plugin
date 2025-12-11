@@ -2,7 +2,7 @@
 /**
  * File: includes/hooks/admin-list-filters.php
  * Text Domain: owbn-chronicle-manager
- * @version 1.2.1
+ * @version 1.2.0
  * 
  * Handles:
  * - Performance: Replace slow AccessSchema filter with cached version
@@ -11,82 +11,6 @@
  */
 
 if (!defined('ABSPATH')) exit;
-
-// EARLY capability grant - runs before plugins_loaded hook setup
-add_filter('user_has_cap', 'owbn_early_menu_access', 1, 4);
-function owbn_early_menu_access($allcaps, $caps, $args, $user) {
-    if (!$user instanceof WP_User || !$user->ID) {
-        return $allcaps;
-    }
-    
-    // Check if we're on our CPT admin pages
-    $is_our_cpt_page = (
-        is_admin() && 
-        isset($_GET['post_type']) && 
-        in_array($_GET['post_type'], ['owbn_chronicle', 'owbn_coordinator'], true)
-    );
-    
-    // Grant capabilities needed to VIEW the list screens
-    $allcaps['ocm_view_list'] = true;
-    $allcaps['read_owbn_chronicle'] = true;
-    $allcaps['read_owbn_coordinator'] = true;
-    $allcaps['edit_owbn_chronicles'] = true;
-    $allcaps['edit_owbn_coordinators'] = true;
-    
-    // On our CPT pages, also grant generic edit_posts so WP doesn't block access
-    if ($is_our_cpt_page) {
-        $allcaps['edit_posts'] = true;
-    }
-    
-    return $allcaps;
-}
-
-// FINAL capability grant - runs LAST to ensure nothing overrides
-add_filter('user_has_cap', 'owbn_final_cap_grant', 9999, 4);
-function owbn_final_cap_grant($allcaps, $caps, $args, $user) {
-    if (!$user instanceof WP_User || !$user->ID) {
-        return $allcaps;
-    }
-    
-    // Grant EVERYTHING related to our CPTs
-    $allcaps['ocm_view_list'] = true;
-    $allcaps['edit_owbn_chronicles'] = true;
-    $allcaps['edit_owbn_coordinators'] = true;
-    $allcaps['read_owbn_chronicle'] = true;
-    $allcaps['read_owbn_coordinator'] = true;
-    $allcaps['edit_owbn_chronicle'] = true;
-    $allcaps['edit_owbn_coordinator'] = true;
-    
-    // Log caps that are being DENIED (not in allcaps after we set ours)
-    if (isset($_GET['post_type']) && in_array($_GET['post_type'], ['owbn_chronicle', 'owbn_coordinator'], true)) {
-        foreach ($caps as $cap) {
-            if (empty($allcaps[$cap])) {
-                error_log("OWBN DENIED CAP: {$cap}");
-            }
-        }
-    }
-    
-    return $allcaps;
-}
-
-// Debug and fix map_meta_cap
-add_filter('map_meta_cap', 'owbn_debug_map_meta_cap', 0, 4);
-function owbn_debug_map_meta_cap($caps, $cap, $user_id, $args) {
-    // Log what's happening with our caps
-    if (in_array($cap, ['ocm_view_list', 'edit_owbn_chronicle', 'edit_owbn_coordinator'], true)) {
-        error_log("MAP_META_CAP: {$cap} => " . implode(',', $caps));
-    }
-    
-    // If our caps are being mapped to do_not_allow, override it
-    if (in_array($cap, ['ocm_view_list', 'edit_owbn_chronicle', 'edit_owbn_coordinator', 'read_owbn_chronicle', 'read_owbn_coordinator'], true)) {
-        if (in_array('do_not_allow', $caps, true)) {
-            error_log("MAP_META_CAP: Overriding do_not_allow for {$cap}");
-            return ['read']; // Subscribers have 'read'
-        }
-    }
-    
-    return $caps;
-}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // CACHED ACCESSSCHEMA ROLES - Fetch once, cache in transient
@@ -171,9 +95,11 @@ function owbn_cached_user_has_cap_filter($allcaps, $caps, $args, $user)
         return $allcaps;
     }
     
-    // Grant basic page access to all authenticated users
-    // This allows loading the CPT list screens - AccessSchema controls actual CRUD via capability map
+    // Grant basic menu access to all authenticated users
+    // AccessSchema controls actual CRUD via capability map
     $allcaps['ocm_view_list'] = true;
+    
+    $email = $user->user_email;
     
     $email = $user->user_email;
     if (!is_email($email)) {
