@@ -1,4 +1,11 @@
 <?php
+/** File: includes/render/render-user-fields.php
+ * Text Domain: owbn-chronicle-manager
+ * @version 2.3.1
+ * @author greghacke
+ * Function: User info and AST/Subcoord group field rendering
+ */
+
 if (!defined('ABSPATH')) exit;
 
 // Render the user info fields for the Chronicle custom post type
@@ -11,12 +18,28 @@ function owbn_render_user_info($key, $value, $meta)
         echo "<div id=\"owbn-cm-info-wrapper\">\n";
     }
 
+    // Ensure value is an array
+    $value = is_array($value) ? $value : [];
+
     $user_id = $value['user'] ?? '';
     $display_name = $value['display_name'] ?? '';
     $actual_email = $value['actual_email'] ?? '';
     $display_email = $value['display_email'] ?? $actual_email;
 
-    $users = get_users(['fields' => ['ID', 'display_name']]);
+    $users = get_users(['orderby' => 'display_name', 'order' => 'ASC', 'fields' => ['ID', 'display_name']]);
+
+    // Check if stored user_id matches any user or special value
+    $user_exists = false;
+    if ($user_id === '' || $user_id === '__new__') {
+        $user_exists = true;
+    } else {
+        foreach ($users as $user) {
+            if ((string)$user_id === (string)$user->ID) {
+                $user_exists = true;
+                break;
+            }
+        }
+    }
 
     // Row 1: User + Display Name
     echo "<div class=\"owbn-user-info-row\">\n";
@@ -24,12 +47,20 @@ function owbn_render_user_info($key, $value, $meta)
     // User dropdown
     echo "<div class=\"owbn-user-info-field\">\n";
     echo "<label>" . esc_html__('User', 'owbn-chronicle-manager') . "<br>\n";
-    echo "<select name=\"" . esc_attr($key) . "[user]\" class=\"owbn-select2\">\n";
+    echo "<select name=\"" . esc_attr($key) . "[user]\" class=\"owbn-select2 single\">\n";
     echo "<option value=\"\">" . esc_html__('— Select —', 'owbn-chronicle-manager') . "</option>\n";
     echo "<option value=\"__new__\" " . selected($user_id, '__new__', false) . ">" . esc_html__('[New User]', 'owbn-chronicle-manager') . "</option>\n";
 
+    // If stored value doesn't match any user, add it as an option to preserve it
+    if (!$user_exists && !empty($user_id)) {
+        $preserved_label = sprintf(__('[User ID: %s - Not Found]', 'owbn-chronicle-manager'), $user_id);
+        echo "<option value=\"" . esc_attr($user_id) . "\" selected>" . esc_html($preserved_label) . "</option>\n";
+    }
+
     foreach ($users as $user) {
-        echo "<option value=\"" . esc_attr($user->ID) . "\" " . selected($user_id, $user->ID, false) . ">" . esc_html($user->display_name) . "</option>\n";
+        // Cast both to string for reliable comparison
+        $is_selected = ((string)$user_id === (string)$user->ID);
+        echo "<option value=\"" . esc_attr($user->ID) . "\" " . selected($is_selected, true, false) . ">" . esc_html($user->display_name) . "</option>\n";
     }
     echo "</select>\n";
     echo "</label>\n";
@@ -96,11 +127,27 @@ function owbn_render_ast_group($field_key, $entries, $meta, $context = 'ast_list
 
 function render_ast_subcoord_block($prefix, $field_key, $index, $entry, $users, $is_template = false)
 {
+    // Ensure entry is an array
+    $entry = is_array($entry) ? $entry : [];
+
     $user_id = $entry['user'] ?? '';
     $display_name = $entry['display_name'] ?? '';
     $role = $entry['role'] ?? '';
     $actual_email = $entry['actual_email'] ?? '';
     $display_email = $entry['display_email'] ?? '';
+
+    // Check if stored user_id matches any user or special value
+    $user_exists = false;
+    if ($user_id === '' || $user_id === '__new__') {
+        $user_exists = true;
+    } else {
+        foreach ($users as $user) {
+            if ((string)$user_id === (string)$user->ID) {
+                $user_exists = true;
+                break;
+            }
+        }
+    }
 
 ?>
     <div class="owbn-<?php echo esc_attr($prefix); ?>-block">
@@ -109,9 +156,15 @@ function render_ast_subcoord_block($prefix, $field_key, $index, $entry, $users, 
                 <label><?php esc_html_e('User', 'owbn-chronicle-manager'); ?></label>
                 <select name="<?php echo esc_attr("{$field_key}[{$index}][user]"); ?>" class="owbn-select2 single">
                     <option value=""><?php esc_html_e('— Select —', 'owbn-chronicle-manager'); ?></option>
-                    <option value="__new__">[New User]</option>
+                    <option value="__new__" <?php selected($user_id, '__new__'); ?>><?php esc_html_e('[New User]', 'owbn-chronicle-manager'); ?></option>
+                    <?php if (!$user_exists && !empty($user_id)): ?>
+                        <option value="<?php echo esc_attr($user_id); ?>" selected>
+                            <?php echo esc_html(sprintf(__('[User ID: %s - Not Found]', 'owbn-chronicle-manager'), $user_id)); ?>
+                        </option>
+                    <?php endif; ?>
                     <?php foreach ($users as $user): ?>
-                        <option value="<?php echo esc_attr($user->ID); ?>" <?php selected($user_id, $user->ID); ?>>
+                        <?php $is_selected = ((string)$user_id === (string)$user->ID); ?>
+                        <option value="<?php echo esc_attr($user->ID); ?>" <?php selected($is_selected, true); ?>>
                             <?php echo esc_html($user->display_name); ?>
                         </option>
                     <?php endforeach; ?>

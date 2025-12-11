@@ -1,4 +1,11 @@
 <?php
+/** File: includes/render/render-metabox-fields.php
+ * Text Domain: owbn-chronicle-manager
+ * @version 2.3.1
+ * @author greghacke
+ * Function: Chronicle metabox field rendering
+ */
+
 if (!defined('ABSPATH')) exit;
 
 // Render the metabox fields for the Chronicle custom post type
@@ -10,6 +17,9 @@ function owbn_render_chronicle_fields_metabox($post)
         echo '<p>' . esc_html__('You do not have permission to edit this Chronicle.', 'owbn-chronicle-manager') . '</p>';
         return;
     }
+
+    // Output nonce for save handler
+    wp_nonce_field('owbn_chronicle_save', 'owbn_chronicle_nonce');
 
     $field_definitions = owbn_get_chronicle_field_definitions();
     $errors = get_transient("owbn_chronicle_errors_{$post->ID}") ?: [];
@@ -116,7 +126,9 @@ function owbn_render_chronicle_fields_metabox($post)
                     break;
 
                 case 'slug':
-                    owbn_render_slug_field($key, $value, $disabled_attr);
+                    // Slug is immutable once set, regardless of user role
+                    $slug_disabled = !empty($value) ? ' disabled' : $disabled_attr;
+                    owbn_render_slug_field($key, $value, $slug_disabled);
                     break;
 
                 default:

@@ -1,7 +1,7 @@
 <?php
 /** File: includes/hooks/chronicle-validate.php
  * Text Domain: owbn-chronicle-manager
- * @version 2.3.0
+ * @version 2.3.1
  * @author greghacke
  * Function: Chronicle validation functions
  */
@@ -14,6 +14,10 @@ if (!defined('ABSPATH')) exit;
 function owbn_validate_chronicle_submission($postarr)
 {
     $definitions = owbn_get_chronicle_field_definitions();
+    $post_id = $postarr['ID'] ?? 0;
+
+    // Fields that are immutable once set - skip validation if DB has value
+    $immutable_fields = ['chronicle_slug'];
 
     // Normalize all boolean checkbox fields to '0' if not set
     foreach ($definitions as $fields) {
@@ -28,17 +32,34 @@ function owbn_validate_chronicle_submission($postarr)
 
     foreach ($definitions as $fields) {
         foreach ($fields as $key => $meta) {
+            
+            // For immutable fields, check DB value if not in submission
+            if (in_array($key, $immutable_fields, true) && $post_id) {
+                $existing = get_post_meta($post_id, $key, true);
+                if (!empty($existing)) {
+                    // Field has value in DB, skip validation
+                    continue;
+                }
+            }
+
             $raw = owbn_safe_post_value($key, $postarr);
             $raw_string = is_array($raw) ? '' : $raw;
 
             // Required field check
             if (!empty($meta['required']) && (is_array($raw) ? empty($raw) : trim($raw_string) === '')) {
+                // Check if value exists in DB (for disabled fields)
+                if ($post_id) {
+                    $existing = get_post_meta($post_id, $key, true);
+                    if (!empty($existing)) {
+                        continue; // Has value in DB, not an error
+                    }
+                }
                 $errors[] = $key;
                 continue;
             }
 
             // Slug format validation
-            if ($meta['type'] === 'slug') {
+            if ($meta['type'] === 'slug' && !empty($raw_string)) {
                 if (!preg_match('/^[a-z0-9]{2,8}$/', strtolower($raw_string))) {
                     $errors[] = $key;
                 }
@@ -47,6 +68,12 @@ function owbn_validate_chronicle_submission($postarr)
             // User info validation
             if ($meta['type'] === 'user_info') {
                 $user_info = is_array($raw) ? $raw : [];
+
+                // If no data submitted, check DB
+                if (empty($user_info) && $post_id) {
+                    $user_info = get_post_meta($post_id, $key, true);
+                    $user_info = is_array($user_info) ? $user_info : [];
+                }
 
                 $user = trim($user_info['user'] ?? '');
                 $display_name = trim($user_info['display_name'] ?? '');

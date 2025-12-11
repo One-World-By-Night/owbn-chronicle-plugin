@@ -1,7 +1,7 @@
 <?php
 /** File: includes/hooks/chronicle-save.php
  * Text Domain: owbn-chronicle-manager
- * @version 2.3.0
+ * @version 2.3.1
  * @author greghacke
  * Function: Chronicle post meta save handler
  */
@@ -171,10 +171,13 @@ function owbn_save_chronicle_field($post_id, $key, $meta, $raw, $staff_user_dirt
             $previous = get_post_meta($post_id, $key, true);
             $previous_user = $previous['user'] ?? '';
             
-            if (owbn_users_changed([$previous_user], [$cleaned['user']])) {
-                $staff_user_dirty = true;
-            }
-            if ($cleaned['user'] === '__new__') {
+            // Only flag dirty if user actually changed to a different value
+            // Ignore if cleaned user is empty (no change submitted)
+            if (!empty($cleaned['user']) && $cleaned['user'] !== '__new__') {
+                if (owbn_users_changed([$previous_user], [$cleaned['user']])) {
+                    $staff_user_dirty = true;
+                }
+            } elseif ($cleaned['user'] === '__new__') {
                 $staff_user_dirty = true;
             }
             
@@ -397,7 +400,12 @@ function owbn_sync_custom_slug_with_post_name($data, $postarr)
     foreach ($definitions as $fields) {
         foreach ($fields as $key => $meta) {
             if ($meta['type'] === 'slug' && !empty($postarr[$key])) {
-                $data['post_name'] = sanitize_title($postarr[$key]);
+                // Only sync if slug doesn't already exist
+                $post_id = $postarr['ID'] ?? 0;
+                $existing = $post_id ? get_post_meta($post_id, $key, true) : '';
+                if (empty($existing)) {
+                    $data['post_name'] = sanitize_title($postarr[$key]);
+                }
                 break 2;
             }
         }
