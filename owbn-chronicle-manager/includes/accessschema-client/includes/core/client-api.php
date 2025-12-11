@@ -2,7 +2,7 @@
 
 /** File: includes/core/client-api.php
  * Text Domain: accessschema-client
- * version 1.2.0
+ * version 1.8.5
  * @author greghacke
  * Function: This file contains the core client API functions for AccessSchema.
  */
@@ -374,16 +374,21 @@ if (!function_exists('asc_hook_user_has_cap_filter')) {
         foreach ((array) $role_map[$requested_cap] as $raw_path) {
             $role_path = asc_expand_role_path($raw_path);
 
-            // Use existing function - it handles both local and remote modes internally
-            $granted = accessSchema_client_remote_check_access($email, $role_path, $client_id, true);
-
-            if (is_wp_error($granted)) {
-                continue;
-            }
-
-            if ($granted === true) {
-                $allcaps[$requested_cap] = true;
-                break;
+            // Check if pattern contains wildcards
+            if (strpos($role_path, '*') !== false) {
+                // Use wildcard-aware pattern matching
+                if (function_exists('accessSchema_client_roles_match_pattern_from_email') &&
+                    accessSchema_client_roles_match_pattern_from_email($email, $role_path, $client_id)) {
+                    $allcaps[$requested_cap] = true;
+                    break;
+                }
+            } else {
+                // Use exact/hierarchical check for non-wildcard paths
+                $granted = accessSchema_client_remote_check_access($email, $role_path, $client_id, true);
+                if (!is_wp_error($granted) && $granted === true) {
+                    $allcaps[$requested_cap] = true;
+                    break;
+                }
             }
         }
 
