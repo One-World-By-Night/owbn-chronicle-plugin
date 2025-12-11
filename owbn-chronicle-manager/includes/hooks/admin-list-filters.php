@@ -2,51 +2,84 @@
 /**
  * File: includes/hooks/admin-list-filters.php
  * Text Domain: owbn-chronicle-manager
- * @version 1.3.0
+ * @version 1.2.0
  * 
- * Uses AccessSchema's existing user_meta cache - no additional API calls
+ * Handles:
+ * - Performance: Replace slow AccessSchema filter with cached version
+ * - Permission filtering: Restrict list to user's accessible posts
+ * - View links: Point to owbn-client frontend pages
  */
 
 if (!defined('ABSPATH')) exit;
 
 // ══════════════════════════════════════════════════════════════════════════════
-// GET CACHED ROLES FROM ACCESSSCHEMA'S USER_META (NO API CALLS)
+// CACHED ACCESSSCHEMA ROLES - Fetch once, cache in transient
 // ══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Get user's roles from AccessSchema's existing user_meta cache
- * This NEVER makes API calls - just reads what's already cached
+ * Get user's AccessSchema roles with aggressive transient caching
+ * Only calls remote API if cache is empty
  */
-function owbn_get_user_cached_roles($user_id = null)
+function owbn_get_cached_user_roles($user_id = null, $email = null)
 {
     if (!$user_id) {
-        $user_id = get_current_user_id();
+        $user = wp_get_current_user();
+        if (!$user->ID) return [];
+        $user_id = $user->ID;
+        $email = $user->user_email;
     }
-    if (!$user_id) return [];
     
+    $cache_key = "owbn_asc_roles_{$user_id}";
+    
+    // Check transient first - this is the critical optimization
+    $cached = get_transient($cache_key);
+    if ($cached !== false) {
+        return $cached;
+    }
+    
+    // Not in cache - fetch from AccessSchema (this is the slow part)
+    $roles = [];
     $client_id = defined('ASC_PREFIX') ? strtolower(str_replace('_', '-', ASC_PREFIX)) : 'ccs';
-    $cache_key = "{$client_id}_accessschema_cached_roles";
     
-    $cached = get_user_meta($user_id, $cache_key, true);
+    if (function_exists('accessSchema_client_remote_get_roles_by_email')) {
+        $response = accessSchema_client_remote_get_roles_by_email($email, $client_id);
+        if (!is_wp_error($response) && isset($response['roles'])) {
+            $roles = $response['roles'];
+        }
+    }
     
-    return is_array($cached) ? $cached : [];
+    // Cache for 10 minutes
+    set_transient($cache_key, $roles, 10 * MINUTE_IN_SECONDS);
+    return $roles;
+}
+
+/**
+ * Clear cached roles for a user (call when permissions change)
+ */
+function owbn_clear_cached_user_roles($user_id)
+{
+    delete_transient("owbn_asc_roles_{$user_id}");
+    delete_transient("owbn_counts_owbn_chronicle_{$user_id}");
+    delete_transient("owbn_counts_owbn_coordinator_{$user_id}");
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// REPLACE SLOW ACCESSSCHEMA FILTER WITH CACHE-ONLY VERSION
+// REPLACE SLOW ACCESSSCHEMA FILTER WITH CACHED VERSION
+// Must run VERY early and at same priority to properly replace
 // ══════════════════════════════════════════════════════════════════════════════
 
+// Remove the slow filter and add cached version
 add_action('plugins_loaded', function() {
-    // Remove the original filter that makes API calls
+    // Remove the original slow filter
     remove_filter('user_has_cap', 'asc_hook_user_has_cap_filter', 10);
     
-    // Add cache-only replacement
+    // Add our cached replacement at same priority
     add_filter('user_has_cap', 'owbn_cached_user_has_cap_filter', 10, 4);
 }, 99);
 
 /**
- * Cache-only replacement for asc_hook_user_has_cap_filter
- * Reads from user_meta - NEVER makes API calls
+ * Cached replacement for asc_hook_user_has_cap_filter
+ * Uses transient-cached roles instead of making API calls
  */
 function owbn_cached_user_has_cap_filter($allcaps, $caps, $args, $user)
 {
@@ -62,13 +95,25 @@ function owbn_cached_user_has_cap_filter($allcaps, $caps, $args, $user)
         return $allcaps;
     }
     
-    // Get roles from user_meta cache (NO API call)
-    $roles = owbn_get_user_cached_roles($user->ID);
+    $email = $user->user_email;
+    if (!is_email($email)) {
+        return $allcaps;
+    }
+    
+    // Get CACHED roles - this is the key difference
+    $roles = owbn_get_cached_user_roles($user->ID, $email);
     
     // Handle group-level check
     if ($requested_cap === 'asc_has_access_to_group') {
         $group_path = $args[1] ?? null;
-        if ($group_path && owbn_user_has_role_access($roles, $group_path)) {
+        if (!$group_path) {
+            return $allcaps;
+        }
+        
+        $has_access = in_array($group_path, $roles, true) ||
+            !empty(preg_grep('#^' . preg_quote($group_path, '#') . '/#', $roles));
+        
+        if ($has_access) {
             $allcaps[$requested_cap] = true;
         }
         return $allcaps;
@@ -81,11 +126,24 @@ function owbn_cached_user_has_cap_filter($allcaps, $caps, $args, $user)
     }
     
     foreach ((array) $role_map[$requested_cap] as $raw_path) {
-        $role_path = str_replace('$slug', sanitize_key(get_query_var('slug') ?: ''), $raw_path);
+        $role_path = owbn_expand_role_path($raw_path);
         
-        if (owbn_user_has_role_access($roles, $role_path)) {
-            $allcaps[$requested_cap] = true;
-            break;
+        // Check against cached roles
+        if (strpos($role_path, '*') !== false) {
+            // Wildcard matching
+            if (owbn_roles_match_pattern($roles, $role_path)) {
+                $allcaps[$requested_cap] = true;
+                break;
+            }
+        } else {
+            // Exact or hierarchical match
+            $has_access = in_array($role_path, $roles, true) ||
+                !empty(preg_grep('#^' . preg_quote($role_path, '#') . '/#', $roles));
+            
+            if ($has_access) {
+                $allcaps[$requested_cap] = true;
+                break;
+            }
         }
     }
     
@@ -93,36 +151,25 @@ function owbn_cached_user_has_cap_filter($allcaps, $caps, $args, $user)
 }
 
 /**
- * Check if user's roles grant access to a path (exact, hierarchical, or wildcard)
+ * Expand role path placeholders
  */
-function owbn_user_has_role_access($roles, $path)
+function owbn_expand_role_path($raw_path)
 {
-    if (empty($roles) || empty($path)) {
-        return false;
-    }
-    
-    // Exact match
-    if (in_array($path, $roles, true)) {
-        return true;
-    }
-    
-    // Wildcard match
-    if (strpos($path, '*') !== false) {
-        $regex = '#^' . str_replace('\*', '[^/]*', preg_quote($path, '#')) . '$#';
-        foreach ($roles as $role) {
-            if (preg_match($regex, $role)) {
-                return true;
-            }
-        }
-    }
-    
-    // Hierarchical match (role is parent of path)
+    $slug = get_query_var('slug') ?: '';
+    return str_replace('$slug', sanitize_key($slug), $raw_path);
+}
+
+/**
+ * Check if any roles match a wildcard pattern
+ */
+function owbn_roles_match_pattern($roles, $pattern)
+{
+    $regex = str_replace('\*', '[^/]*', preg_quote($pattern, '#'));
     foreach ($roles as $role) {
-        if (strpos($path, $role . '/') === 0) {
+        if (preg_match('#^' . $regex . '$#', $role)) {
             return true;
         }
     }
-    
     return false;
 }
 
@@ -130,6 +177,9 @@ function owbn_user_has_role_access($roles, $path)
 // ACCESSIBLE SLUGS - Extract from cached roles
 // ══════════════════════════════════════════════════════════════════════════════
 
+/**
+ * Get accessible slugs for current user (null = unrestricted for admins)
+ */
 function owbn_get_user_accessible_slugs($post_type)
 {
     static $cache = [];
@@ -147,27 +197,93 @@ function owbn_get_user_accessible_slugs($post_type)
         return $cache[$cache_key];
     }
     
-    $roles = owbn_get_user_cached_roles($user->ID);
-    $slugs = [];
+    // Get cached roles
+    $roles = owbn_get_cached_user_roles($user->ID, $user->user_email);
     
     if ($post_type === 'owbn_chronicle') {
-        // Pattern: chronicle/{slug}/hst, chronicle/{slug}/cm, chronicle/{slug}/ast
-        foreach ($roles as $role) {
-            if (preg_match('#^chronicle/([^/]+)/(hst|cm|ast)$#', $role, $m)) {
-                $slugs[] = $m[1];
-            }
-        }
+        $accessible = owbn_extract_chronicle_slugs_from_roles($roles, $user->ID);
     } elseif ($post_type === 'owbn_coordinator') {
-        // Pattern: coordinator/{slug}/coordinator, coordinator/{slug}/sub-coordinator
-        foreach ($roles as $role) {
-            if (preg_match('#^coordinator/([^/]+)/(coordinator|sub-coordinator)$#', $role, $m)) {
-                $slugs[] = $m[1];
-            }
+        $accessible = owbn_extract_coordinator_slugs_from_roles($roles, $user->ID);
+    } else {
+        $accessible = [];
+    }
+    
+    $cache[$cache_key] = $accessible;
+    return $accessible;
+}
+
+function owbn_extract_chronicle_slugs_from_roles($roles, $user_id)
+{
+    $slugs = [];
+    
+    // Pattern: chronicle/{slug}/hst, chronicle/{slug}/cm, chronicle/{slug}/ast
+    foreach ($roles as $role) {
+        if (preg_match('#^chronicle/([^/]+)/(hst|cm|ast)$#', $role, $m)) {
+            $slugs[] = $m[1];
         }
     }
     
-    $cache[$cache_key] = array_unique($slugs);
-    return $cache[$cache_key];
+    if (!empty($slugs)) {
+        return array_unique($slugs);
+    }
+    
+    // Fallback: meta lookup (only if no AccessSchema roles found)
+    global $wpdb;
+    $user_id_str = (string) $user_id;
+    $post_ids = $wpdb->get_col($wpdb->prepare(
+        "SELECT DISTINCT p.ID FROM {$wpdb->posts} p
+         INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+         WHERE p.post_type = 'owbn_chronicle'
+         AND p.post_status IN ('publish', 'draft')
+         AND pm.meta_key IN ('hst_info', 'cm_info')
+         AND pm.meta_value LIKE %s
+         LIMIT 100",
+        '%"user":"' . $wpdb->esc_like($user_id_str) . '"%'
+    ));
+    
+    foreach ($post_ids as $pid) {
+        $slug = get_post_meta($pid, 'chronicle_slug', true);
+        if ($slug) $slugs[] = $slug;
+    }
+    
+    return array_unique($slugs);
+}
+
+function owbn_extract_coordinator_slugs_from_roles($roles, $user_id)
+{
+    $slugs = [];
+    
+    // Pattern: coordinator/{slug}/coordinator, coordinator/{slug}/sub-coordinator
+    foreach ($roles as $role) {
+        if (preg_match('#^coordinator/([^/]+)/(coordinator|sub-coordinator)$#', $role, $m)) {
+            $slugs[] = $m[1];
+        }
+    }
+    
+    if (!empty($slugs)) {
+        return array_unique($slugs);
+    }
+    
+    // Fallback: meta lookup
+    global $wpdb;
+    $user_id_str = (string) $user_id;
+    $post_ids = $wpdb->get_col($wpdb->prepare(
+        "SELECT DISTINCT p.ID FROM {$wpdb->posts} p
+         INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+         WHERE p.post_type = 'owbn_coordinator'
+         AND p.post_status IN ('publish', 'draft')
+         AND pm.meta_key = 'coord_info'
+         AND pm.meta_value LIKE %s
+         LIMIT 100",
+        '%"user":"' . $wpdb->esc_like($user_id_str) . '"%'
+    ));
+    
+    foreach ($post_ids as $pid) {
+        $slug = get_post_meta($pid, 'coordinator_slug', true);
+        if ($slug) $slugs[] = $slug;
+    }
+    
+    return array_unique($slugs);
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -239,7 +355,9 @@ function owbn_list_view_map_meta_cap($caps, $cap, $user_id, $args)
     }
     
     $post_id = !empty($args[0]) ? (int) $args[0] : 0;
-    if (!$post_id) return $caps;
+    if (!$post_id) {
+        return $caps;
+    }
     
     $post = get_post($post_id);
     if (!$post || !in_array($post->post_type, ['owbn_chronicle', 'owbn_coordinator'], true)) {
@@ -247,7 +365,9 @@ function owbn_list_view_map_meta_cap($caps, $cap, $user_id, $args)
     }
     
     $user = get_userdata($user_id);
-    if (!$user) return ['do_not_allow'];
+    if (!$user) {
+        return ['do_not_allow'];
+    }
     
     // Admin/exec always allowed
     if (array_intersect($user->roles, ['administrator', 'exec_team', 'web_team'])) {
@@ -263,7 +383,11 @@ function owbn_list_view_map_meta_cap($caps, $cap, $user_id, $args)
     $meta_key = ($post->post_type === 'owbn_chronicle') ? 'chronicle_slug' : 'coordinator_slug';
     $slug = get_post_meta($post_id, $meta_key, true);
     
-    return in_array($slug, $accessible, true) ? ['read'] : ['do_not_allow'];
+    if (in_array($slug, $accessible, true)) {
+        return ['read'];
+    }
+    
+    return ['do_not_allow'];
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -278,11 +402,19 @@ function owbn_optimize_post_counts($counts, $type, $perm)
     }
     
     $user = wp_get_current_user();
-    if (!$user->ID) return $counts;
+    if (!$user->ID) {
+        return $counts;
+    }
     
     // Admins get normal counts
     if (array_intersect($user->roles, ['administrator', 'exec_team', 'web_team'])) {
         return $counts;
+    }
+    
+    $cache_key = "owbn_counts_{$type}_{$user->ID}";
+    $cached = get_transient($cache_key);
+    if ($cached !== false) {
+        return $cached;
     }
     
     $accessible = owbn_get_user_accessible_slugs($type);
@@ -292,32 +424,33 @@ function owbn_optimize_post_counts($counts, $type, $perm)
         $counts->$status = 0;
     }
     
-    if (empty($accessible)) {
-        return $counts;
+    if ($accessible === null || !empty($accessible)) {
+        global $wpdb;
+        $meta_key = ($type === 'owbn_chronicle') ? 'chronicle_slug' : 'coordinator_slug';
+        
+        $where = '';
+        if ($accessible !== null && !empty($accessible)) {
+            $placeholders = implode(',', array_fill(0, count($accessible), '%s'));
+            $where = $wpdb->prepare(
+                " AND p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value IN ($placeholders))",
+                array_merge([$meta_key], $accessible)
+            );
+        }
+        
+        $results = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT post_status, COUNT(*) AS num_posts FROM {$wpdb->posts} p WHERE post_type = %s {$where} GROUP BY post_status",
+                $type
+            ),
+            ARRAY_A
+        );
+        
+        foreach ($results as $row) {
+            $counts->{$row['post_status']} = (int) $row['num_posts'];
+        }
     }
     
-    global $wpdb;
-    $meta_key = ($type === 'owbn_chronicle') ? 'chronicle_slug' : 'coordinator_slug';
-    $placeholders = implode(',', array_fill(0, count($accessible), '%s'));
-    
-    $results = $wpdb->get_results(
-        $wpdb->prepare(
-            "SELECT p.post_status, COUNT(*) AS num_posts 
-             FROM {$wpdb->posts} p
-             INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-             WHERE p.post_type = %s 
-             AND pm.meta_key = %s 
-             AND pm.meta_value IN ($placeholders)
-             GROUP BY p.post_status",
-            array_merge([$type, $meta_key], $accessible)
-        ),
-        ARRAY_A
-    );
-    
-    foreach ($results as $row) {
-        $counts->{$row['post_status']} = (int) $row['num_posts'];
-    }
-    
+    set_transient($cache_key, $counts, 10 * MINUTE_IN_SECONDS);
     return $counts;
 }
 
@@ -332,24 +465,41 @@ function owbn_modify_row_actions($actions, $post)
         return $actions;
     }
     
-    if (!function_exists('owc_option_name')) {
-        return $actions;
-    }
+    $view_url = owbn_get_frontend_view_url($post);
     
-    $slug = get_post_meta($post->ID, ($post->post_type === 'owbn_chronicle') ? 'chronicle_slug' : 'coordinator_slug', true);
-    $page_option = ($post->post_type === 'owbn_chronicle') ? 'chronicles_detail_page' : 'coordinators_detail_page';
-    $page_id = get_option(owc_option_name($page_option), 0);
-    
-    if ($page_id && $slug && isset($actions['view'])) {
-        $view_url = add_query_arg('slug', $slug, get_permalink($page_id));
+    if ($view_url && isset($actions['view'])) {
         $actions['view'] = sprintf(
-            '<a href="%s" rel="bookmark">%s</a>',
+            '<a href="%s" rel="bookmark" aria-label="%s">%s</a>',
             esc_url($view_url),
+            esc_attr(sprintf(__('View &#8220;%s&#8221;', 'owbn-chronicle-manager'), get_the_title($post))),
             __('View', 'owbn-chronicle-manager')
         );
     }
     
     return $actions;
+}
+
+function owbn_get_frontend_view_url($post)
+{
+    if (!function_exists('owc_option_name')) {
+        return null;
+    }
+    
+    if ($post->post_type === 'owbn_chronicle') {
+        $slug = get_post_meta($post->ID, 'chronicle_slug', true);
+        $page_id = get_option(owc_option_name('chronicles_detail_page'), 0);
+        if ($page_id && $slug) {
+            return add_query_arg('slug', $slug, get_permalink($page_id));
+        }
+    } elseif ($post->post_type === 'owbn_coordinator') {
+        $slug = get_post_meta($post->ID, 'coordinator_slug', true);
+        $page_id = get_option(owc_option_name('coordinators_detail_page'), 0);
+        if ($page_id && $slug) {
+            return add_query_arg('slug', $slug, get_permalink($page_id));
+        }
+    }
+    
+    return null;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -373,66 +523,12 @@ function owbn_filtered_list_notice()
     }
     
     $type_label = ($screen->post_type === 'owbn_chronicle') ? 'chronicles' : 'coordinators';
-    echo '<div class="notice notice-info is-dismissible"><p>';
-    printf(esc_html__('Showing only %s you have access to.', 'owbn-chronicle-manager'), esc_html($type_label));
-    echo '</p></div>';
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// ADMIN BAR - Remove "New Chronicle/Coordinator" for non-admins
-// ══════════════════════════════════════════════════════════════════════════════
-
-add_action('admin_bar_menu', 'owbn_remove_admin_bar_new_items', 999);
-function owbn_remove_admin_bar_new_items($wp_admin_bar)
-{
-    $user = wp_get_current_user();
-    if (!$user->ID) return;
-    
-    // Admins keep everything
-    if (array_intersect($user->roles, ['administrator', 'exec_team', 'web_team'])) {
-        return;
-    }
-    
-    // Remove "New Chronicle" and "New Coordinator" from "+ New" menu
-    $wp_admin_bar->remove_node('new-owbn_chronicle');
-    $wp_admin_bar->remove_node('new-owbn_coordinator');
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// ADMIN MENU - Remove "Add New" submenu for non-admins
-// ══════════════════════════════════════════════════════════════════════════════
-
-add_action('admin_menu', 'owbn_remove_add_new_submenu', 999);
-function owbn_remove_add_new_submenu()
-{
-    $user = wp_get_current_user();
-    if (!$user->ID) return;
-    
-    if (array_intersect($user->roles, ['administrator', 'exec_team', 'web_team'])) {
-        return;
-    }
-    
-    // Remove "Add New" submenu items
-    remove_submenu_page('edit.php?post_type=owbn_chronicle', 'post-new.php?post_type=owbn_chronicle');
-    remove_submenu_page('edit.php?post_type=owbn_coordinator', 'post-new.php?post_type=owbn_coordinator');
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// HIDE "ADD NEW" BUTTON ON LIST PAGE VIA CSS
-// ══════════════════════════════════════════════════════════════════════════════
-
-add_action('admin_head', 'owbn_hide_add_new_button');
-function owbn_hide_add_new_button()
-{
-    $screen = get_current_screen();
-    if (!$screen || !in_array($screen->post_type, ['owbn_chronicle', 'owbn_coordinator'], true)) {
-        return;
-    }
-    
-    $user = wp_get_current_user();
-    if (array_intersect($user->roles, ['administrator', 'exec_team', 'web_team'])) {
-        return;
-    }
-    
-    echo '<style>.page-title-action { display: none !important; }</style>';
+    ?>
+    <div class="notice notice-info is-dismissible">
+        <p><?php printf(
+            esc_html__('Showing only %s you have access to.', 'owbn-chronicle-manager'),
+            esc_html($type_label)
+        ); ?></p>
+    </div>
+    <?php
 }
