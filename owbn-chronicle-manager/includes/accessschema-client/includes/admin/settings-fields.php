@@ -144,6 +144,12 @@ add_action('admin_init', function () {
             'delete_published_posts',
             'read_private_posts',
             'upload_files',
+            // OCM custom capabilities
+            'ocm_view_list',
+            'edit_owbn_chronicle',
+            'edit_owbn_coordinator',
+            'ocm_create_chronicle',
+            'ocm_create_coordinator',
         ];
 
         $existing_map = get_option($cap_key, []);
