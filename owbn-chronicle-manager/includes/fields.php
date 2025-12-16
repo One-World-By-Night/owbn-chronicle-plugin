@@ -3,6 +3,12 @@ function owbn_get_chronicle_field_definitions()
 {
     return [
         'Chronicle Details' => [
+            'record_type' => [
+                'label'   => __('Record Type', 'owbn-chronicle-manager'),
+                'type'    => 'select',
+                'options' => ['local' => 'Local', 'remote' => 'Remote'],
+                'default' => 'local',
+            ],
             'chronicle_slug' => [
                 'label' => __('Chronicle Slug', 'owbn-chronicle-manager'),
                 'type' => 'slug',

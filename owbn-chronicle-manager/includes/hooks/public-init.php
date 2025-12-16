@@ -16,6 +16,7 @@ add_filter('template_include', function ($template) {
 function owbn_register_chronicle_meta_fields()
 {
     $fields = [
+        'record_type'             => 'string',
         'chronicle_slug'          => 'string',
         'web_url'                 => 'string',
         'active_player_count'     => 'string',

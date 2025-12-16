@@ -94,7 +94,7 @@ function owbn_register_chronicle_meta()
     if (!owbn_chronicles_enabled()) return;
 
     $complex = ['ooc_locations', 'ic_location_list', 'game_site_list', 'genres', 'social_urls', 'session_list', 'admin_contact', 'document_links', 'email_lists', 'player_lists'];
-    $simple = ['chronicle_slug', 'premise', 'game_theme', 'game_mood', 'traveler_info', 'active_player_count', 'hst_user', 'hst_display_name', 'hst_email', 'cm_user', 'cm_display_name', 'cm_email', 'web_url', 'hst_selection', 'cm_selection', 'ast_selection', 'chronicle_start_date', 'chronicle_region', 'chronicle_probationary', 'chronicle_satellite', 'chronicle_parent'];
+    $simple = ['record_type', 'chronicle_slug', 'premise', 'game_theme', 'game_mood', 'traveler_info', 'active_player_count', 'hst_user', 'hst_display_name', 'hst_email', 'cm_user', 'cm_display_name', 'cm_email', 'web_url', 'hst_selection', 'cm_selection', 'ast_selection', 'chronicle_start_date', 'chronicle_region', 'chronicle_probationary', 'chronicle_satellite', 'chronicle_parent'];
 
     foreach ($complex as $field) {
         register_post_meta('owbn_chronicle', $field, ['type' => 'array', 'single' => true, 'show_in_rest' => true, 'sanitize_callback' => null]);
