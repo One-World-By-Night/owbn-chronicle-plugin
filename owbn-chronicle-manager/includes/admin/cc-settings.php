@@ -1,15 +1,12 @@
 <?php
-if (!defined('ABSPATH')) exit;
-
-/**
- * C&C Plugin Settings - Settings > C&C Plugin
- * 
- * Includes:
- * - Feature toggles (Chronicles, Coordinators)
- * - API Settings
- * - Genre list management
- * - Region list management
+/** File: includes/admin/cc-settings.php
+ * Text Domain: owbn-chronicle-manager
+ * @version 2.4.0
+ * @author greghacke
+ * Function: C&C Plugin Settings - Settings > C&C Plugin
  */
+
+if (!defined('ABSPATH')) exit;
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ADMIN MENU
@@ -30,63 +27,81 @@ add_action('admin_menu', function () {
 // ══════════════════════════════════════════════════════════════════════════════
 
 add_action('admin_init', function () {
-    // // API Key
-    // register_setting('owbn_cc_settings', 'owbn_api_key_readonly', [
-    //     'type' => 'string',
-    //     'sanitize_callback' => 'sanitize_text_field'
-    // ]);
-
-    // Feature toggles
+    // Chronicles
     register_setting('owbn_cc_settings', 'owbn_enable_chronicles', [
         'type' => 'boolean',
-        'default' => true,
+        'default' => false,
         'sanitize_callback' => 'rest_sanitize_boolean'
     ]);
+    register_setting('owbn_cc_settings', 'owbn_chronicles_mode', [
+        'type' => 'string',
+        'default' => 'local',
+        'sanitize_callback' => 'sanitize_text_field'
+    ]);
+    register_setting('owbn_cc_settings', 'owbn_chronicles_api_key', [
+        'type' => 'string',
+        'default' => '',
+        'sanitize_callback' => 'sanitize_text_field'
+    ]);
+    register_setting('owbn_cc_settings', 'owbn_chronicles_remote_url', [
+        'type' => 'string',
+        'default' => '',
+        'sanitize_callback' => 'esc_url_raw'
+    ]);
+    register_setting('owbn_cc_settings', 'owbn_chronicles_remote_key', [
+        'type' => 'string',
+        'default' => '',
+        'sanitize_callback' => 'sanitize_text_field'
+    ]);
+
+    // Coordinators
     register_setting('owbn_cc_settings', 'owbn_enable_coordinators', [
         'type' => 'boolean',
-        'default' => true,
+        'default' => false,
         'sanitize_callback' => 'rest_sanitize_boolean'
     ]);
+    register_setting('owbn_cc_settings', 'owbn_coordinators_mode', [
+        'type' => 'string',
+        'default' => 'local',
+        'sanitize_callback' => 'sanitize_text_field'
+    ]);
+    register_setting('owbn_cc_settings', 'owbn_coordinators_api_key', [
+        'type' => 'string',
+        'default' => '',
+        'sanitize_callback' => 'sanitize_text_field'
+    ]);
+    register_setting('owbn_cc_settings', 'owbn_coordinators_remote_url', [
+        'type' => 'string',
+        'default' => '',
+        'sanitize_callback' => 'esc_url_raw'
+    ]);
+    register_setting('owbn_cc_settings', 'owbn_coordinators_remote_key', [
+        'type' => 'string',
+        'default' => '',
+        'sanitize_callback' => 'sanitize_text_field'
+    ]);
 
-    // Feature Toggles Section
-    add_settings_section(
-        'owbn_cc_features',
-        __('Feature Toggles', 'owbn-chronicle-manager'),
-        function () {
-            echo '<p>' . esc_html__('Enable or disable plugin features. Disabled features hide from admin and API.', 'owbn-chronicle-manager') . '</p>';
-        },
-        'owbn-cc-settings'
-    );
+    // Genre list
+    register_setting('owbn_cc_settings', 'owbn_genre_list', [
+        'type' => 'array',
+        'default' => [],
+        'sanitize_callback' => 'owbn_sanitize_list_option'
+    ]);
 
-    add_settings_field(
-        'owbn_enable_chronicles',
-        __('Chronicles', 'owbn-chronicle-manager'),
-        'owbn_render_toggle_field',
-        'owbn-cc-settings',
-        'owbn_cc_features',
-        [
-            'option_name' => 'owbn_enable_chronicles',
-            'label' => __('Enable Chronicle management', 'owbn-chronicle-manager'),
-        ]
-    );
-
-    add_settings_field(
-        'owbn_enable_coordinators',
-        __('Coordinators', 'owbn-chronicle-manager'),
-        'owbn_render_toggle_field',
-        'owbn-cc-settings',
-        'owbn_cc_features',
-        [
-            'option_name' => 'owbn_enable_coordinators',
-            'label' => __('Enable Coordinator management', 'owbn-chronicle-manager'),
-        ]
-    );
+    // Region list
+    register_setting('owbn_cc_settings', 'owbn_region_list', [
+        'type' => 'array',
+        'default' => [],
+        'sanitize_callback' => 'owbn_sanitize_list_option'
+    ]);
 });
 
-function owbn_render_toggle_field($args)
+function owbn_sanitize_list_option($input)
 {
-    $value = get_option($args['option_name'], true);
-    echo '<label><input type="checkbox" name="' . esc_attr($args['option_name']) . '" value="1" ' . checked($value, true, false) . ' /> ' . esc_html($args['label']) . '</label>';
+    if (!is_array($input)) {
+        $input = array_filter(array_map('trim', explode("\n", $input)));
+    }
+    return array_values(array_filter(array_map('sanitize_text_field', $input)));
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -95,156 +110,221 @@ function owbn_render_toggle_field($args)
 
 function owbn_render_cc_settings_page()
 {
-    if (!current_user_can('manage_options')) return;
-
-    // Handle settings-updated flag
-    if (isset($_GET['settings-updated'])) {
-        update_option('owbn_flush_rewrite_rules', true);
-        add_settings_error('owbn_cc_messages', 'owbn_cc_message', __('Settings saved.', 'owbn-chronicle-manager'), 'updated');
+    if (!current_user_can('manage_options')) {
+        return;
     }
 
-    // Process Genre form submission
-    if (
-        isset($_POST['owbn_genres_nonce']) &&
-        wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['owbn_genres_nonce'])), 'save_owbn_genres')
-    ) {
-        $lines = array_filter(array_map(
-            'sanitize_text_field',
-            array_map('trim', explode("\n", sanitize_textarea_field(wp_unslash($_POST['owbn_genres'] ?? ''))))
-        ));
-        update_option('owbn_genre_list', $lines);
-        add_settings_error('owbn_cc_messages', 'owbn_genres_message', __('Genres updated.', 'owbn-chronicle-manager'), 'updated');
-    }
+    // Current values
+    $chron_enabled    = get_option('owbn_enable_chronicles', false);
+    $chron_mode       = get_option('owbn_chronicles_mode', 'local');
+    $chron_api_key    = get_option('owbn_chronicles_api_key', '');
+    $chron_remote_url = get_option('owbn_chronicles_remote_url', '');
+    $chron_remote_key = get_option('owbn_chronicles_remote_key', '');
 
-    // Process Region form submission
-    if (
-        isset($_POST['owbn_regions_nonce']) &&
-        wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['owbn_regions_nonce'])), 'save_owbn_regions')
-    ) {
-        $lines = array_filter(array_map(
-            'sanitize_text_field',
-            array_map('trim', explode("\n", sanitize_textarea_field(wp_unslash($_POST['owbn_regions'] ?? ''))))
-        ));
-        update_option('owbn_region_list', $lines);
-        add_settings_error('owbn_cc_messages', 'owbn_regions_message', __('Regions updated.', 'owbn-chronicle-manager'), 'updated');
-    }
+    $coord_enabled    = get_option('owbn_enable_coordinators', false);
+    $coord_mode       = get_option('owbn_coordinators_mode', 'local');
+    $coord_api_key    = get_option('owbn_coordinators_api_key', '');
+    $coord_remote_url = get_option('owbn_coordinators_remote_url', '');
+    $coord_remote_key = get_option('owbn_coordinators_remote_key', '');
 
-    // Process API Key form submission
-    if (
-        isset($_POST['owbn_api_nonce']) &&
-        wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['owbn_api_nonce'])), 'save_owbn_api')
-    ) {
-        $api_key = sanitize_text_field(wp_unslash($_POST['owbn_api_key_readonly'] ?? ''));
-        update_option('owbn_api_key_readonly', $api_key);
-        add_settings_error('owbn_cc_messages', 'owbn_api_message', __('API settings saved.', 'owbn-chronicle-manager'), 'updated');
-    }
+    $genre_list  = get_option('owbn_genre_list', []);
+    $region_list = get_option('owbn_region_list', []);
 
-    // Fetch current values
-    $genres = get_option('owbn_genre_list', []);
-    $regions = get_option('owbn_region_list', []);
-    $genres_text = is_array($genres) ? implode("\n", $genres) : '';
-    $regions_text = is_array($regions) ? implode("\n", $regions) : '';
-?>
+    // Generate local API URL
+    $local_api_base = rest_url('owbn-cc/v1/');
+
+    ?>
     <div class="wrap">
-        <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
-        <?php settings_errors('owbn_cc_messages'); ?>
+        <h1><?php esc_html_e('C&C Plugin Settings', 'owbn-chronicle-manager'); ?></h1>
 
-        <!-- Feature Toggles -->
-        <form action="options.php" method="post">
-            <?php
-            settings_fields('owbn_cc_settings');
-            do_settings_sections('owbn-cc-settings');
-            submit_button(__('Save Features', 'owbn-chronicle-manager'));
-            ?>
-        </form>
+        <?php settings_errors(); ?>
 
-        <hr />
+        <form method="post" action="options.php">
+            <?php settings_fields('owbn_cc_settings'); ?>
 
-        <!-- API Settings -->
-        <h2><?php esc_html_e('API Settings', 'owbn-chronicle-manager'); ?></h2>
-        <form method="post">
-            <?php wp_nonce_field('save_owbn_api', 'owbn_api_nonce'); ?>
-            <table class="form-table">
+            <!-- CHRONICLES -->
+            <h2><?php esc_html_e('Chronicles', 'owbn-chronicle-manager'); ?></h2>
+            <table class="form-table" role="presentation">
                 <tr>
-                    <th scope="row"><?php esc_html_e('API URL', 'owbn-chronicle-manager'); ?></th>
+                    <th scope="row"><?php esc_html_e('Enable', 'owbn-chronicle-manager'); ?></th>
                     <td>
-                        <code id="owbn_api_url"><?php echo esc_url(rest_url('owbn-cc/v1/')); ?></code>
-                        <button type="button" class="button" onclick="navigator.clipboard.writeText(document.getElementById('owbn_api_url').textContent)"><?php esc_html_e('Copy', 'owbn-chronicle-manager'); ?></button>
-                        <p class="description"><?php esc_html_e('Base URL for client connections', 'owbn-chronicle-manager'); ?></p>
+                        <label>
+                            <input type="hidden" name="owbn_enable_chronicles" value="0" />
+                            <input type="checkbox" name="owbn_enable_chronicles" id="owbn_enable_chronicles" value="1" <?php checked($chron_enabled); ?> />
+                            <?php esc_html_e('Enable Chronicle management', 'owbn-chronicle-manager'); ?>
+                        </label>
                     </td>
                 </tr>
-                <tr>
-                    <th scope="row"><?php esc_html_e('Read-Only API Key', 'owbn-chronicle-manager'); ?></th>
+                <tr class="owbn-chronicles-options" <?php echo $chron_enabled ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('Data Source', 'owbn-chronicle-manager'); ?></th>
                     <td>
-                        <input type="text" name="owbn_api_key_readonly" id="owbn_api_key_ro"
-                            value="<?php echo esc_attr(get_option('owbn_api_key_readonly', '')); ?>"
-                            class="regular-text code" readonly />
-                        <button type="button" class="button" onclick="owbnGenerateApiKey('owbn_api_key_ro')"><?php esc_html_e('Generate New', 'owbn-chronicle-manager'); ?></button>
-                        <p class="description"><?php esc_html_e('Use this key for read-only API access', 'owbn-chronicle-manager'); ?></p>
+                        <fieldset>
+                            <label>
+                                <input type="radio" name="owbn_chronicles_mode" class="owbn-chronicles-mode" value="local" <?php checked($chron_mode, 'local'); ?> />
+                                <?php esc_html_e('Local (this site manages chronicles)', 'owbn-chronicle-manager'); ?>
+                            </label><br>
+                            <label>
+                                <input type="radio" name="owbn_chronicles_mode" class="owbn-chronicles-mode" value="remote" <?php checked($chron_mode, 'remote'); ?> />
+                                <?php esc_html_e('Remote (fetch from another site)', 'owbn-chronicle-manager'); ?>
+                            </label>
+                        </fieldset>
                     </td>
                 </tr>
-            </table>
-            <?php submit_button(__('Save API Settings', 'owbn-chronicle-manager')); ?>
-        </form>
-        <script>
-            function owbnGenerateApiKey(fieldId) {
-                const field = document.getElementById(fieldId);
-                const key = 'cc_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-                field.value = key;
-                field.removeAttribute('readonly');
-            }
-        </script>
-
-        <hr />
-
-        <!-- Status -->
-        <h2><?php esc_html_e('Status', 'owbn-chronicle-manager'); ?></h2>
-        <table class="widefat" style="max-width:300px;">
-            <tr>
-                <td><strong>Chronicles</strong></td>
-                <td><?php echo get_option('owbn_enable_chronicles', true) ? '✅ Enabled' : '❌ Disabled'; ?></td>
-            </tr>
-            <tr>
-                <td><strong>Coordinators</strong></td>
-                <td><?php echo get_option('owbn_enable_coordinators', true) ? '✅ Enabled' : '❌ Disabled'; ?></td>
-            </tr>
-        </table>
-
-        <hr />
-
-        <!-- Genre List -->
-        <h2><?php esc_html_e('Genre List', 'owbn-chronicle-manager'); ?></h2>
-        <p class="description"><?php esc_html_e('Used as available genre entries for Chronicles.', 'owbn-chronicle-manager'); ?></p>
-        <form method="post">
-            <?php wp_nonce_field('save_owbn_genres', 'owbn_genres_nonce'); ?>
-            <table class="form-table">
-                <tr>
-                    <th scope="row"><?php esc_html_e('Genres (one per line)', 'owbn-chronicle-manager'); ?></th>
+                <!-- Local: Show API URL and Key -->
+                <tr class="owbn-chronicles-options owbn-chronicles-local" <?php echo ($chron_enabled && $chron_mode === 'local') ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('API Endpoint', 'owbn-chronicle-manager'); ?></th>
                     <td>
-                        <textarea name="owbn_genres" rows="12" class="large-text code"><?php echo esc_textarea($genres_text); ?></textarea>
+                        <code><?php echo esc_html($local_api_base); ?>chronicles</code>
+                        <p class="description"><?php esc_html_e('Share this URL with sites that need to fetch chronicle data.', 'owbn-chronicle-manager'); ?></p>
+                    </td>
+                </tr>
+                <tr class="owbn-chronicles-options owbn-chronicles-local" <?php echo ($chron_enabled && $chron_mode === 'local') ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('API Key', 'owbn-chronicle-manager'); ?></th>
+                    <td>
+                        <input type="text" name="owbn_chronicles_api_key" value="<?php echo esc_attr($chron_api_key); ?>" class="regular-text code" />
+                        <button type="button" class="button owbn-generate-key" data-target="owbn_chronicles_api_key"><?php esc_html_e('Generate', 'owbn-chronicle-manager'); ?></button>
+                        <p class="description"><?php esc_html_e('Secret key for API authentication. Share with authorized remote sites.', 'owbn-chronicle-manager'); ?></p>
+                    </td>
+                </tr>
+                <!-- Remote: Enter remote URL and Key -->
+                <tr class="owbn-chronicles-options owbn-chronicles-remote" <?php echo ($chron_enabled && $chron_mode === 'remote') ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('Remote API URL', 'owbn-chronicle-manager'); ?></th>
+                    <td>
+                        <input type="url" name="owbn_chronicles_remote_url" value="<?php echo esc_url($chron_remote_url); ?>" class="regular-text" placeholder="https://example.com/wp-json/owbn-cc/v1/" />
+                    </td>
+                </tr>
+                <tr class="owbn-chronicles-options owbn-chronicles-remote" <?php echo ($chron_enabled && $chron_mode === 'remote') ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('Remote API Key', 'owbn-chronicle-manager'); ?></th>
+                    <td>
+                        <input type="text" name="owbn_chronicles_remote_key" value="<?php echo esc_attr($chron_remote_key); ?>" class="regular-text code" />
                     </td>
                 </tr>
             </table>
-            <?php submit_button(__('Save Genres', 'owbn-chronicle-manager')); ?>
-        </form>
 
-        <hr />
+            <hr />
 
-        <!-- Region List -->
-        <h2><?php esc_html_e('Region List', 'owbn-chronicle-manager'); ?></h2>
-        <p class="description"><?php esc_html_e('Used to populate the Region dropdown for Chronicles.', 'owbn-chronicle-manager'); ?></p>
-        <form method="post">
-            <?php wp_nonce_field('save_owbn_regions', 'owbn_regions_nonce'); ?>
-            <table class="form-table">
+            <!-- COORDINATORS -->
+            <h2><?php esc_html_e('Coordinators', 'owbn-chronicle-manager'); ?></h2>
+            <table class="form-table" role="presentation">
                 <tr>
-                    <th scope="row"><?php esc_html_e('Regions (one per line)', 'owbn-chronicle-manager'); ?></th>
+                    <th scope="row"><?php esc_html_e('Enable', 'owbn-chronicle-manager'); ?></th>
                     <td>
-                        <textarea name="owbn_regions" rows="12" class="large-text code"><?php echo esc_textarea($regions_text); ?></textarea>
+                        <label>
+                            <input type="hidden" name="owbn_enable_coordinators" value="0" />
+                            <input type="checkbox" name="owbn_enable_coordinators" id="owbn_enable_coordinators" value="1" <?php checked($coord_enabled); ?> />
+                            <?php esc_html_e('Enable Coordinator management', 'owbn-chronicle-manager'); ?>
+                        </label>
+                    </td>
+                </tr>
+                <tr class="owbn-coordinators-options" <?php echo $coord_enabled ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('Data Source', 'owbn-chronicle-manager'); ?></th>
+                    <td>
+                        <fieldset>
+                            <label>
+                                <input type="radio" name="owbn_coordinators_mode" class="owbn-coordinators-mode" value="local" <?php checked($coord_mode, 'local'); ?> />
+                                <?php esc_html_e('Local (this site manages coordinators)', 'owbn-chronicle-manager'); ?>
+                            </label><br>
+                            <label>
+                                <input type="radio" name="owbn_coordinators_mode" class="owbn-coordinators-mode" value="remote" <?php checked($coord_mode, 'remote'); ?> />
+                                <?php esc_html_e('Remote (fetch from another site)', 'owbn-chronicle-manager'); ?>
+                            </label>
+                        </fieldset>
+                    </td>
+                </tr>
+                <!-- Local: Show API URL and Key -->
+                <tr class="owbn-coordinators-options owbn-coordinators-local" <?php echo ($coord_enabled && $coord_mode === 'local') ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('API Endpoint', 'owbn-chronicle-manager'); ?></th>
+                    <td>
+                        <code><?php echo esc_html($local_api_base); ?>coordinators</code>
+                        <p class="description"><?php esc_html_e('Share this URL with sites that need to fetch coordinator data.', 'owbn-chronicle-manager'); ?></p>
+                    </td>
+                </tr>
+                <tr class="owbn-coordinators-options owbn-coordinators-local" <?php echo ($coord_enabled && $coord_mode === 'local') ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('API Key', 'owbn-chronicle-manager'); ?></th>
+                    <td>
+                        <input type="text" name="owbn_coordinators_api_key" value="<?php echo esc_attr($coord_api_key); ?>" class="regular-text code" />
+                        <button type="button" class="button owbn-generate-key" data-target="owbn_coordinators_api_key"><?php esc_html_e('Generate', 'owbn-chronicle-manager'); ?></button>
+                        <p class="description"><?php esc_html_e('Secret key for API authentication. Share with authorized remote sites.', 'owbn-chronicle-manager'); ?></p>
+                    </td>
+                </tr>
+                <!-- Remote: Enter remote URL and Key -->
+                <tr class="owbn-coordinators-options owbn-coordinators-remote" <?php echo ($coord_enabled && $coord_mode === 'remote') ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('Remote API URL', 'owbn-chronicle-manager'); ?></th>
+                    <td>
+                        <input type="url" name="owbn_coordinators_remote_url" value="<?php echo esc_url($coord_remote_url); ?>" class="regular-text" placeholder="https://example.com/wp-json/owbn-cc/v1/" />
+                    </td>
+                </tr>
+                <tr class="owbn-coordinators-options owbn-coordinators-remote" <?php echo ($coord_enabled && $coord_mode === 'remote') ? '' : 'style="display:none;"'; ?>>
+                    <th scope="row"><?php esc_html_e('Remote API Key', 'owbn-chronicle-manager'); ?></th>
+                    <td>
+                        <input type="text" name="owbn_coordinators_remote_key" value="<?php echo esc_attr($coord_remote_key); ?>" class="regular-text code" />
                     </td>
                 </tr>
             </table>
-            <?php submit_button(__('Save Regions', 'owbn-chronicle-manager')); ?>
+
+            <hr />
+
+            <!-- GENRE LIST -->
+            <h2><?php esc_html_e('Genre List', 'owbn-chronicle-manager'); ?></h2>
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row"><?php esc_html_e('Available Genres', 'owbn-chronicle-manager'); ?></th>
+                    <td>
+                        <textarea name="owbn_genre_list" rows="10" class="large-text code"><?php echo esc_textarea(implode("\n", $genre_list)); ?></textarea>
+                        <p class="description"><?php esc_html_e('One genre per line.', 'owbn-chronicle-manager'); ?></p>
+                    </td>
+                </tr>
+            </table>
+
+            <hr />
+
+            <!-- REGION LIST -->
+            <h2><?php esc_html_e('Region List', 'owbn-chronicle-manager'); ?></h2>
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row"><?php esc_html_e('Available Regions', 'owbn-chronicle-manager'); ?></th>
+                    <td>
+                        <textarea name="owbn_region_list" rows="10" class="large-text code"><?php echo esc_textarea(implode("\n", $region_list)); ?></textarea>
+                        <p class="description"><?php esc_html_e('One region per line.', 'owbn-chronicle-manager'); ?></p>
+                    </td>
+                </tr>
+            </table>
+
+            <?php submit_button(); ?>
         </form>
     </div>
-<?php
+
+    <script>
+    jQuery(function($) {
+        // Toggle visibility based on enable checkbox
+        function toggleOptions(type) {
+            var enabled = $('#owbn_enable_' + type).is(':checked');
+            var mode = $('input[name="owbn_' + type + '_mode"]:checked').val() || 'local';
+            
+            $('.owbn-' + type + '-options').toggle(enabled);
+            $('.owbn-' + type + '-local').toggle(enabled && mode === 'local');
+            $('.owbn-' + type + '-remote').toggle(enabled && mode === 'remote');
+        }
+
+        // Enable checkbox change
+        $('#owbn_enable_chronicles, #owbn_enable_coordinators').on('change', function() {
+            var type = $(this).attr('id').replace('owbn_enable_', '');
+            toggleOptions(type);
+        });
+
+        // Mode radio change
+        $('.owbn-chronicles-mode, .owbn-coordinators-mode').on('change', function() {
+            var type = $(this).hasClass('owbn-chronicles-mode') ? 'chronicles' : 'coordinators';
+            toggleOptions(type);
+        });
+
+        // Generate API key
+        $('.owbn-generate-key').on('click', function() {
+            var target = $(this).data('target');
+            var key = 'owbn_' + Math.random().toString(36).substr(2, 9) + '_' + Math.random().toString(36).substr(2, 9);
+            $('input[name="' + target + '"]').val(key);
+        });
+    });
+    </script>
+    <?php
 }
