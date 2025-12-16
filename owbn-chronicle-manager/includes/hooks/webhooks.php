@@ -25,17 +25,21 @@ add_action('rest_api_init', function () {
 function owbn_api_permission_check($request)
 {
     $api_key = $request->get_header('x-api-key');
-
-    // Check database option first, fall back to constant for backwards compatibility
-    $expected_key = get_option('owbn_api_key_readonly');
-    if (!$expected_key && defined('OWBNCC_API_KEY')) {
-        $expected_key = OWBNCC_API_KEY;
+    $route = $request->get_route();
+    
+    // Determine which key to check based on route
+    if (strpos($route, '/chronicle') !== false) {
+        $expected_key = get_option('owbn_chronicles_api_key');
+    } elseif (strpos($route, '/coordinator') !== false) {
+        $expected_key = get_option('owbn_coordinators_api_key');
+    } else {
+        $expected_key = get_option('owbn_api_key_readonly'); // fallback
     }
-
+    
     if (!$expected_key || !$api_key || $api_key !== $expected_key) {
         return new WP_Error('unauthorized', 'Invalid or missing API key', ['status' => 403]);
     }
-
+    
     return true;
 }
 
