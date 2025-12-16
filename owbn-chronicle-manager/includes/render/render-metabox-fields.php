@@ -25,6 +25,7 @@ function owbn_render_chronicle_fields_metabox($post)
     $errors = get_transient("owbn_chronicle_errors_{$post->ID}") ?: [];
 
     $restricted_fields = [
+        'record_type',
         'chronicle_slug',
         'chronicle_start_date',
         'chronicle_region',

@@ -101,7 +101,7 @@ function owbn_register_coordinator_meta()
     if (!owbn_coordinators_enabled()) return;
 
     $complex = ['coord_info', 'subcoord_list', 'document_links', 'email_lists', 'player_lists'];
-    $simple  = ['coordinator_slug', 'coordinator_title', 'office_description', 'term_start_date', 'term_end_date', 'web_url', 'coordinator_appointment', 'coordinator_type', 'hosting_chronicle'];
+$simple  = ['record_type', 'coordinator_slug', 'coordinator_title', 'office_description', 'term_start_date', 'term_end_date', 'web_url', 'coordinator_appointment', 'coordinator_type', 'hosting_chronicle'];
 
     foreach ($complex as $field) {
         register_post_meta('owbn_coordinator', $field, ['type' => 'array', 'single' => true, 'show_in_rest' => true, 'sanitize_callback' => null]);
@@ -119,7 +119,13 @@ add_action('init', 'owbn_register_coordinator_meta');
 function owbn_get_coordinator_field_definitions()
 {
     return [
-        'Basic Info' => [
+'Basic Info' => [
+            'record_type' => [
+                'label'   => __('Record Type', 'owbn-chronicle-manager'),
+                'type'    => 'select',
+                'options' => ['local' => 'Local', 'remote' => 'Remote'],
+                'default' => 'local',
+            ],
             'coordinator_slug' => [
                 'label' => __('Coordinator Slug', 'owbn-chronicle-manager'),
                 'type'  => 'text',

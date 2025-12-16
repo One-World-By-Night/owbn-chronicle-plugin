@@ -32,6 +32,7 @@ function owbn_save_chronicle_meta($post_id)
 
     // Fields that only admin/exec can modify
     $restricted_fields = [
+        'record_type',
         'chronicle_slug',
         'chronicle_start_date',
         'chronicle_region',

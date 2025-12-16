@@ -30,8 +30,9 @@ function owbn_save_coordinator_meta($post_id, $post)
     // Fields that can NEVER be changed after initial creation
     $immutable_fields = ['coordinator_slug'];
 
-    // Fields that only admin/exec can modify
+// Fields that only admin/exec can modify
     $restricted_fields = [
+        'record_type',
         'coordinator_slug',
         'coordinator_appointment',
         'coordinator_type',
@@ -40,7 +41,7 @@ function owbn_save_coordinator_meta($post_id, $post)
     $is_admin = owbn_is_admin_user();
 
     // Simple text/date fields
-    $simple_fields = ['coordinator_title', 'term_start_date', 'web_url', 'coordinator_appointment', 'coordinator_type', 'hosting_chronicle'];
+    $simple_fields = ['record_type', 'coordinator_title', 'term_start_date', 'web_url', 'coordinator_appointment', 'coordinator_type', 'hosting_chronicle'];
     foreach ($simple_fields as $field) {
         // IMMUTABLE: Never change once set
         if (in_array($field, $immutable_fields, true)) {
