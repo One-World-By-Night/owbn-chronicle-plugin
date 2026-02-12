@@ -190,9 +190,28 @@ function owbn_force_draft_on_entity_error(array $data, array $postarr): array
     $errors = owbn_validate_entity_submission($data['post_type'], $postarr);
 
     if (!empty($errors)) {
-        $data['post_status'] = 'draft';
+        // Determine original post status from the database
+        $original_status = '';
+        if (!empty($postarr['ID'])) {
+            $original_post = get_post($postarr['ID']);
+            $original_status = $original_post ? $original_post->post_status : '';
+        }
+
+        // Store error transient for admin notice display
         if (!empty($postarr['ID'])) {
             set_transient("owbn_{$entity_key}_errors_{$postarr['ID']}", $errors, 60);
+        }
+
+        if ($original_status === 'publish') {
+            // Published post: block save entirely instead of downgrading to draft.
+            // The validation_blocked transient signals entity-save.php to skip all meta saves.
+            if (!empty($postarr['ID'])) {
+                set_transient("owbn_{$entity_key}_validation_blocked_{$postarr['ID']}", true, 60);
+            }
+            $data['post_status'] = 'publish';
+        } else {
+            // Draft/new: keep current behavior
+            $data['post_status'] = 'draft';
         }
     }
 

@@ -5,7 +5,7 @@ Tags: chronicle, coordinator, custom post types, entity management
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.0.0
+Stable tag: 2.1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Manage OWBN Chronicle & Coordinator information using structured custom post types, approval workflows, and a REST API. Built on a generic entity registry for easy extensibility.
@@ -32,6 +32,17 @@ Key features:
 4. Begin managing entities using the WordPress admin
 
 == Changelog ==
+
+= 2.1.0 =
+* Pending changeset workflow — staff field changes by non-admins on published posts are held pending admin approval instead of downgrading the post to draft
+* Published posts remain visible on the front end while staff changes await review
+* Validation failures on published posts now block the save entirely instead of demoting to draft
+* Admin Approve/Reject UI for pending staff changes with submitter details and self-promotion detection
+* Metabox banner showing pending change status for both admins and non-admins
+* Fixed capability checks so non-admin users (HST, CM, Coordinator) can access CPT list and edit pages without requiring WordPress roles
+* Grant edit_posts to authenticated users via capability filter to prevent WordPress admin menu from blocking CPT pages
+* Hide default Posts and Comments menus for non-admin users
+* map_meta_cap and edit permission checks now use cached AccessSchema roles before falling back to direct API calls
 
 = 2.0.0 =
 * Complete architecture refactor — generic entity registry pattern

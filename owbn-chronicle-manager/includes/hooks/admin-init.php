@@ -170,6 +170,49 @@ function owbn_create_custom_roles()
     }
 }
 
+/**
+ * Refresh capabilities on existing custom roles.
+ *
+ * add_role() is a no-op if the role already exists, so stale roles in the
+ * database never receive new capabilities. This function ensures every cap
+ * defined in owbn_create_custom_roles() is present on the stored role object.
+ *
+ * Called from owbn_run_upgrade() on version bumps.
+ */
+function owbn_refresh_custom_role_caps(): void
+{
+    $role_caps = [
+        'chron_staff' => [
+            'read' => true,
+            'edit_posts' => true,
+            'edit_others_posts' => true,
+            'ocm_view_list' => true,
+            'ocm_view_chronicle' => true,
+            'ocm_edit_chronicle' => true,
+            'edit_owbn_chronicle' => true,
+            'read_owbn_chronicle' => true,
+        ],
+        'coord_staff' => [
+            'read' => true,
+            'edit_posts' => true,
+            'ocm_view_list' => true,
+            'edit_owbn_coordinator' => true,
+            'read_owbn_coordinator' => true,
+        ],
+    ];
+
+    foreach ($role_caps as $role_slug => $caps) {
+        $role = get_role($role_slug);
+        if (!$role) continue;
+
+        foreach ($caps as $cap => $grant) {
+            if (!$role->has_cap($cap)) {
+                $role->add_cap($cap, $grant);
+            }
+        }
+    }
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // GENRE LIST INIT
 // ══════════════════════════════════════════════════════════════════════════════

@@ -44,6 +44,12 @@ function owbn_save_entity_meta(int $post_id, WP_Post $post): void
         return;
     }
 
+    // If validation failed on a published post, skip all meta saves to preserve existing data
+    if (get_transient("owbn_{$entity_key}_validation_blocked_{$post_id}")) {
+        delete_transient("owbn_{$entity_key}_validation_blocked_{$post_id}");
+        return;
+    }
+
     // Get field definitions by calling the config's callable
     $field_definitions_callable = $config['field_definitions'] ?? null;
     if (!is_callable($field_definitions_callable)) return;
@@ -53,9 +59,16 @@ function owbn_save_entity_meta(int $post_id, WP_Post $post): void
     // Get immutable and restricted fields from config
     $immutable_fields  = $config['immutable_fields'] ?? [];
     $restricted_fields = $config['restricted_fields'] ?? [];
+    $staff_fields      = $config['staff_fields'] ?? [];
 
     $is_admin = owbn_is_admin_user();
     $staff_user_dirty = false;
+
+    // Determine if pending changeset logic applies:
+    // Only for published posts edited by non-admins that have staff fields defined
+    $is_published  = ($post->post_status === 'publish');
+    $needs_pending = ($is_published && !$is_admin && !empty($staff_fields));
+    $pending_values = [];
 
     // Loop all field definitions
     foreach ($definitions as $fields) {
@@ -77,12 +90,60 @@ function owbn_save_entity_meta(int $post_id, WP_Post $post): void
             }
 
             $raw = owbn_safe_post_value($key);
+
+            // For staff fields on published posts by non-admins:
+            // Sanitize but don't save to live meta — collect for pending changeset
+            if ($needs_pending && in_array($key, $staff_fields, true)) {
+                $sanitized = owbn_sanitize_staff_field_for_pending($key, $meta);
+                $previous  = get_post_meta($post_id, $key, true);
+
+                if (owbn_detect_staff_field_dirty($key, $meta, $sanitized, $previous)) {
+                    $staff_user_dirty = true;
+                    $pending_values[$key] = $sanitized;
+                } else {
+                    // User assignment didn't change — save normally
+                    // (non-user subfields like display_name may have been updated)
+                    $staff_user_dirty = owbn_save_entity_field($post_id, $key, $meta, $raw, $staff_user_dirty);
+                }
+                continue;
+            }
+
+            // Normal save for non-staff fields (or staff fields when admin/draft)
             $staff_user_dirty = owbn_save_entity_field($post_id, $key, $meta, $raw, $staff_user_dirty);
         }
     }
 
-    // Handle staff user changes if any user fields were modified
+    // Handle pending changeset for published posts by non-admins
+    if ($needs_pending && !empty($pending_values)) {
+        // Self-promotion detection on pending values
+        $current_user_id = (string) get_current_user_id();
+        $self_promoted = false;
+
+        foreach ($pending_values as $field_value) {
+            if (is_array($field_value) && isset($field_value['user']) && $field_value['user'] === $current_user_id) {
+                $self_promoted = true;
+                break;
+            }
+        }
+
+        // Store pending changeset (replaces any previous pending)
+        update_post_meta($post_id, '_owbn_pending_changes', [
+            'fields'        => $pending_values,
+            'submitted_by'  => get_current_user_id(),
+            'submitted_at'  => current_time('mysql'),
+            'self_promoted' => $self_promoted,
+        ]);
+
+        set_transient("owbn_{$entity_key}_pending_notice_{$post_id}", true, 60);
+        return; // Do NOT call owbn_handle_entity_staff_change — post stays published
+    }
+
+    // For admins or draft posts, use existing staff change handler
     if ($staff_user_dirty) {
+        // Admin save is authoritative — clear any pending changeset
+        if ($is_admin) {
+            delete_post_meta($post_id, '_owbn_pending_changes');
+        }
         owbn_handle_entity_staff_change($post_id, $config);
     }
 }
@@ -269,6 +330,11 @@ function owbn_handle_entity_staff_change(int $post_id, array $config): void
     $current_user_id = (string) $current_user->ID;
     $is_allowed = owbn_is_admin_user($current_user);
 
+    // Admin save is authoritative — clear any pending changeset
+    if ($is_allowed) {
+        delete_post_meta($post_id, '_owbn_pending_changes');
+    }
+
     // Apply exclusive_fields rules from config
     $exclusive_fields = $config['exclusive_fields'] ?? [];
     foreach ($exclusive_fields as $rule) {
@@ -305,6 +371,78 @@ function owbn_handle_entity_staff_change(int $post_id, array $config): void
             ]);
             set_transient("owbn_{$entity_key}_dirty_notice_{$post_id}", true, 60);
         }
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PENDING CHANGESET HELPERS
+// ══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Sanitize a staff field value for pending storage without writing to post meta.
+ *
+ * Mirrors the sanitization logic from owbn_save_entity_field() for user_info
+ * and ast_group types but returns the sanitized value instead of persisting it.
+ *
+ * @param string $key  The meta key.
+ * @param array  $meta The field definition array.
+ * @return mixed The sanitized value.
+ */
+function owbn_sanitize_staff_field_for_pending(string $key, array $meta)
+{
+    switch ($meta['type']) {
+        case 'user_info':
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing
+            $info = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : [];
+            return owbn_sanitize_user_info($info);
+
+        case 'ast_group':
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing
+            $group_data = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : [];
+            return owbn_sanitize_ast_group($group_data, $meta['fields']);
+
+        default:
+            return owbn_safe_post_value($key);
+    }
+}
+
+/**
+ * Detect if a staff field's user assignment has changed.
+ *
+ * Compares the user IDs between the new sanitized value and the existing
+ * meta value. Returns true if the user assignment is different.
+ *
+ * @param string $key       The meta key.
+ * @param array  $meta      The field definition array.
+ * @param mixed  $new_value The new sanitized value.
+ * @param mixed  $previous  The existing meta value from the database.
+ * @return bool True if the user assignment changed.
+ */
+function owbn_detect_staff_field_dirty(string $key, array $meta, $new_value, $previous): bool
+{
+    switch ($meta['type']) {
+        case 'user_info':
+            $previous_user = $previous['user'] ?? '';
+            $new_user      = $new_value['user'] ?? '';
+
+            if (!empty($new_user) && $new_user === '__new__') {
+                return true;
+            }
+            return owbn_users_changed([$previous_user], [$new_user]);
+
+        case 'ast_group':
+            $previous_users = is_array($previous) ? array_column($previous, 'user') : [];
+            $new_users      = is_array($new_value) ? array_column($new_value, 'user') : [];
+
+            foreach ((array) $new_value as $row) {
+                if (!empty($row['user']) && $row['user'] === '__new__') {
+                    return true;
+                }
+            }
+            return owbn_users_changed($previous_users, $new_users);
+
+        default:
+            return false;
     }
 }
 
