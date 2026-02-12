@@ -2,9 +2,9 @@
 /**
  * File: includes/hooks/admin-remove-add.php
  * Text Domain: owbn-chronicle-manager
- * @version 1.0.0
- * 
- * Removes "Add New" Chronicle/Coordinator options for non-admins
+ * @version 2.0.0
+ *
+ * Removes "Add New" options for non-admins across all registered entity types.
  */
 
 if (!defined('ABSPATH')) exit;
@@ -21,9 +21,9 @@ function owbn_user_can_create()
  */
 add_action('admin_bar_menu', function($wp_admin_bar) {
     if (owbn_user_can_create()) return;
-    
-    $wp_admin_bar->remove_node('new-owbn_chronicle');
-    $wp_admin_bar->remove_node('new-owbn_coordinator');
+    foreach (owbn_get_entity_post_types() as $post_type) {
+        $wp_admin_bar->remove_node("new-{$post_type}");
+    }
 }, 999);
 
 /**
@@ -31,9 +31,9 @@ add_action('admin_bar_menu', function($wp_admin_bar) {
  */
 add_action('admin_menu', function() {
     if (owbn_user_can_create()) return;
-    
-    remove_submenu_page('edit.php?post_type=owbn_chronicle', 'post-new.php?post_type=owbn_chronicle');
-    remove_submenu_page('edit.php?post_type=owbn_coordinator', 'post-new.php?post_type=owbn_coordinator');
+    foreach (owbn_get_entity_post_types() as $post_type) {
+        remove_submenu_page("edit.php?post_type={$post_type}", "post-new.php?post_type={$post_type}");
+    }
 }, 999);
 
 /**
@@ -41,12 +41,10 @@ add_action('admin_menu', function() {
  */
 add_action('admin_head', function() {
     if (owbn_user_can_create()) return;
-    
+
     $screen = get_current_screen();
-    if (!$screen || !in_array($screen->post_type, ['owbn_chronicle', 'owbn_coordinator'], true)) {
-        return;
-    }
-    
+    if (!$screen || !owbn_is_entity_post_type($screen->post_type)) return;
+
     echo '<style>.page-title-action { display: none !important; }</style>';
 });
 
@@ -55,9 +53,9 @@ add_action('admin_head', function() {
  */
 add_action('load-post-new.php', function() {
     if (owbn_user_can_create()) return;
-    
+
     $post_type = $_GET['post_type'] ?? '';
-    if (in_array($post_type, ['owbn_chronicle', 'owbn_coordinator'], true)) {
+    if (owbn_is_entity_post_type($post_type)) {
         wp_die(__('You do not have permission to create new items.', 'owbn-chronicle-manager'));
     }
 });

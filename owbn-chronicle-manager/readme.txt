@@ -1,163 +1,54 @@
 === OWBN Chronicle & Coordinator Manager ===
 Contributors: gregwhacke, owbnwebteam
 Donate link: https://www.owbn.net/
-Tags: chronicle, nested content, information, custom post types
+Tags: chronicle, coordinator, custom post types, entity management
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.5.0
+Stable tag: 2.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-OWBN Chronicle management tool for updating and maintaining chronicles & coordindators in the organization.
+Manage OWBN Chronicle & Coordinator information using structured custom post types, approval workflows, and a REST API. Built on a generic entity registry for easy extensibility.
 
-## Purpose
+== Description ==
 
-This plugin aims to:
+This plugin centralizes OWbN Chronicle & Coordinator data using native WordPress custom post types. It features a generic entity registry architecture where each entity type is driven by a configuration array — adding a new entity type requires only a config file and field definitions.
 
-- Centralize all OWbN Chronicle & Coordinator data using a native WordPress custom post type (`owbn_chronicle`)
-- Allow Chronicle owners to manage and update their chronicle profiles
-- Allow Coordinators to manage and update their coordinator profiles
-- Provide admins with oversight and editorial control
-- Offer shortcode-based filtering and rendering for public-facing displays
-- Store all data internally without external form builders or plugins
+Key features:
 
----
+* Generic entity registry — one codebase handles all entity types
+* Per-entity feature toggles — enable only what each site needs
+* Local/Remote data source modes — manage data locally or fetch from another site's API
+* REST API with CORS support and API key authentication
+* AccessSchema permission integration
+* Structured admin metabox forms with 16+ field types
+* Repeatable sub-records (locations, sessions, staff, documents, etc.)
 
-## Architecture Overview
+== Installation ==
 
-### Custom Post Type
+1. Upload the `owbn-chronicle-manager` folder to `/wp-content/plugins/`
+2. Activate the plugin through the 'Plugins' menu in WordPress
+3. Go to Settings > C&C Plugin to enable entity types and configure data sources
+4. Begin managing entities using the WordPress admin
 
-Each `owbn_chronicle` post stores the full record for a Chronicle. Metadata is attached to the post, including structured objects (e.g., staff, locations) and simple scalar values (e.g., region, slug).
+== Changelog ==
 
-### Repeatable Sub-records
+= 2.0.0 =
+* Complete architecture refactor — generic entity registry pattern
+* Unified save, validate, and API handlers for all entity types
+* Coordinator entity type support
+* Per-entity feature toggles (enable/disable per site)
+* REST API with generic routes, CORS, and API key auth
+* Data source banner showing Local/Remote mode in edit forms
+* Removed per-record record_type field (now derived from site-level settings)
+* Admin menu grouping for all entity types
 
-Chronicles can have multiple nested elements stored as JSON objects:
+= 1.5.0 =
+* Coordinator management added
+* Settings page with Local/Remote mode
 
-- OOC and IC Locations
-- Game Sites (virtual and physical)
-- Sessions
-- Assistant Storytellers (ASTs)
-- Documents
-- Email Lists
-- Social URLs
+= 1.1.5 =
+* Validation and notice of approval requirements for staff changes
 
-These are saved under single meta keys and parsed/rendered accordingly.
-
----
-
-## Field Definitions
-
-- **Chronicle Name**: Human-readable title of the chronicle  
-- **Chronicle Slug**: URL-safe identifier (e.g., `kony` for Kings of New York)  
-
-**Nested Fields (stored as objects):**
-
-- **ic_location_list**: In-character locations (multi-record)  
-- **game_site_list**: Combined physical and virtual game sites  
-- **session_list**: Repeatable session entries with type, date, frequency, genres  
-- **ast_list**: Assistant Storytellers (ASTs) with name, email, role, user ID  
-- **document_links**: Label + URL pairs for internal or external documentation  
-- **email_lists**: Named group mailing lists  
-- **social_urls**: Discord, Facebook, etc.  
-- **genres**: Array of genre and subgenre combinations  
-
-**Scalar Fields:**
-
-- **premise**, **game_theme**, **game_mood**, **traveler_info**: WYSIWYG text  
-- **active_player_count**: Integer estimate  
-- **web_url**: Website  
-- **hst_user**, **hst_display_name**, **hst_email**: HST data  
-- **cm_user**, **cm_display_name**, **cm_email**: CM data (if not a satellite)  
-- **hst_selection**, **cm_selection**, **ast_selection**: How each was selected  
-- **ooc_location**: Where a game is portrayed for OOC tracability  
-- **chronicle_start_date**: ISO date  
-- **chronicle_region**: Region name  
-- **chronicle_probationary**, **chronicle_satellite**: Boolean (yes/no)  
-- **chronicle_parent**: Slug of parent chronicle (if satellite)  
-
----
-
-## Shortcodes
-
-Chronicle data can be rendered anywhere using the following shortcodes:
-
-### `[owbn-chronicles]`
-
-Renders a listing of approved chronicles.
-
-Example:
-
-`[owbn-chronicles]` – show all  
-`[owbn-chronicles region="great lakes" genre="sabbat"]` – filter
-
-**Supported filters:**
-
-- `plug`
-- `region`
-- `genre`
-- `country`
-- `state`
-- `game_type` (virtual, in-person)
-- `probationary` (yes/no)
-- `satellite` (yes/no)
-
-### `[owbn-chronicle plug="kony" view="box|full"]`
-
-Render a single chronicle:
-
-- `view="full"` (default): Full profile view  
-- `view="box"`: Compact card/summary view with title and key info  
-
----
-
-## Installation
-
-1. Copy this plugin folder into `/wp-content/plugins/`
-2. Activate via the WordPress dashboard
-3. Add `[owbn-chronicles]` or `[owbn-chronicle plug="kony"]` to any page or post
-4. Begin managing chronicles using WordPress post editing and structured metadata
-
----
-
-## Developer Notes
-
-- Data is stored using `register_post_meta()` for GraphQL/REST access
-- All fields are editable via internal admin tools or custom interfaces
-- Repeatables are saved as JSON under single meta keys (e.g., `ast_list`)
-- Plugin includes metabox rendering for internal admin review
-- Designed to support full static form processing without ACF or Gravity Forms
-
----
-
-## License
-
-This plugin is licensed under the [GNU General Public License v2.0](http://www.gnu.org/licenses/gpl-2.0.html)
-
----
-
-## Example Output
-
-View a formatted sample:
-
-https://www.owbn.net/chronicles/new-york-city-ny-usa-kings-of-new-york
-
----
-
-## Updates
-
-- 1.1.2: Multi-Site control  
-- 1.1.5: Validation and noitce of approval requirements for staff changes.
-
----
-
-## Contributing
-
-Fork the repository, open issues, or submit pull requests via:
-
-[https://github.com/One-World-By-Night/owbn-chronicle-plugin](https://github.com/One-World-By-Night/owbn-chronicle-plugin)
-
----
-
-## Maintainers
-
-This plugin is maintained by the OWBN.org Web Coordination team.
+= 1.1.2 =
+* Multi-Site control

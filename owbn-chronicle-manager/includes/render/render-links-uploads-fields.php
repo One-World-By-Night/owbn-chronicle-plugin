@@ -1,4 +1,11 @@
 <?php
+/** File: includes/render/render-links-uploads-fields.php
+ * Text Domain: owbn-chronicle-manager
+ * @version 3.0.0
+ * @author greghacke
+ * Function: Links, uploads, social, email, and player list field rendering
+ */
+
 if (!defined('ABSPATH')) exit;
 
 // Render document links field
@@ -110,20 +117,20 @@ function owbn_render_social_links_field($key, $value, $meta)
 
     foreach ($groups as $i => $group) {
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-        echo render_social_link_block($key, $i, $group);
+        echo render_social_link_block($key, $i, $group, $meta);
     }
 
     // Template block (hidden)
     echo '<div class="owbn-social-template" style="display:none;">';
     // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-    echo render_social_link_block($key, '__INDEX__', []);
+    echo render_social_link_block($key, '__INDEX__', [], $meta);
     echo '</div>';
 
     echo '<button type="button" class="button add-social-link" data-field="' . esc_attr($key) . '">Add Social Link</button>' . "\n";
     echo '</div>' . "\n";
 }
 
-function render_social_link_block($key, $index, $group)
+function render_social_link_block($key, $index, $group, $field_meta = [])
 {
     ob_start();
 
@@ -131,10 +138,10 @@ function render_social_link_block($key, $index, $group)
     $url = $group['url'] ?? '';
     $header = $platform ? ucfirst($platform) : __('Social Link', 'owbn-chronicle-manager');
 
-    // Get platform field definition from fields.php
-    $definitions = owbn_get_chronicle_field_definitions();
-    $platform_meta = $definitions['Links']['social_urls']['fields']['platform'] ?? [];
+    // Get platform and url field definitions from the passed-in field meta
+    $platform_meta = $field_meta['fields']['platform'] ?? [];
     $platform_options = $platform_meta['options'] ?? [];
+    $url_meta = $field_meta['fields']['url'] ?? [];
 
 ?>
     <div class="owbn-social-block">
@@ -157,7 +164,7 @@ function render_social_link_block($key, $index, $group)
                 </div>
 
                 <div class="owbn-social-row">
-                    <label><?php echo esc_html($definitions['Links']['social_urls']['fields']['url']['label']); ?></label><br>
+                    <label><?php echo esc_html($url_meta['label'] ?? 'URL'); ?></label><br>
                     <input type="url" name="<?php echo esc_attr("{$key}[{$index}][url]"); ?>" value="<?php echo esc_url($url); ?>" class="regular-text">
                 </div>
             </div>

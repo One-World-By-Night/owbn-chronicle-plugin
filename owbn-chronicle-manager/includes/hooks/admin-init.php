@@ -1,39 +1,22 @@
 <?php
+/**
+ * File: includes/hooks/admin-init.php
+ * Text Domain: owbn-chronicle-manager
+ * @version 2.0.0
+ *
+ * Handles:
+ * - Flush rewrite rules
+ * - Shared capabilities & roles
+ * - Genre list init
+ * - Region list init
+ *
+ * Removed in v2 (handled elsewhere):
+ * - Feature toggle helpers (replaced by owbn_is_entity_enabled)
+ * - require_once chain (handled by main plugin file)
+ * - Enctype (handled by owbn_add_entity_enctype in entity-init.php)
+ */
+
 if (!defined('ABSPATH')) exit;
-
-// ══════════════════════════════════════════════════════════════════════════════
-// FEATURE TOGGLE HELPERS
-// ══════════════════════════════════════════════════════════════════════════════
-
-if (!function_exists('owbn_chronicles_enabled')) {
-    function owbn_chronicles_enabled()
-    {
-        return (bool) get_option('owbn_enable_chronicles', true);
-    }
-}
-
-if (!function_exists('owbn_coordinators_enabled')) {
-    function owbn_coordinators_enabled()
-    {
-        return (bool) get_option('owbn_enable_coordinators', true);
-    }
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// LOAD FEATURE FILES
-// ══════════════════════════════════════════════════════════════════════════════
-
-require_once plugin_dir_path(__FILE__) . 'chronicle-init.php';
-require_once plugin_dir_path(__FILE__) . 'coordinator-init.php';
-require_once plugin_dir_path(__FILE__) . 'admin-list-filters.php';
-require_once plugin_dir_path(__FILE__) . 'helpers.php';
-require_once plugin_dir_path(__FILE__) . 'chronicle-save.php';
-require_once plugin_dir_path(__FILE__) . 'chronicle-validate.php';
-require_once plugin_dir_path(__FILE__) . 'chronicle-admin-notices.php';
-require_once plugin_dir_path(__FILE__) . 'coordinator-save.php';
-require_once plugin_dir_path(__FILE__) . 'coordinator-validate.php';
-require_once plugin_dir_path(__FILE__) . 'coordinator-admin-notices.php';
-require_once plugin_dir_path(__FILE__) . 'admin-remove-add.php';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // FLUSH REWRITE RULES
@@ -50,40 +33,42 @@ add_action('init', function () {
 // SHARED CAPABILITIES & ROLES
 // ══════════════════════════════════════════════════════════════════════════════
 
+/**
+ * Grant admin capabilities for all registered entity types.
+ *
+ * Derives capabilities from the entity registry so that new entity types
+ * automatically get their caps granted to administrator.
+ */
 function owbn_grant_admin_chronicle_caps()
 {
     $role = get_role('administrator');
     if (!$role) return;
 
-    $caps = [
-        // Shared
-        'ocm_view_list',
+    // Shared capability
+    $caps = ['ocm_view_list'];
 
-        // Chronicle
-        'ocm_view_chronicle',
-        'ocm_edit_chronicle',
-        'ocm_delete_chronicle',
-        'ocm_create_chronicle',
-        'edit_owbn_chronicle',
-        'read_owbn_chronicle',
-        'delete_owbn_chronicle',
-        'edit_owbn_chronicles',
-        'edit_others_owbn_chronicles',
-        'publish_owbn_chronicles',
-        'read_private_owbn_chronicles',
-        'create_owbn_chronicles',
+    // Build caps from registered entity types
+    foreach (owbn_get_entity_types() as $config) {
+        $post_type  = $config['post_type'];
+        $base_caps  = $config['capabilities'] ?? [];
 
-        // Coordinator
-        'ocm_create_coordinator',
-        'edit_owbn_coordinator',
-        'read_owbn_coordinator',
-        'delete_owbn_coordinator',
-        'edit_owbn_coordinators',
-        'edit_others_owbn_coordinators',
-        'publish_owbn_coordinators',
-        'read_private_owbn_coordinators',
-        'create_owbn_coordinators',
-    ];
+        // Add all base capabilities from config
+        foreach ($base_caps as $cap) {
+            $caps[] = $cap;
+        }
+
+        // Add WordPress-standard CPT capabilities
+        $caps[] = "edit_{$post_type}";
+        $caps[] = "read_{$post_type}";
+        $caps[] = "delete_{$post_type}";
+        $caps[] = "edit_{$post_type}s";
+        $caps[] = "edit_others_{$post_type}s";
+        $caps[] = "publish_{$post_type}s";
+        $caps[] = "read_private_{$post_type}s";
+        $caps[] = "create_{$post_type}s";
+    }
+
+    $caps = array_unique($caps);
 
     foreach ($caps as $cap) {
         if (!$role->has_cap($cap)) {
@@ -190,7 +175,7 @@ function owbn_create_custom_roles()
 // ══════════════════════════════════════════════════════════════════════════════
 
 add_action('init', function () {
-    if (owbn_chronicles_enabled() && !get_option('owbn_genre_list')) {
+    if (owbn_is_entity_enabled('owbn_chronicle') && !get_option('owbn_genre_list')) {
         update_option('owbn_genre_list', [
             'Vampire - Anarch',
             'Vampire - Camarilla',
@@ -219,7 +204,7 @@ add_action('init', function () {
 // ══════════════════════════════════════════════════════════════════════════════
 
 add_action('init', function () {
-    if (owbn_chronicles_enabled() && !get_option('owbn_region_list')) {
+    if (owbn_is_entity_enabled('owbn_chronicle') && !get_option('owbn_region_list')) {
         update_option('owbn_region_list', [
             'Central and West Brazil',
             'Great Lakes',
@@ -236,13 +221,3 @@ add_action('init', function () {
         ]);
     }
 });
-
-// Enable file uploads in post editor
-add_action('post_edit_form_tag', 'owbn_add_enctype_to_edit_form');
-function owbn_add_enctype_to_edit_form()
-{
-    global $post;
-    if (in_array($post->post_type, ['owbn_chronicle', 'owbn_coordinator'], true)) {
-        echo ' enctype="multipart/form-data"';
-    }
-}

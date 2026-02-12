@@ -1,9 +1,8 @@
 <?php
-
 /**
  * Plugin Name: OWBN Chronicle & Coordinator Manager
  * Description: Manage OWBN Chronicle & Coordinator information using structured custom post types, shortcodes, and approval workflows.
- * Version: 1.9.5
+ * Version: 2.0.0
  * Author: greghacke
  * Author URI: https://www.owbn.net
  * Text Domain: owbn-chronicle-manager
@@ -14,25 +13,48 @@
  * GitHub Branch: main
  */
 
-// ─── Core Includes ───────────────────────────────────────────────────────────
-require_once plugin_dir_path(__FILE__) . 'includes/hooks/admin-init.php';
+if (!defined('ABSPATH')) exit;
+
+define('OWBN_CM_VERSION', '2.0.0');
+
+// ─── Core Engine ─────────────────────────────────────────────────────────────
+require_once plugin_dir_path(__FILE__) . 'includes/core/entity-registry.php';
+require_once plugin_dir_path(__FILE__) . 'includes/core/entity-init.php';
+require_once plugin_dir_path(__FILE__) . 'includes/core/entity-save.php';
+require_once plugin_dir_path(__FILE__) . 'includes/core/entity-validate.php';
+require_once plugin_dir_path(__FILE__) . 'includes/core/entity-api.php';
+
+// ─── Field Definitions (unchanged) ──────────────────────────────────────────
 require_once plugin_dir_path(__FILE__) . 'includes/fields.php';
-require_once plugin_dir_path(__FILE__) . 'includes/hooks/webhooks.php';
-require_once plugin_dir_path(__FILE__) . 'includes/hooks/api-chronicles.php';
-require_once plugin_dir_path(__FILE__) . 'includes/hooks/api-coordinators.php';
-require_once plugin_dir_path(__FILE__) . 'includes/render/render-chronicle-box.php';
 require_once plugin_dir_path(__FILE__) . 'includes/helpers/countries.php';
-require_once plugin_dir_path(__FILE__) . 'includes/admin/cc-settings.php';
-require_once plugin_dir_path(__FILE__) . 'includes/admin/enqueue-scripts.php';
-require_once plugin_dir_path(__FILE__) . 'includes/editor/editor-init.php';
+
+// ─── Entity Configs ─────────────────────────────────────────────────────────
+require_once plugin_dir_path(__FILE__) . 'includes/entities/chronicle-config.php';
+require_once plugin_dir_path(__FILE__) . 'includes/entities/coordinator-config.php';
+
+// ─── Hooks ──────────────────────────────────────────────────────────────────
+require_once plugin_dir_path(__FILE__) . 'includes/hooks/admin-init.php';
+require_once plugin_dir_path(__FILE__) . 'includes/hooks/helpers.php';
+require_once plugin_dir_path(__FILE__) . 'includes/hooks/admin-list-filters.php';
+require_once plugin_dir_path(__FILE__) . 'includes/hooks/admin-notices.php';
+require_once plugin_dir_path(__FILE__) . 'includes/hooks/admin-remove-add.php';
+
+// ─── Rendering ──────────────────────────────────────────────────────────────
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-metabox-fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-location-fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-session-fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-user-fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-links-uploads-fields.php';
+require_once plugin_dir_path(__FILE__) . 'includes/render/render-chronicle-box.php';
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-chronicle-full.php';
+
+// ─── Admin ──────────────────────────────────────────────────────────────────
+require_once plugin_dir_path(__FILE__) . 'includes/admin/cc-settings.php';
+require_once plugin_dir_path(__FILE__) . 'includes/admin/enqueue-scripts.php';
+require_once plugin_dir_path(__FILE__) . 'includes/editor/editor-init.php';
+
+// ─── AccessSchema Client ────────────────────────────────────────────────────
 require_once plugin_dir_path(__FILE__) . 'includes/accessschema-client/accessSchema-client.php';
-// require_once plugin_dir_path(__FILE__) . 'languages/i18n.php';
 
 // ─── Activation Hook ─────────────────────────────────────────────────────────
 register_activation_hook(__FILE__, function () {
@@ -58,7 +80,7 @@ add_action('init', function () {
         owbn_grant_admin_chronicle_caps();
     }
 
-    // Always ensure roles exist (safe to check)
+    // Always ensure roles exist
     $roles = ['chron_staff', 'web_team', 'exec_team'];
     foreach ($roles as $role) {
         if (!get_role($role)) {
@@ -68,10 +90,22 @@ add_action('init', function () {
     }
 
     owbn_grant_admin_chronicle_caps();
-
-    // Flush rewrite rules once if needed
-    if (get_option('owbn_flush_rewrite_rules')) {
-        flush_rewrite_rules();
-        delete_option('owbn_flush_rewrite_rules');
-    }
 }, 5);
+
+// ─── Upgrade Routine ─────────────────────────────────────────────────────────
+add_action('init', function () {
+    $current = get_option('owbn_cm_version', '0');
+    if (version_compare($current, OWBN_CM_VERSION, '<')) {
+        owbn_run_upgrade($current);
+        update_option('owbn_cm_version', OWBN_CM_VERSION);
+    }
+}, 6);
+
+function owbn_run_upgrade(string $from): void
+{
+    // Flush rewrite rules for new API routes
+    flush_rewrite_rules();
+
+    // Future version-gated upgrades go here:
+    // if (version_compare($from, '2.1.0', '<')) { ... }
+}
