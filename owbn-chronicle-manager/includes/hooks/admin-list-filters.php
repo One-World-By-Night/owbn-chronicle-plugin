@@ -19,24 +19,73 @@
 
 if (!defined('ABSPATH')) exit;
 
-// EARLY capability grant - runs before plugins_loaded hook setup
-add_filter('user_has_cap', 'owbn_early_menu_access', 1, 4);
-function owbn_early_menu_access($allcaps, $caps, $args, $user) {
+/**
+ * Check if user is an admin-level role that bypasses ASC checks.
+ */
+function owbn_user_is_admin_role(WP_User $user): bool {
+    return (bool) array_intersect($user->roles, ['administrator', 'exec_team', 'web_team']);
+}
+
+/**
+ * Check if user has any ASC roles for any entity type.
+ * Uses cached roles to avoid API calls.
+ */
+function owbn_user_has_any_entity_roles(WP_User $user): bool {
+    static $cache = [];
+    if (isset($cache[$user->ID])) {
+        return $cache[$user->ID];
+    }
+
+    $roles = owbn_get_cached_user_roles($user->ID, $user->user_email);
+    $entity_prefixes = [];
+    foreach (owbn_get_entity_types() as $post_type => $config) {
+        $entity_key = $config['entity_key'] ?? '';
+        if ($entity_key) {
+            $entity_prefixes[] = $entity_key . '/';
+        }
+    }
+
+    foreach ($roles as $role) {
+        foreach ($entity_prefixes as $prefix) {
+            if (strpos($role, $prefix) === 0) {
+                $cache[$user->ID] = true;
+                return true;
+            }
+        }
+    }
+
+    $cache[$user->ID] = false;
+    return false;
+}
+
+// Capability grant — only for admin roles or users with ASC entity roles.
+add_filter('user_has_cap', 'owbn_entity_cap_grant', 1, 4);
+function owbn_entity_cap_grant($allcaps, $caps, $args, $user) {
     if (!$user instanceof WP_User || !$user->ID) {
         return $allcaps;
     }
 
+    // Admin roles get full CPT access unconditionally.
+    if (owbn_user_is_admin_role($user)) {
+        foreach (owbn_get_entity_types() as $post_type => $config) {
+            $base_caps = $config['capabilities'] ?? [];
+            if (!empty($base_caps['read_post'])) {
+                $allcaps[$base_caps['read_post']] = true;
+            }
+            if (!empty($base_caps['edit_post'])) {
+                $allcaps[$base_caps['edit_post']] = true;
+                $allcaps["edit_{$post_type}s"] = true;
+            }
+        }
+        return $allcaps;
+    }
+
+    // Non-admin: only grant CPT caps if user has ASC roles for an entity type.
+    if (!owbn_user_has_any_entity_roles($user)) {
+        return $allcaps;
+    }
+
     $entity_post_types = owbn_get_entity_post_types();
-
-    // Check if we're on one of our CPT admin pages
-    $is_our_cpt_page = (
-        is_admin() &&
-        isset($_GET['post_type']) &&
-        in_array($_GET['post_type'], $entity_post_types, true)
-    );
-
-    // Grant capabilities needed to VIEW the list screens
-    $allcaps['ocm_view_list'] = true;
 
     foreach (owbn_get_entity_types() as $post_type => $config) {
         $base_caps = $config['capabilities'] ?? [];
@@ -44,13 +93,16 @@ function owbn_early_menu_access($allcaps, $caps, $args, $user) {
             $allcaps[$base_caps['read_post']] = true;
         }
         if (!empty($base_caps['edit_post'])) {
-            // Grant the plural edit_posts form (edit_owbn_chronicles, edit_owbn_coordinators, etc.)
-            $plural_edit = "edit_{$post_type}s";
-            $allcaps[$plural_edit] = true;
+            $allcaps["edit_{$post_type}s"] = true;
         }
     }
 
-    // On our CPT pages, also grant generic edit_posts so WP doesn't block access
+    // On our CPT pages, also grant generic edit_posts so WP doesn't block access.
+    $is_our_cpt_page = (
+        is_admin() &&
+        isset($_GET['post_type']) &&
+        in_array($_GET['post_type'], $entity_post_types, true)
+    );
     if ($is_our_cpt_page) {
         $allcaps['edit_posts'] = true;
     }
@@ -58,47 +110,10 @@ function owbn_early_menu_access($allcaps, $caps, $args, $user) {
     return $allcaps;
 }
 
-// FINAL capability grant - runs LAST to ensure nothing overrides
-add_filter('user_has_cap', 'owbn_final_cap_grant', 9999, 4);
-function owbn_final_cap_grant($allcaps, $caps, $args, $user) {
-    if (!$user instanceof WP_User || !$user->ID) {
-        return $allcaps;
-    }
-
-    // Grant EVERYTHING related to our CPTs
-    $allcaps['ocm_view_list'] = true;
-
-    foreach (owbn_get_entity_types() as $post_type => $config) {
-        $base_caps = $config['capabilities'] ?? [];
-        if (!empty($base_caps['read_post'])) {
-            $allcaps[$base_caps['read_post']] = true;
-        }
-        if (!empty($base_caps['edit_post'])) {
-            $allcaps[$base_caps['edit_post']] = true;
-            // Plural form
-            $plural_edit = "edit_{$post_type}s";
-            $allcaps[$plural_edit] = true;
-        }
-    }
-
-    // Log caps that are being DENIED (not in allcaps after we set ours)
-    $entity_post_types = owbn_get_entity_post_types();
-    if (isset($_GET['post_type']) && in_array($_GET['post_type'], $entity_post_types, true)) {
-        foreach ($caps as $cap) {
-            if (empty($allcaps[$cap])) {
-                error_log("OWBN DENIED CAP: {$cap}");
-            }
-        }
-    }
-
-    return $allcaps;
-}
-
-// Debug and fix map_meta_cap
-add_filter('map_meta_cap', 'owbn_debug_map_meta_cap', 0, 4);
-function owbn_debug_map_meta_cap($caps, $cap, $user_id, $args) {
-    // Build list of our caps from the entity registry
-    $our_caps = ['ocm_view_list'];
+// map_meta_cap override — only for admin roles or ASC role holders.
+add_filter('map_meta_cap', 'owbn_entity_override_map_meta_cap', 0, 4);
+function owbn_entity_override_map_meta_cap($caps, $cap, $user_id, $args) {
+    $our_caps = [];
     foreach (owbn_get_entity_types() as $post_type => $config) {
         $base_caps = $config['capabilities'] ?? [];
         if (!empty($base_caps['edit_post'])) {
@@ -109,17 +124,21 @@ function owbn_debug_map_meta_cap($caps, $cap, $user_id, $args) {
         }
     }
 
-    // Log what's happening with our caps
-    if (in_array($cap, $our_caps, true)) {
-        error_log("MAP_META_CAP: {$cap} => " . implode(',', $caps));
+    if (!in_array($cap, $our_caps, true)) {
+        return $caps;
     }
 
-    // If our caps are being mapped to do_not_allow, override it
-    if (in_array($cap, $our_caps, true)) {
-        if (in_array('do_not_allow', $caps, true)) {
-            error_log("MAP_META_CAP: Overriding do_not_allow for {$cap}");
-            return ['read']; // Subscribers have 'read'
-        }
+    if (!in_array('do_not_allow', $caps, true)) {
+        return $caps;
+    }
+
+    $user = get_userdata($user_id);
+    if (!$user) {
+        return $caps;
+    }
+
+    if (owbn_user_is_admin_role($user) || owbn_user_has_any_entity_roles($user)) {
+        return ['read'];
     }
 
     return $caps;
