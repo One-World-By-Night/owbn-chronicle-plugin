@@ -238,6 +238,55 @@ function owbn_render_entity_metabox($post)
         echo '</div>' . "\n";
     }
 
+    // Pending changeset banner (inside metabox, above fields)
+    $pending = get_post_meta($post->ID, '_owbn_pending_changes', true);
+    if (!empty($pending) && !empty($pending['fields'])) {
+        $is_current_admin = owbn_is_admin_user();
+
+        if ($is_current_admin) {
+            // Admin sees details of pending changes
+            $pending_labels = [];
+            foreach ($pending['fields'] as $pkey => $pval) {
+                foreach ($field_groups as $section => $sfields) {
+                    if (isset($sfields[$pkey])) {
+                        $pending_labels[] = $sfields[$pkey]['label'];
+                    }
+                }
+            }
+
+            $submitted_by = get_userdata($pending['submitted_by'] ?? 0);
+            $submitted_name = $submitted_by ? $submitted_by->display_name : __('Unknown', 'owbn-chronicle-manager');
+
+            echo '<div style="margin-bottom: 15px; padding: 12px 14px; background-color: #fff8e5; border-left: 4px solid #d63638;">';
+            echo '<strong><span class="dashicons dashicons-clock" style="vertical-align: text-bottom;"></span> ';
+            echo esc_html__('Pending Staff Changes', 'owbn-chronicle-manager');
+            echo '</strong>';
+            echo '<br><small>';
+            printf(
+                esc_html__('Submitted by %s on %s', 'owbn-chronicle-manager'),
+                esc_html($submitted_name),
+                esc_html($pending['submitted_at'] ?? '')
+            );
+            if (!empty($pending['self_promoted'])) {
+                echo ' &mdash; <span style="color: #d63638; font-weight: bold;">' . esc_html__('Self-promotion detected', 'owbn-chronicle-manager') . '</span>';
+            }
+            echo '</small>';
+            if (!empty($pending_labels)) {
+                echo '<br><small>' . esc_html__('Fields:', 'owbn-chronicle-manager') . ' ' . esc_html(implode(', ', $pending_labels)) . '</small>';
+            }
+            echo '<br><small><em>' . esc_html__('Use the Approve/Reject buttons above to act on these changes.', 'owbn-chronicle-manager') . '</em></small>';
+            echo '</div>' . "\n";
+        } else {
+            // Non-admin sees pending status
+            echo '<div style="margin-bottom: 15px; padding: 12px 14px; background-color: #fff8e5; border-left: 4px solid #0073aa;">';
+            echo '<strong><span class="dashicons dashicons-clock" style="vertical-align: text-bottom;"></span> ';
+            echo esc_html__('Pending Staff Changes', 'owbn-chronicle-manager');
+            echo '</strong>';
+            echo '<br><small><em>' . esc_html__('Your staff changes are awaiting admin approval. Other field changes were saved.', 'owbn-chronicle-manager') . '</em></small>';
+            echo '</div>' . "\n";
+        }
+    }
+
     foreach ($field_groups as $section_label => $fields) {
         echo '<div class="owbn-field-group">';
         echo '<h3>' . esc_html($section_label) . '</h3>';
@@ -392,19 +441,38 @@ function owbn_entity_map_meta_cap($caps, $cap, $user_id, $args)
         return ['read'];
     }
 
-    // AccessSchema pattern check.
+    // AccessSchema pattern check — use cached roles for performance and consistency.
     $slug_meta_key = $config['slug_meta_key'] ?? '';
     $entity_slug   = $slug_meta_key ? get_post_meta($post_id, $slug_meta_key, true) : '';
 
-    if ($entity_slug && function_exists('accessSchema_client_roles_match_pattern_from_email')) {
-        $client_id = defined('ASC_PREFIX') ? strtolower(str_replace('_', '-', ASC_PREFIX)) : 'ccs';
-        $email     = $user->user_email;
-
+    if ($entity_slug) {
         $access_patterns = $config['access_patterns'] ?? [];
-        foreach ($access_patterns as $pattern) {
-            $resolved = str_replace('{slug}', $entity_slug, $pattern);
-            if (accessSchema_client_roles_match_pattern_from_email($email, $resolved, $client_id)) {
-                return ['read'];
+
+        // Check cached roles first (fast, works without live ASC server)
+        if (function_exists('owbn_get_cached_user_roles')) {
+            $cached_roles = owbn_get_cached_user_roles($user_id, $user->user_email);
+            foreach ($access_patterns as $pattern) {
+                $resolved = str_replace('{slug}', $entity_slug, $pattern);
+                if (in_array($resolved, $cached_roles, true)) {
+                    return ['read'];
+                }
+                // Also check hierarchical (user has a child role)
+                if (!empty(preg_grep('#^' . preg_quote($resolved, '#') . '/#', $cached_roles))) {
+                    return ['read'];
+                }
+            }
+        }
+
+        // Fallback to direct ASC API call if cached check didn't match
+        if (function_exists('accessSchema_client_roles_match_pattern_from_email')) {
+            $client_id = defined('ASC_PREFIX') ? strtolower(str_replace('_', '-', ASC_PREFIX)) : 'ccs';
+            $email     = $user->user_email;
+
+            foreach ($access_patterns as $pattern) {
+                $resolved = str_replace('{slug}', $entity_slug, $pattern);
+                if (accessSchema_client_roles_match_pattern_from_email($email, $resolved, $client_id)) {
+                    return ['read'];
+                }
             }
         }
     }
@@ -450,19 +518,37 @@ function owbn_user_can_edit_entity(int $user_id, int $post_id): bool
         return true;
     }
 
-    // AccessSchema pattern check.
+    // AccessSchema pattern check — use cached roles for performance and consistency.
     $slug_meta_key = $config['slug_meta_key'] ?? '';
     $entity_slug   = $slug_meta_key ? get_post_meta($post_id, $slug_meta_key, true) : '';
 
-    if ($entity_slug && function_exists('accessSchema_client_roles_match_pattern_from_email')) {
-        $client_id = defined('ASC_PREFIX') ? strtolower(str_replace('_', '-', ASC_PREFIX)) : 'ccs';
-        $email     = $user->user_email;
-
+    if ($entity_slug) {
         $access_patterns = $config['access_patterns'] ?? [];
-        foreach ($access_patterns as $pattern) {
-            $resolved = str_replace('{slug}', $entity_slug, $pattern);
-            if (accessSchema_client_roles_match_pattern_from_email($email, $resolved, $client_id)) {
-                return true;
+
+        // Check cached roles first (fast, works without live ASC server)
+        if (function_exists('owbn_get_cached_user_roles')) {
+            $cached_roles = owbn_get_cached_user_roles($user_id, $user->user_email);
+            foreach ($access_patterns as $pattern) {
+                $resolved = str_replace('{slug}', $entity_slug, $pattern);
+                if (in_array($resolved, $cached_roles, true)) {
+                    return true;
+                }
+                if (!empty(preg_grep('#^' . preg_quote($resolved, '#') . '/#', $cached_roles))) {
+                    return true;
+                }
+            }
+        }
+
+        // Fallback to direct ASC API call
+        if (function_exists('accessSchema_client_roles_match_pattern_from_email')) {
+            $client_id = defined('ASC_PREFIX') ? strtolower(str_replace('_', '-', ASC_PREFIX)) : 'ccs';
+            $email     = $user->user_email;
+
+            foreach ($access_patterns as $pattern) {
+                $resolved = str_replace('{slug}', $entity_slug, $pattern);
+                if (accessSchema_client_roles_match_pattern_from_email($email, $resolved, $client_id)) {
+                    return true;
+                }
             }
         }
     }

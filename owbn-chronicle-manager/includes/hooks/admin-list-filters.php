@@ -27,6 +27,14 @@ function owbn_user_is_admin_role(WP_User $user): bool {
 }
 
 /**
+ * Check if user has a plugin staff role (chron_staff, coord_staff).
+ * These roles have CPT capabilities defined but are not admin-level.
+ */
+function owbn_user_is_staff_role(WP_User $user): bool {
+    return (bool) array_intersect($user->roles, ['chron_staff', 'coord_staff']);
+}
+
+/**
  * Check if user has any ASC roles for any entity type.
  * Uses cached roles to avoid API calls.
  */
@@ -58,7 +66,7 @@ function owbn_user_has_any_entity_roles(WP_User $user): bool {
     return false;
 }
 
-// Capability grant — only for admin roles or users with ASC entity roles.
+// Capability grant — for admin roles, plugin staff roles, or users with ASC entity roles.
 add_filter('user_has_cap', 'owbn_entity_cap_grant', 1, 4);
 function owbn_entity_cap_grant($allcaps, $caps, $args, $user) {
     if (!$user instanceof WP_User || !$user->ID) {
@@ -80,8 +88,8 @@ function owbn_entity_cap_grant($allcaps, $caps, $args, $user) {
         return $allcaps;
     }
 
-    // Non-admin: only grant CPT caps if user has ASC roles for an entity type.
-    if (!owbn_user_has_any_entity_roles($user)) {
+    // Non-admin: grant CPT caps if user has a plugin staff role OR ASC entity roles.
+    if (!owbn_user_is_staff_role($user) && !owbn_user_has_any_entity_roles($user)) {
         return $allcaps;
     }
 
@@ -97,20 +105,14 @@ function owbn_entity_cap_grant($allcaps, $caps, $args, $user) {
         }
     }
 
-    // On our CPT pages, also grant generic edit_posts so WP doesn't block access.
-    $is_our_cpt_page = (
-        is_admin() &&
-        isset($_GET['post_type']) &&
-        in_array($_GET['post_type'], $entity_post_types, true)
-    );
-    if ($is_our_cpt_page) {
-        $allcaps['edit_posts'] = true;
-    }
+    // ocm_view_list and edit_posts are granted to all authenticated users
+    // via owbn_cached_user_has_cap_filter — no need to duplicate here.
+    $allcaps['ocm_view_list'] = true;
 
     return $allcaps;
 }
 
-// map_meta_cap override — only for admin roles or ASC role holders.
+// map_meta_cap override — for admin roles, plugin staff roles, or ASC role holders.
 add_filter('map_meta_cap', 'owbn_entity_override_map_meta_cap', 0, 4);
 function owbn_entity_override_map_meta_cap($caps, $cap, $user_id, $args) {
     $our_caps = [];
@@ -137,7 +139,7 @@ function owbn_entity_override_map_meta_cap($caps, $cap, $user_id, $args) {
         return $caps;
     }
 
-    if (owbn_user_is_admin_role($user) || owbn_user_has_any_entity_roles($user)) {
+    if (owbn_user_is_admin_role($user) || owbn_user_is_staff_role($user) || owbn_user_has_any_entity_roles($user)) {
         return ['read'];
     }
 
@@ -223,16 +225,20 @@ function owbn_cached_user_has_cap_filter($allcaps, $caps, $args, $user)
         return $allcaps;
     }
 
+    // Grant basic page access to all authenticated users regardless of ASC mode.
+    // This allows loading the CPT list screens — actual CRUD is controlled by map_meta_cap.
+    // edit_posts is required because WordPress's admin menu system marks edit.php as
+    // no-privilege when the standard Posts menu capability fails, which blocks ALL
+    // edit.php pages including our CPT pages (since $pagenow is just 'edit.php').
+    $allcaps['ocm_view_list'] = true;
+    $allcaps['edit_posts'] = true;
+
     $client_id = defined('ASC_PREFIX') ? strtolower(str_replace('_', '-', ASC_PREFIX)) : 'ccs';
     $mode = get_option("{$client_id}_accessschema_mode", 'remote');
 
     if ($mode === 'none') {
         return $allcaps;
     }
-
-    // Grant basic page access to all authenticated users
-    // This allows loading the CPT list screens - AccessSchema controls actual CRUD via capability map
-    $allcaps['ocm_view_list'] = true;
 
     $email = $user->user_email;
     if (!is_email($email)) {
@@ -653,6 +659,26 @@ function owbn_get_frontend_view_url($post)
 // ══════════════════════════════════════════════════════════════════════════════
 // ADMIN NOTICE
 // ══════════════════════════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════════════════════
+// HIDE DEFAULT MENUS FOR NON-ADMIN USERS
+// Because we grant edit_posts to all authenticated users (to prevent WordPress
+// from blocking our CPT edit.php pages), we need to hide the standard Posts
+// and Comments menus for users who shouldn't see them.
+// ══════════════════════════════════════════════════════════════════════════════
+
+add_action('admin_menu', 'owbn_hide_default_menus_for_non_admins', 999);
+function owbn_hide_default_menus_for_non_admins()
+{
+    $user = wp_get_current_user();
+    if (!$user->ID) return;
+
+    // Admin roles keep all default menus
+    if (owbn_user_is_admin_role($user)) return;
+
+    remove_menu_page('edit.php');           // Posts
+    remove_menu_page('edit-comments.php');  // Comments
+}
 
 add_action('admin_notices', 'owbn_filtered_list_notice');
 function owbn_filtered_list_notice()

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OWBN Chronicle & Coordinator Manager
  * Description: Manage OWBN Chronicle & Coordinator information using structured custom post types, shortcodes, and approval workflows.
- * Version: 2.0.1
+ * Version: 2.1.0
  * Author: greghacke
  * Author URI: https://www.owbn.net
  * Text Domain: owbn-chronicle-manager
@@ -15,7 +15,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('OWBN_CM_VERSION', '2.0.1');
+define('OWBN_CM_VERSION', '2.1.0');
 
 // ─── Core Engine ─────────────────────────────────────────────────────────────
 require_once plugin_dir_path(__FILE__) . 'includes/core/entity-registry.php';
@@ -62,7 +62,9 @@ register_activation_hook(__FILE__, function () {
 });
 
 // ─── Deactivation Hook ───────────────────────────────────────────────────────
-register_deactivation_hook(__FILE__, 'owbn_deactivate_plugin');
+register_deactivation_hook(__FILE__, function () {
+    flush_rewrite_rules();
+});
 
 // ─── Safe Activation + Role Setup ────────────────────────────────────────────
 add_action('init', function () {
@@ -106,6 +108,8 @@ function owbn_run_upgrade(string $from): void
     // Flush rewrite rules for new API routes
     flush_rewrite_rules();
 
-    // Future version-gated upgrades go here:
-    // if (version_compare($from, '2.1.0', '<')) { ... }
+    // v2.1.0: Refresh stale role caps so chron_staff/coord_staff get required capabilities
+    if (version_compare($from, '2.1.0', '<')) {
+        owbn_refresh_custom_role_caps();
+    }
 }
