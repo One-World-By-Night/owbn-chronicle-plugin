@@ -1,19 +1,30 @@
 <?php
 /** File: includes/render/render-user-fields.php
  * Text Domain: owbn-chronicle-manager
- * @version 2.3.1
+ * @version 3.0.0
  * @author greghacke
  * Function: User info and AST/Subcoord group field rendering
  */
 
 if (!defined('ABSPATH')) exit;
 
-// Render the user info fields for the Chronicle custom post type
+// Render the user info fields for entity post types
 function owbn_render_user_info($key, $value, $meta)
 {
-    $is_cm = ($key === 'cm_info');
+    // Check if this field has visibility rules (e.g., cm_info is hidden for satellite chronicles)
+    $post_type = get_post_type();
+    $config = owbn_get_entity_config($post_type);
+    $has_visibility_rule = false;
+    if ($config) {
+        foreach ($config['exclusive_fields'] ?? [] as $rule) {
+            if (in_array($key, $rule['clear'] ?? [], true)) {
+                $has_visibility_rule = true;
+                break;
+            }
+        }
+    }
 
-    if ($is_cm) {
+    if ($has_visibility_rule) {
         echo "<div class=\"owbn-cm-info-container\">\n";
         echo "<div id=\"owbn-cm-info-wrapper\">\n";
     }
@@ -92,7 +103,7 @@ function owbn_render_user_info($key, $value, $meta)
 
     echo "</div>\n"; // End Row 2
 
-    if ($is_cm) {
+    if ($has_visibility_rule) {
         echo "</div>\n"; // #owbn-cm-info-wrapper
 
         echo "<div id=\"owbn-cm-info-message\" style=\"display:none; margin-top: 10px;\">\n";

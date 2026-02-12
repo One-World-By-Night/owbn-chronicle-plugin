@@ -1,149 +1,16 @@
 <?php
 /** File: includes/render/render-metabox-fields.php
  * Text Domain: owbn-chronicle-manager
- * @version 2.3.1
+ * @version 3.0.0
  * @author greghacke
- * Function: Chronicle metabox field rendering
+ * Function: Entity metabox field rendering helpers
+ *
+ * Note: The main metabox rendering function owbn_render_entity_metabox()
+ * lives in includes/core/entity-init.php. This file contains only the
+ * individual field-type rendering helpers.
  */
 
 if (!defined('ABSPATH')) exit;
-
-// Render the metabox fields for the Chronicle custom post type
-function owbn_render_chronicle_fields_metabox($post)
-{
-    $user_id = get_current_user_id();
-
-    if (!owbn_user_can_edit_chronicle($user_id, $post->ID)) {
-        echo '<p>' . esc_html__('You do not have permission to edit this Chronicle.', 'owbn-chronicle-manager') . '</p>';
-        return;
-    }
-
-    // Output nonce for save handler
-    wp_nonce_field('owbn_chronicle_save', 'owbn_chronicle_nonce');
-
-    $field_definitions = owbn_get_chronicle_field_definitions();
-    $errors = get_transient("owbn_chronicle_errors_{$post->ID}") ?: [];
-
-    $restricted_fields = [
-        'record_type',
-        'chronicle_slug',
-        'chronicle_start_date',
-        'chronicle_region',
-        'chronicle_probationary',
-        'chronicle_satellite',
-        'chronicle_parent',
-    ];
-
-    $can_edit_metadata = owbn_user_can_edit_metadata_fields($user_id);
-
-    echo "\n<div class=\"owbn-meta-view\">\n";
-    foreach ($field_definitions as $section_label => $fields) {
-        echo "<h2>" . esc_html($section_label) . "</h2>\n";
-        echo "<table class=\"form-table\">\n<tbody>\n";
-        foreach ($fields as $key => $meta) {
-            $value = get_post_meta($post->ID, $key, true);
-            $label = $meta['label'];
-            $type  = $meta['type'];
-            $error_class = in_array($key, $errors, true) ? ' owbn-error-field' : '';
-            $disabled_attr = in_array($key, $restricted_fields) && !$can_edit_metadata ? ' disabled' : '';
-
-            echo "<tr>\n";
-            echo "<th><label for=\"" . esc_attr($key) . "\">" . esc_html($label) . "</label></th>\n";
-            echo "<td class=\"" . esc_attr(trim($error_class)) . "\">\n";
-
-            switch ($type) {
-                case 'wysiwyg':
-                    owbn_render_wysiwyg_editor($key, $value);
-                    break;
-
-                case 'select':
-                    owbn_render_select_field($key, $value, $meta, $disabled_attr);
-                    break;
-
-                case 'chronicle_select':
-                    owbn_render_chronicle_select_field($key, $value, $meta, $label, $error_class, $disabled_attr);
-                    break;
-
-                case 'multi_select':
-                    owbn_render_multi_select_field($key, $value, $meta, $disabled_attr);
-                    break;
-
-                case 'session_group':
-                    owbn_render_session_group($key, $value, $meta);
-                    break;
-
-                case 'repeatable_group':
-                    owbn_render_repeatable_group($key, $value, $meta);
-                    break;
-
-                case 'document_links_group':
-                    owbn_render_document_links_field($key, $value, $meta);
-                    break;
-
-                case 'social_links_group':
-                    owbn_render_social_links_field($key, $value, $meta);
-                    break;
-
-                case 'email_lists_group':
-                    owbn_render_email_lists_field($key, $value, $meta);
-                    break;
-
-                case 'player_lists_group':
-                    owbn_render_player_lists_field($key, $value, $meta);
-                    break;
-
-                case 'user_info':
-                    owbn_render_user_info($key, $value, $meta);
-                    break;
-
-                case 'ast_group':
-                    owbn_render_ast_group($key, $value, $meta, $key);
-                    break;
-
-                case 'boolean':
-                    owbn_render_boolean_field($key, $value, $disabled_attr);
-                    break;
-
-                case 'ooc_location':
-                    owbn_render_ooc_location($key, $value, $meta);
-                    break;
-
-                case 'location_group':
-                    owbn_render_location_group($key, $value, $meta);
-                    break;
-
-                case 'date':
-                    echo "<input type=\"date\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\" " . esc_attr($disabled_attr) . ">\n";
-                    break;
-
-                case 'number':
-                    echo "<input type=\"number\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\" " . esc_attr($disabled_attr) . ">\n";
-                    break;
-
-                case 'json':
-                    echo "<textarea class=\"large-text code\" rows=\"4\" name=\"" . esc_attr($key) . "\" " . esc_attr($disabled_attr) . ">" .
-                        esc_textarea(is_scalar($value) ? $value : wp_json_encode($value)) .
-                        "</textarea>\n";
-                    break;
-
-                case 'slug':
-                    // Slug is immutable once set, regardless of user role
-                    $slug_disabled = !empty($value) ? ' disabled' : $disabled_attr;
-                    owbn_render_slug_field($key, $value, $slug_disabled);
-                    break;
-
-                default:
-                    echo "<input type=\"text\" class=\"regular-text\" name=\"" . esc_attr($key) . "\" value=\"" . esc_attr($value) . "\" " . esc_attr($disabled_attr) . ">\n";
-                    break;
-            }
-
-            echo '</td></tr>';
-        }
-        echo '</tbody></table>';
-    }
-    echo '</div>';
-}
-
 
 // Render the slug field with optional disabling
 function owbn_render_slug_field($key, $value, $disabled_attr = '')
@@ -330,8 +197,8 @@ function owbn_render_repeatable_group($key, $value, $meta)
     echo '</div>';
 }
 
-// Render the chronicle select field for selecting parent chronicles
-function owbn_render_chronicle_select_field($key, $value, $meta, $label, $error_class, $disabled_attr = '')
+// Render the entity select field for selecting related entities (e.g., parent chronicles)
+function owbn_render_entity_select_field($key, $value, $meta, $label, $error_class, $disabled_attr = '', $post_type = 'owbn_chronicle')
 {
     global $post;
     $value = is_scalar($value) ? $value : '';

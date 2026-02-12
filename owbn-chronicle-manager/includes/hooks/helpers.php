@@ -50,9 +50,9 @@ if (!function_exists('owbn_is_admin_user')) {
         } elseif (is_int($user)) {
             $user = get_userdata($user);
         }
-        
+
         if (!$user instanceof WP_User) return false;
-        
+
         return !empty(array_intersect($user->roles, ['administrator', 'exec_team', 'web_team']));
     }
 }
@@ -68,7 +68,7 @@ if (!function_exists('owbn_sanitize_user_info')) {
     function owbn_sanitize_user_info($info)
     {
         if (!is_array($info)) return [];
-        
+
         return [
             'user'          => sanitize_text_field($info['user'] ?? ''),
             'display_name'  => sanitize_text_field($info['display_name'] ?? ''),
@@ -86,20 +86,20 @@ if (!function_exists('owbn_sanitize_ast_group')) {
     function owbn_sanitize_ast_group($group_data, $meta_fields)
     {
         $cleaned = [];
-        
+
         if (!is_array($group_data)) return $cleaned;
-        
+
         foreach ($group_data as $index => $row) {
             if ($index === '__INDEX__') continue;
             if (empty($row['user']) && empty($row['display_name']) && empty($row['email']) && empty($row['role'])) {
                 continue;
             }
-            
+
             $row_cleaned = [];
             foreach ($meta_fields as $sub_key => $sub_meta) {
                 if (!isset($row[$sub_key])) continue;
                 $raw = $row[$sub_key];
-                
+
                 if (in_array($sub_key, ['email', 'actual_email', 'display_email'], true)) {
                     $row_cleaned[$sub_key] = sanitize_email($raw);
                 } else {
@@ -108,10 +108,10 @@ if (!function_exists('owbn_sanitize_ast_group')) {
                         : sanitize_text_field($raw);
                 }
             }
-            
+
             $cleaned[] = $row_cleaned;
         }
-        
+
         return $cleaned;
     }
 }
@@ -123,25 +123,25 @@ if (!function_exists('owbn_sanitize_document_links')) {
     function owbn_sanitize_document_links($group_data, $post_id, $field_key, $existing_meta = null)
     {
         $cleaned = [];
-        
+
         if (!is_array($group_data)) return $cleaned;
-        
+
         foreach ($group_data as $index => $row) {
             if ($index === '__INDEX__') continue;
-            
+
             $row_cleaned = [
                 'title'        => isset($row['title']) ? sanitize_text_field($row['title']) : '',
                 'link'         => isset($row['link']) ? esc_url_raw($row['link']) : '',
                 'last_updated' => isset($row['last_updated']) ? sanitize_text_field($row['last_updated']) : '',
             ];
-            
+
             // Handle uploaded file
             $file_field = "{$field_key}_{$index}_upload";
             if (!empty($_FILES[$file_field]) && !empty($_FILES[$file_field]['tmp_name'])) {
                 require_once ABSPATH . 'wp-admin/includes/file.php';
                 require_once ABSPATH . 'wp-admin/includes/media.php';
                 require_once ABSPATH . 'wp-admin/includes/image.php';
-                
+
                 $attachment_id = media_handle_upload($file_field, $post_id);
                 if (!is_wp_error($attachment_id)) {
                     $row_cleaned['file_id'] = $attachment_id;
@@ -152,10 +152,10 @@ if (!function_exists('owbn_sanitize_document_links')) {
             } elseif (is_array($existing_meta) && isset($existing_meta[$index]['file_id'])) {
                 $row_cleaned['file_id'] = $existing_meta[$index]['file_id'];
             }
-            
+
             $cleaned[] = $row_cleaned;
         }
-        
+
         return $cleaned;
     }
 }
@@ -167,23 +167,23 @@ if (!function_exists('owbn_sanitize_email_lists')) {
     function owbn_sanitize_email_lists($group_data)
     {
         $cleaned = [];
-        
+
         if (!is_array($group_data)) return $cleaned;
-        
+
         foreach ($group_data as $index => $row) {
             if ($index === '__INDEX__') continue;
-            
+
             $row_cleaned = [
                 'list_name'     => isset($row['list_name']) ? sanitize_text_field($row['list_name']) : '',
                 'email_address' => isset($row['email_address']) ? sanitize_email($row['email_address']) : '',
                 'description'   => isset($row['description']) ? wp_kses_post($row['description']) : '',
             ];
-            
+
             if ($row_cleaned['list_name'] || $row_cleaned['email_address'] || $row_cleaned['description']) {
                 $cleaned[] = $row_cleaned;
             }
         }
-        
+
         return $cleaned;
     }
 }
@@ -195,13 +195,13 @@ if (!function_exists('owbn_sanitize_player_lists')) {
     function owbn_sanitize_player_lists($group_data)
     {
         $cleaned = [];
-        
+
         if (!is_array($group_data)) return $cleaned;
-        
+
         foreach ($group_data as $index => $row) {
             if ($index === '__INDEX__') continue;
             if (empty($row['list_name'])) continue;
-            
+
             $cleaned[] = [
                 'list_name'        => sanitize_text_field($row['list_name'] ?? ''),
                 'access'           => sanitize_text_field($row['access'] ?? 'Public'),
@@ -211,7 +211,7 @@ if (!function_exists('owbn_sanitize_player_lists')) {
                 'signup_url'       => esc_url_raw($row['signup_url'] ?? ''),
             ];
         }
-        
+
         return $cleaned;
     }
 }
@@ -223,22 +223,97 @@ if (!function_exists('owbn_sanitize_social_links')) {
     function owbn_sanitize_social_links($group_data)
     {
         $cleaned = [];
-        
+
         if (!is_array($group_data)) return $cleaned;
-        
+
         foreach ($group_data as $index => $row) {
             if ($index === '__INDEX__' || (empty($row['platform']) && empty($row['url']))) {
                 continue;
             }
-            
+
             $cleaned[] = [
                 'platform' => isset($row['platform']) ? sanitize_text_field($row['platform']) : '',
                 'url'      => isset($row['url']) ? esc_url_raw($row['url']) : '',
             ];
         }
-        
+
         return $cleaned;
     }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// API RESPONSE HELPERS
+// ══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Filter personnel data for API responses.
+ *
+ * Strips internal fields (user ID, actual_email) and returns only
+ * public-facing display fields.
+ *
+ * @param mixed $raw_value Raw personnel meta value.
+ * @return array Filtered personnel data.
+ */
+function owbn_filter_personnel_list($raw_value)
+{
+    if (!is_array($raw_value)) {
+        return [];
+    }
+
+    // Single user_info structure
+    if (isset($raw_value['display_name'])) {
+        return [
+            'display_name'  => $raw_value['display_name'] ?? '',
+            'display_email' => $raw_value['display_email'] ?? '',
+        ];
+    }
+
+    // Array of user_info structures
+    $filtered = [];
+    foreach ($raw_value as $person) {
+        if (!is_array($person)) continue;
+
+        $entry = [
+            'display_name'  => $person['display_name'] ?? '',
+            'display_email' => $person['display_email'] ?? '',
+        ];
+
+        if (isset($person['role'])) {
+            $entry['role'] = $person['role'];
+        }
+
+        $filtered[] = $entry;
+    }
+
+    return $filtered;
+}
+
+/**
+ * Strip wysiwyg subfields from array data for list API responses.
+ *
+ * Removes large HTML content subfields that are only needed in detail view.
+ *
+ * @param array $value      The array field value.
+ * @param array $definition The field definition (with 'fields' sub-definitions).
+ * @return array Filtered array with wysiwyg subfields removed.
+ */
+function owbn_strip_wysiwyg_subfields($value, $definition)
+{
+    if (!is_array($value)) return $value;
+
+    $subfields = $definition['fields'] ?? [];
+
+    foreach ($value as &$item) {
+        if (!is_array($item)) continue;
+
+        foreach ($subfields as $sub_key => $sub_def) {
+            if (($sub_def['type'] ?? '') === 'wysiwyg' && isset($item[$sub_key])) {
+                unset($item[$sub_key]);
+            }
+        }
+    }
+
+    return $value;
 }
 
 /**
