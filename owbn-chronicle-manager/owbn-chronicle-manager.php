@@ -15,7 +15,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('OWBN_CM_VERSION', '2.1.0');
+define('OWBN_CM_VERSION', '2.2.0');
 
 // ─── Core Engine ─────────────────────────────────────────────────────────────
 require_once plugin_dir_path(__FILE__) . 'includes/core/entity-registry.php';
