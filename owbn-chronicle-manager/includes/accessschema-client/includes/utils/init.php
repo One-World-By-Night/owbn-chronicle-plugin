@@ -3,7 +3,6 @@
 /** File: includes/utils/init.php
  * Text Domain: accessschema-client
  * version 1.2.0
- *
  * @author greghacke
  * Function: Init utils functionality for the plugin
  */
