@@ -3,7 +3,7 @@ Contributors: greghacke
 Tags: access control, remote API, roles, permissions  
 Requires at least: 5.0  
 Tested up to: 6.5  
-Stable tag: 1.2.0  
+Stable tag: 2.1.2  
 License: MIT  
 License URI: https://opensource.org/licenses/MIT  
 
@@ -43,32 +43,25 @@ to match your plugin.
 
 == Configuration ==
 
-Once initialized, a menu appears under "Users" as "{ASC_PREFIX} ASC" where you can configure:  
+Once initialized, a menu appears under “Users” as "{ASC_PREFIX} ASC" where you can configure:  
 - Connection Mode (remote, local, none)  
 - Remote API URL and key  
 - Capability-to-role mapping for WP core caps
 
-These are stored in options like (where client_id is the lowercase, hyphen-normalized ASC_PREFIX):  
-- {client_id}_accessschema_mode  
-- {client_id}_accessschema_client_url  
-- {client_id}_accessschema_client_key  
-- {client_id}_capability_map
-
-Example: If ASC_PREFIX is 'YPP', options would be:  
-- ypp_accessschema_mode  
-- ypp_accessschema_client_url  
-- ypp_accessschema_client_key  
-- ypp_capability_map
+These are stored in options like:  
+- YPP_accessschema_mode  
+- YPP_accessschema_client_url  
+- YPP_accessschema_client_key  
+- YPP_capability_map
 
 == Developer API ==
 
-Use in plugin code (where $client_id is your lowercase, hyphen-normalized ASC_PREFIX, e.g., 'ypp'):
+Use in plugin code:
 
-accessSchema_client_remote_check_access( 'user@example.com', 'Chronicle/KONY/HST', $client_id, true );  
-accessSchema_client_remote_grant_role( 'user@example.com', 'Coordinator/Tzimisce/Player', $client_id );  
-accessSchema_client_remote_revoke_role( 'user@example.com', 'Coordinator/Tzimisce/Player', $client_id );  
-accessSchema_client_remote_get_roles_by_email( 'user@example.com', $client_id );  
-accessSchema_access_granted( 'Chronicle/KONY/*' );  // Uses ASC_PREFIX automatically
+accessSchema_client_remote_check_access( 'user@example.com', 'Chronicle/KONY/HST', 'ypp' );  
+accessSchema_client_remote_grant_role( 'user@example.com', 'Coordinator/Tzimisce/Player' );  
+accessSchema_client_remote_get_roles_by_email( 'user@example.com' );  
+accessSchema_access_granted( 'Chronicle/KONY/*' );
 
 == Usage Examples ==
 
@@ -113,19 +106,15 @@ Capability mapping (in settings or via update_option):
 
 == Shortcode ==
 
-Use [access_schema_{client_id}]...[/access_schema_{client_id}] to conditionally show content.
+Use [access_schema_client]...[/access_schema_client] to conditionally show content:
 
-The shortcode name is dynamic based on your ASC_PREFIX. For example:
-- If ASC_PREFIX is 'YPP', use [access_schema_ypp]
-- If ASC_PREFIX is 'OWBN_BOARD', use [access_schema_owbn-board]
-
-[access_schema_ypp role="Chronicles/ABC/HST"]  
+[access_schema_client role="Chronicles/ABC/HST"]  
 Welcome, Head Storyteller!  
-[/access_schema_ypp]
+[/access_schema_client]
 
-[access_schema_ypp any="Chronicles/ABC/HST, Chronicles/ABC/AST" wildcard="true" fallback="You do not have access."]  
+[access_schema_client any="Chronicles/ABC/HST, Chronicles/ABC/AST" wildcard="true" fallback="You do not have access."]  
 Only visible to staff.  
-[/access_schema_ypp]
+[/access_schema_client]
 
 == Shortcode Attributes ==
 
@@ -147,12 +136,19 @@ add_filter('accessSchema_access_granted', function($granted, $patterns, $user_id
 
 == Changelog ==
 
-= 1.2.0 =  
-- Switched from slug to client_id everywhere  
-- Added login caching and refresh logic  
-- Added remote + local fallback  
-- Improved error and access logs  
+= 1.2.0 =
+- Switched from slug to client_id everywhere
+- Added login caching and refresh logic
+- Added remote + local fallback
+- Improved error and access logs
 - Clarified shortcode behavior and fallback
+
+= 2.1.2 =
+- Added function_exists() guard on accessSchema_client_render_grouped_roles() to prevent fatal on duplicate load
+
+= 2.0.4 =
+- PHP 7.4 compliance (replaced match expression with switch)
+- Version sync with server plugin
 
 == License ==
 

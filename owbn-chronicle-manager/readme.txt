@@ -5,7 +5,7 @@ Tags: chronicle, coordinator, custom post types, entity management
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.1.0
+Stable tag: 2.2.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Manage OWBN Chronicle & Coordinator information using structured custom post types, approval workflows, and a REST API. Built on a generic entity registry for easy extensibility.
@@ -32,6 +32,17 @@ Key features:
 4. Begin managing entities using the WordPress admin
 
 == Changelog ==
+
+= 2.2.2 =
+* Upgraded embedded accessSchema client from v1.2.0 to v2.1.2
+* Fixed client_id normalization in user_has_cap filter (options now correctly use lowercase slug)
+* Fixed remote API URL construction to handle legacy stored URLs with REST path prefix
+* Registered accessschema_get_roles_for_slug filter so utility role-matching functions work correctly
+* Security hardening: nonce verification, output escaping, wp_safe_redirect across client library
+* Removed empty placeholder files and debug code from client library
+
+= 2.2.0 =
+* Elementor Theme Builder integration
 
 = 2.1.0 =
 * Pending changeset workflow — staff field changes by non-admins on published posts are held pending admin approval instead of downgrading the post to draft
