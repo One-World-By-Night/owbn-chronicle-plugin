@@ -56,10 +56,13 @@ require_once plugin_dir_path(__FILE__) . 'includes/editor/editor-init.php';
 // ─── AccessSchema Client ────────────────────────────────────────────────────
 require_once plugin_dir_path(__FILE__) . 'includes/accessschema-client/accessSchema-client.php';
 
-// ─── Elementor Integration ──────────────────────────────────────────────────
-require_once plugin_dir_path(__FILE__) . 'includes/elementor/theme-builder.php';
-require_once plugin_dir_path(__FILE__) . 'includes/elementor/dynamic-tags/tags-loader.php';
-require_once plugin_dir_path(__FILE__) . 'includes/elementor/widgets-loader.php';
+// ─── Elementor Integration (optional — only loads if files exist) ───────────
+$elementor_dir = plugin_dir_path(__FILE__) . 'includes/elementor/';
+if (is_dir($elementor_dir)) {
+    require_once $elementor_dir . 'theme-builder.php';
+    require_once $elementor_dir . 'dynamic-tags/tags-loader.php';
+    require_once $elementor_dir . 'widgets-loader.php';
+}
 
 // ─── Activation Hook ─────────────────────────────────────────────────────────
 register_activation_hook(__FILE__, function () {
