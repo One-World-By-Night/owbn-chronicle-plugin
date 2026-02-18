@@ -25,6 +25,8 @@ owbn_register_entity_type([
     'menu_name'      => 'OWBN Chronicles',
     'menu_icon'      => 'dashicons-location-alt',
     'menu_position'  => 30,
+    'show_in_menu'   => 'owbn-cc',
+    'add_new_label'  => 'Add Chronicle',
 
     // Feature toggle
     'option_enabled' => 'owbn_enable_chronicles',

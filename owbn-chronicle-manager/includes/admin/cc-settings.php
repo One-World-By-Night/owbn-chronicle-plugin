@@ -9,20 +9,6 @@
 if (!defined('ABSPATH')) exit;
 
 // ══════════════════════════════════════════════════════════════════════════════
-// ADMIN MENU
-// ══════════════════════════════════════════════════════════════════════════════
-
-add_action('admin_menu', function () {
-    add_options_page(
-        __('C&C Plugin Settings', 'owbn-chronicle-manager'),
-        __('C&C Plugin', 'owbn-chronicle-manager'),
-        'manage_options',
-        'owbn-cc-settings',
-        'owbn_render_cc_settings_page'
-    );
-});
-
-// ══════════════════════════════════════════════════════════════════════════════
 // REGISTER SETTINGS
 // ══════════════════════════════════════════════════════════════════════════════
 
