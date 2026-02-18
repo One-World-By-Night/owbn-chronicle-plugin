@@ -3,7 +3,7 @@
 **Plugin Name**: OWBN Chronicle & Coordinator Manager
 **Plugin URI**: https://www.owbn.net
 **Description**: Manage OWBN Chronicle & Coordinator information using structured custom post types, shortcodes, and approval workflows. Built on a generic entity registry so new entity types require only a config file and field definitions.
-**Version**: 2.0.0
+**Version**: 2.2.3
 **Author**: OWBN Web Coordination Team, Greg Hacke
 **Author URI**: https://www.owbn.net
 **Tags**: chronicle, coordinator, custom post types, entity management
@@ -118,6 +118,7 @@ Navigate to **Settings > C&C Plugin** to configure:
 - 1.1.2: Multi-Site control
 - 1.1.5: Validation and notice of approval requirements for staff changes
 - 2.0.0: Complete architecture refactor — generic entity registry, unified save/validate/API handlers, coordinator support, per-entity feature toggles, REST API with CORS, data source banner (local/remote)
+- 2.2.3: AccessSchema Client updated to v2.4.0 — fixed duplicate role display in Users table when multiple client plugins are active; shared cache architecture for all client instances
 
 ---
 
