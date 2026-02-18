@@ -11,6 +11,15 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
+ * Shared hooks — register once regardless of how many client instances load.
+ * All callbacks iterate 'accessschema_registered_slugs' to cover every instance.
+ */
+if ( defined( 'ASC_CLIENT_USERS_HOOKS_REGISTERED' ) ) {
+	return;
+}
+define( 'ASC_CLIENT_USERS_HOOKS_REGISTERED', true );
+
+/**
  * Add a single column to the Users table for remote AccessSchema-client instances.
  *
  * Skips the column entirely if all registered clients are in local mode,
@@ -60,8 +69,8 @@ add_filter(
 		$output   = '<div class="asc-client-role-column">';
 
 		foreach ( $registered as $client_id => $label ) {
-			$cache_key     = "{$client_id}_accessschema_cached_roles";
-			$timestamp_key = "{$client_id}_accessschema_cached_roles_timestamp";
+			$cache_key     = 'accessschema_cached_roles';
+			$timestamp_key = 'accessschema_cached_roles_timestamp';
 
 			$roles     = get_user_meta( $user_id, $cache_key, true );
 			$timestamp = get_user_meta( $user_id, $timestamp_key, true );
@@ -193,8 +202,8 @@ add_action(
 				return;
 			}
 
-			$cache_key     = "{$client_id}_accessschema_cached_roles";
-			$timestamp_key = "{$client_id}_accessschema_cached_roles_timestamp";
+			$cache_key     = 'accessschema_cached_roles';
+			$timestamp_key = 'accessschema_cached_roles_timestamp';
 
 			if ( 'flush_accessschema_cache' === $action ) {
 				check_admin_referer( "flush_accessschema_{$user_id}_{$client_id}" );
@@ -310,8 +319,10 @@ add_action(
 			.asc-client-no-roles { color: #646970; font-style: italic; font-size: 12px; }
 		';
 
-		wp_register_style( 'asc-client-users-table', false );
+		if ( ! wp_style_is( 'asc-client-users-table', 'registered' ) ) {
+			wp_register_style( 'asc-client-users-table', false );
+			wp_add_inline_style( 'asc-client-users-table', $css );
+		}
 		wp_enqueue_style( 'asc-client-users-table' );
-		wp_add_inline_style( 'asc-client-users-table', $css );
 	}
 );

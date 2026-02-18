@@ -5,7 +5,7 @@ Tags: chronicle, coordinator, custom post types, entity management
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.2.2
+Stable tag: 2.2.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Manage OWBN Chronicle & Coordinator information using structured custom post types, approval workflows, and a REST API. Built on a generic entity registry for easy extensibility.
@@ -32,6 +32,10 @@ Key features:
 4. Begin managing entities using the WordPress admin
 
 == Changelog ==
+
+= 2.2.3 =
+* Updated embedded AccessSchema client to v2.4.0 (shared role cache across all AccessSchema-enabled plugins)
+* Roles refreshed by any AccessSchema-enabled plugin are now visible to all, eliminating cross-plugin cache isolation
 
 = 2.2.2 =
 * Upgraded embedded accessSchema client from v1.2.0 to v2.1.2

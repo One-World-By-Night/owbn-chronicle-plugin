@@ -2,14 +2,18 @@
 
 /** File: prefix.php
  * Text Domain: accessschema-client
- * version 2.1.2
+ * version 2.4.0
  *
  * @author greghacke
- * Function:
+ * Function: Instance-specific configuration for this embedded accessSchema client.
+ *
+ * Each plugin that embeds the client sets its own prefix and label here.
+ * Uses variables (not constants) so multiple plugins can each have their own values.
  */
 
 defined( 'ABSPATH' ) || exit;
 
-// Unique constant prefix for this embedded instance of accessSchema-client
-define( 'ASC_PREFIX', 'CCS' );            // OWBN Chronicle Plugin prefix
-define( 'ASC_LABEL', 'C&C Schema' );      // OWBN Chronicle Plugin label
+// Unique prefix for this embedded instance of accessSchema-client.
+// Change these to match your plugin.
+$asc_instance_prefix = 'CCS';
+$asc_instance_label  = 'C&C Schema';
