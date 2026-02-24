@@ -227,13 +227,12 @@ function owbn_cached_user_has_cap_filter($allcaps, $caps, $args, $user)
         return $allcaps;
     }
 
-    // Grant basic page access to all authenticated users regardless of ASC mode.
-    // This allows loading the CPT list screens — actual CRUD is controlled by map_meta_cap.
-    // edit_posts is required because WordPress's admin menu system marks edit.php as
-    // no-privilege when the standard Posts menu capability fails, which blocks ALL
-    // edit.php pages including our CPT pages (since $pagenow is just 'edit.php').
+    // Grant ocm_view_list to all authenticated users so they can access our CPT
+    // list screens. Actual CRUD is controlled by map_meta_cap per-post checks.
+    // Note: we no longer grant edit_posts here. The Posts menu is removed for
+    // non-admins in owbn_hide_default_menus_for_non_admins(), which prevents
+    // edit.php from entering $_wp_menu_nopriv and blocking our CPT pages.
     $allcaps['ocm_view_list'] = true;
-    $allcaps['edit_posts'] = true;
 
     $client_id = 'ccs';
     $mode = get_option("{$client_id}_accessschema_mode", 'remote');
