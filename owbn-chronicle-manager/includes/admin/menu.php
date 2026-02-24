@@ -15,17 +15,19 @@ add_action('admin_menu', 'owbn_cc_register_admin_menu');
 
 function owbn_cc_register_admin_menu()
 {
+    // Parent menu uses ocm_view_list so non-admin users with ASC entity roles
+    // can access the chronicle/coordinator submenus underneath.
     add_menu_page(
         __('OWBN C&C', 'owbn-chronicle-manager'),
         __('OWBN C&C', 'owbn-chronicle-manager'),
-        'manage_options',
+        'ocm_view_list',
         'owbn-cc',
         'owbn_render_cc_settings_page',
         'dashicons-groups',
         30
     );
 
-    // Rename the auto-generated first submenu entry (same slug as parent = rename trick)
+    // Settings submenu — admin only
     add_submenu_page(
         'owbn-cc',
         __('C&C Settings', 'owbn-chronicle-manager'),
