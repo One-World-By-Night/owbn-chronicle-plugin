@@ -1,11 +1,4 @@
 <?php
-/** File: includes/render/render-user-fields.php
- * Text Domain: owbn-chronicle-manager
- * @version 3.0.0
- * @author greghacke
- * Function: User info and AST/Subcoord group field rendering
- */
-
 if (!defined('ABSPATH')) exit;
 
 // Render the user info fields for entity post types

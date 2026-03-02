@@ -1,16 +1,5 @@
 <?php
-/** File: fields.php
- * Text Domain: owbn-chronicle-manager
- * @version 2.3.1
- * @author greghacke
- * Function: CPT fields listing
- */
-
 if (!defined('ABSPATH')) exit;
-
-// ══════════════════════════════════════════════════════════════════════════════
-// CHRONICLE FIELD DEFINITIONS
-// ══════════════════════════════════════════════════════════════════════════════
 
 function owbn_get_chronicle_field_definitions()
 {
@@ -368,10 +357,6 @@ function owbn_get_chronicle_field_definitions()
         ],
     ];
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// COORDINATOR FIELD DEFINITIONS
-// ══════════════════════════════════════════════════════════════════════════════
 
 function owbn_get_coordinator_field_definitions()
 {

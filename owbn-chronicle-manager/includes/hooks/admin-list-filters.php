@@ -1,43 +1,14 @@
 <?php
-/**
- * File: includes/hooks/admin-list-filters.php
- * Text Domain: owbn-chronicle-manager
- * @version 2.0.0
- *
- * Handles:
- * - Performance: Replace slow AccessSchema filter with cached version
- * - Permission filtering: Restrict list to user's accessible posts
- * - View links: Point to owbn-client frontend pages
- *
- * v2 changes:
- * - All hardcoded post type checks replaced with owbn_get_entity_post_types()
- * - Per-entity slug extraction replaced with generic owbn_extract_entity_slugs_from_roles()
- * - Hardcoded meta_key selection replaced with entity config lookup
- * - Per-entity map_meta_cap filters replaced with single owbn_entity_map_meta_cap
- * - Cap grants loop over all registered entity types
- */
-
 if (!defined('ABSPATH')) exit;
 
-/**
- * Check if user is an admin-level role that bypasses ASC checks.
- */
 function owbn_user_is_admin_role(WP_User $user): bool {
     return (bool) array_intersect($user->roles, ['administrator', 'exec_team', 'web_team']);
 }
 
-/**
- * Check if user has a plugin staff role (chron_staff, coord_staff).
- * These roles have CPT capabilities defined but are not admin-level.
- */
 function owbn_user_is_staff_role(WP_User $user): bool {
     return (bool) array_intersect($user->roles, ['chron_staff', 'coord_staff']);
 }
 
-/**
- * Check if user has any ASC roles for any entity type.
- * Uses cached roles to avoid API calls.
- */
 function owbn_user_has_any_entity_roles(WP_User $user): bool {
     static $cache = [];
     if (isset($cache[$user->ID])) {
@@ -146,10 +117,6 @@ function owbn_entity_override_map_meta_cap($caps, $cap, $user_id, $args) {
     return $caps;
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// CACHED ACCESSSCHEMA ROLES - Fetch once, cache in transient
-// ══════════════════════════════════════════════════════════════════════════════
-
 /**
  * Get user's AccessSchema roles with aggressive transient caching
  * Only calls remote API if cache is empty
@@ -189,9 +156,6 @@ function owbn_get_cached_user_roles($user_id = null, $email = null)
     return $roles;
 }
 
-/**
- * Clear cached roles for a user (call when permissions change)
- */
 function owbn_clear_cached_user_roles($user_id)
 {
     delete_transient("owbn_asc_roles_{$user_id}");
@@ -201,11 +165,6 @@ function owbn_clear_cached_user_roles($user_id)
         delete_transient("owbn_counts_{$post_type}_{$user_id}");
     }
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// REPLACE SLOW ACCESSSCHEMA FILTER WITH CACHED VERSION
-// Must run VERY early and at same priority to properly replace
-// ══════════════════════════════════════════════════════════════════════════════
 
 // Remove the slow filter and add cached version
 add_action('plugins_loaded', function() {
@@ -296,18 +255,12 @@ function owbn_cached_user_has_cap_filter($allcaps, $caps, $args, $user)
     return $allcaps;
 }
 
-/**
- * Expand role path placeholders
- */
 function owbn_expand_role_path($raw_path)
 {
     $slug = get_query_var('slug') ?: '';
     return str_replace('$slug', sanitize_key($slug), $raw_path);
 }
 
-/**
- * Check if any roles match a wildcard pattern
- */
 function owbn_roles_match_pattern($roles, $pattern)
 {
     $regex = str_replace('\*', '[^/]*', preg_quote($pattern, '#'));
@@ -319,13 +272,6 @@ function owbn_roles_match_pattern($roles, $pattern)
     return false;
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// ACCESSIBLE SLUGS - Extract from cached roles
-// ══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Get accessible slugs for current user (null = unrestricted for admins)
- */
 function owbn_get_user_accessible_slugs($post_type)
 {
     static $cache = [];
@@ -424,10 +370,6 @@ function owbn_extract_entity_slugs_from_roles($roles, $user_id, $post_type)
     return array_unique($slugs);
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PRE_GET_POSTS - Filter admin list to accessible posts only
-// ══════════════════════════════════════════════════════════════════════════════
-
 add_action('pre_get_posts', 'owbn_filter_admin_post_list');
 function owbn_filter_admin_post_list($query)
 {
@@ -462,10 +404,6 @@ function owbn_filter_admin_post_list($query)
     ];
     $query->set('meta_query', $meta_query);
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// BYPASS SLOW MAP_META_CAP ON LIST SCREENS
-// ══════════════════════════════════════════════════════════════════════════════
 
 global $owbn_list_screen_active;
 $owbn_list_screen_active = false;
@@ -530,10 +468,6 @@ function owbn_list_view_map_meta_cap($caps, $cap, $user_id, $args)
     return ['do_not_allow'];
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// OPTIMIZED POST COUNTS
-// ══════════════════════════════════════════════════════════════════════════════
-
 add_filter('wp_count_posts', 'owbn_optimize_post_counts', 10, 3);
 function owbn_optimize_post_counts($counts, $type, $perm)
 {
@@ -596,10 +530,6 @@ function owbn_optimize_post_counts($counts, $type, $perm)
     return $counts;
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// ROW ACTIONS - View link to owbn-client frontend
-// ══════════════════════════════════════════════════════════════════════════════
-
 add_filter('post_row_actions', 'owbn_modify_row_actions', 10, 2);
 function owbn_modify_row_actions($actions, $post)
 {
@@ -656,17 +586,6 @@ function owbn_get_frontend_view_url($post)
 
     return null;
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// ADMIN NOTICE
-// ══════════════════════════════════════════════════════════════════════════════
-
-// ══════════════════════════════════════════════════════════════════════════════
-// HIDE DEFAULT MENUS FOR NON-ADMIN USERS
-// Because we grant edit_posts to all authenticated users (to prevent WordPress
-// from blocking our CPT edit.php pages), we need to hide the standard Posts
-// and Comments menus for users who shouldn't see them.
-// ══════════════════════════════════════════════════════════════════════════════
 
 add_action('admin_menu', 'owbn_hide_default_menus_for_non_admins', 999);
 function owbn_hide_default_menus_for_non_admins()

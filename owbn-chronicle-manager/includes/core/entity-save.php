@@ -5,8 +5,6 @@
  * Provides a single save_post handler for all registered entity types,
  * driven by entity config from the registry. Replaces per-entity save files.
  *
- * @package OWBN Chronicle Manager
- * @since 2.0.0
  */
 
 if (!defined('ABSPATH')) exit;
@@ -374,10 +372,6 @@ function owbn_handle_entity_staff_change(int $post_id, array $config): void
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PENDING CHANGESET HELPERS
-// ══════════════════════════════════════════════════════════════════════════════
-
 /**
  * Sanitize a staff field value for pending storage without writing to post meta.
  *
@@ -446,18 +440,7 @@ function owbn_detect_staff_field_dirty(string $key, array $meta, $new_value, $pr
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// GROUP SANITIZERS (copied from chronicle-save.php, not in helpers.php)
-// ══════════════════════════════════════════════════════════════════════════════
-
 if (!function_exists('owbn_sanitize_session_group')) {
-    /**
-     * Sanitize session_group field data.
-     *
-     * @param mixed $group_data The raw group data from POST.
-     * @param array $meta_fields The sub-field definitions.
-     * @return array Sanitized rows.
-     */
     function owbn_sanitize_session_group($group_data, $meta_fields)
     {
         $cleaned = [];
@@ -491,13 +474,6 @@ if (!function_exists('owbn_sanitize_session_group')) {
 }
 
 if (!function_exists('owbn_sanitize_ooc_location')) {
-    /**
-     * Sanitize ooc_location field data (single row, not repeatable).
-     *
-     * @param mixed $group_data The raw group data from POST.
-     * @param array $meta_fields The sub-field definitions.
-     * @return array Sanitized row.
-     */
     function owbn_sanitize_ooc_location($group_data, $meta_fields)
     {
         $row_cleaned = [];
@@ -530,13 +506,6 @@ if (!function_exists('owbn_sanitize_ooc_location')) {
 }
 
 if (!function_exists('owbn_sanitize_location_group')) {
-    /**
-     * Sanitize location_group field data (repeatable rows).
-     *
-     * @param mixed $group_data The raw group data from POST.
-     * @param array $meta_fields The sub-field definitions.
-     * @return array Sanitized rows with keys filtered to allowed fields.
-     */
     function owbn_sanitize_location_group($group_data, $meta_fields)
     {
         $cleaned = [];
@@ -579,13 +548,6 @@ if (!function_exists('owbn_sanitize_location_group')) {
 }
 
 if (!function_exists('owbn_sanitize_repeatable_group')) {
-    /**
-     * Sanitize repeatable_group field data.
-     *
-     * @param mixed $group_data The raw group data from POST.
-     * @param array $meta_fields The sub-field definitions.
-     * @return array Sanitized rows.
-     */
     function owbn_sanitize_repeatable_group($group_data, $meta_fields)
     {
         $cleaned = [];
@@ -603,10 +565,6 @@ if (!function_exists('owbn_sanitize_repeatable_group')) {
         return $cleaned;
     }
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// SLUG SYNC FILTER
-// ══════════════════════════════════════════════════════════════════════════════
 
 /**
  * Sync entity slug fields with WordPress post_name.
@@ -647,10 +605,6 @@ function owbn_sync_entity_slug_with_post_name($data, $postarr)
 
     return $data;
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// HOOKS
-// ══════════════════════════════════════════════════════════════════════════════
 
 add_action('save_post', 'owbn_save_entity_meta', 10, 2);
 add_filter('wp_insert_post_data', 'owbn_sync_entity_slug_with_post_name', 15, 2);

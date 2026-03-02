@@ -1,16 +1,5 @@
 <?php
-/** File: includes/admin/cc-settings.php
- * Text Domain: owbn-chronicle-manager
- * @version 2.3.0
- * @author greghacke
- * Function: C&C Plugin Settings - Settings > C&C Plugin
- */
-
 if (!defined('ABSPATH')) exit;
-
-// ══════════════════════════════════════════════════════════════════════════════
-// REGISTER SETTINGS
-// ══════════════════════════════════════════════════════════════════════════════
 
 add_action('admin_init', function () {
     // Chronicles
@@ -49,10 +38,6 @@ function owbn_sanitize_list_option($input)
     }
     return array_values(array_filter(array_map('sanitize_text_field', $input)));
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// RENDER SETTINGS PAGE
-// ══════════════════════════════════════════════════════════════════════════════
 
 function owbn_render_cc_settings_page()
 {

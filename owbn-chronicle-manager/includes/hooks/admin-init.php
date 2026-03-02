@@ -1,26 +1,5 @@
 <?php
-/**
- * File: includes/hooks/admin-init.php
- * Text Domain: owbn-chronicle-manager
- * @version 2.0.0
- *
- * Handles:
- * - Flush rewrite rules
- * - Shared capabilities & roles
- * - Genre list init
- * - Region list init
- *
- * Removed in v2 (handled elsewhere):
- * - Feature toggle helpers (replaced by owbn_is_entity_enabled)
- * - require_once chain (handled by main plugin file)
- * - Enctype (handled by owbn_add_entity_enctype in entity-init.php)
- */
-
 if (!defined('ABSPATH')) exit;
-
-// ══════════════════════════════════════════════════════════════════════════════
-// FLUSH REWRITE RULES
-// ══════════════════════════════════════════════════════════════════════════════
 
 add_action('init', function () {
     if (get_option('owbn_flush_rewrite_rules')) {
@@ -29,16 +8,6 @@ add_action('init', function () {
     }
 }, 99);
 
-// ══════════════════════════════════════════════════════════════════════════════
-// SHARED CAPABILITIES & ROLES
-// ══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Grant admin capabilities for all registered entity types.
- *
- * Derives capabilities from the entity registry so that new entity types
- * automatically get their caps granted to administrator.
- */
 function owbn_grant_admin_chronicle_caps()
 {
     $role = get_role('administrator');
@@ -213,10 +182,6 @@ function owbn_refresh_custom_role_caps(): void
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// GENRE LIST INIT
-// ══════════════════════════════════════════════════════════════════════════════
-
 add_action('init', function () {
     if (owbn_is_entity_enabled('owbn_chronicle') && !get_option('owbn_genre_list')) {
         update_option('owbn_genre_list', [
@@ -241,10 +206,6 @@ add_action('init', function () {
         ]);
     }
 });
-
-// ══════════════════════════════════════════════════════════════════════════════
-// REGION LIST INIT
-// ══════════════════════════════════════════════════════════════════════════════
 
 add_action('init', function () {
     if (owbn_is_entity_enabled('owbn_chronicle') && !get_option('owbn_region_list')) {

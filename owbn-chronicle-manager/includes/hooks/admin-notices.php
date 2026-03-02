@@ -1,18 +1,6 @@
 <?php
-/**
- * File: includes/hooks/admin-notices.php
- * Text Domain: owbn-chronicle-manager
- * @version 2.1.0
- *
- * Generic admin notices for all entity types.
- * Replaces chronicle-admin-notices.php and coordinator-admin-notices.php.
- */
-
 if (!defined('ABSPATH')) exit;
 
-/**
- * Display admin notice for entity validation errors (generic).
- */
 add_action('admin_notices', 'owbn_admin_notice_entity_errors');
 function owbn_admin_notice_entity_errors()
 {
@@ -55,9 +43,6 @@ function owbn_admin_notice_entity_errors()
     delete_transient("owbn_{$entity_key}_errors_{$post_id}");
 }
 
-/**
- * Display admin notice for dirty staff user changes on draft posts (generic).
- */
 add_action('admin_notices', 'owbn_admin_notice_entity_dirty_change');
 function owbn_admin_notice_entity_dirty_change()
 {
@@ -86,10 +71,6 @@ function owbn_admin_notice_entity_dirty_change()
         delete_transient("owbn_{$entity_key}_dirty_notice_{$post_id}");
     }
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// PENDING CHANGESET NOTICES
-// ══════════════════════════════════════════════════════════════════════════════
 
 /**
  * Display notice after a non-admin submits staff changes on a published post.
@@ -344,10 +325,6 @@ function owbn_admin_notice_pending_result()
         delete_transient("owbn_{$entity_key}_pending_rejected_{$post_id}");
     }
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════════════════════════════════════════
 
 /**
  * Helper to get current post ID from various sources.

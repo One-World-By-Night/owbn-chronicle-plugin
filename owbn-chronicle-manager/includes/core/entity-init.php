@@ -6,21 +6,10 @@
  * mapping, permalinks, rewrites, and template loading -- all driven by
  * entity config arrays from the registry.
  *
- * @package OWBN Chronicle Manager
- * @since 2.0.0
  */
 
 if (!defined('ABSPATH')) exit;
 
-// ══════════════════════════════════════════════════════════════════════════════
-// CPT REGISTRATION
-// ══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Register a WordPress Custom Post Type from an entity config.
- *
- * @param array $config Entity type configuration array.
- */
 function owbn_register_entity_cpt(array $config): void
 {
     if (!owbn_is_entity_enabled($config['post_type'])) return;
@@ -96,18 +85,6 @@ function owbn_register_entity_cpt(array $config): void
     register_post_type($config['post_type'], $cpt_args);
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// META REGISTRATION
-// ══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Register post meta for an entity type based on its field definitions.
- *
- * Complex field types (arrays) are registered with type 'array'; all others
- * are registered as 'string'.
- *
- * @param array $config Entity type configuration array.
- */
 function owbn_register_entity_meta(array $config): void
 {
     if (!owbn_is_entity_enabled($config['post_type'])) return;
@@ -148,15 +125,6 @@ function owbn_register_entity_meta(array $config): void
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// METABOX
-// ══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Add the admin metabox for an entity type.
- *
- * @param array $config Entity type configuration array.
- */
 function owbn_add_entity_meta_box(array $config): void
 {
     if (!owbn_is_entity_enabled($config['post_type'])) return;
@@ -404,10 +372,6 @@ function owbn_render_entity_metabox($post)
     echo '</div>';
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PERMISSION MAPPING (map_meta_cap)
-// ══════════════════════════════════════════════════════════════════════════════
-
 /**
  * Generic map_meta_cap filter for all registered entity types.
  *
@@ -489,10 +453,6 @@ function owbn_entity_map_meta_cap($caps, $cap, $user_id, $args)
 
     return ['do_not_allow'];
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// PERMISSION HELPER FUNCTIONS
-// ══════════════════════════════════════════════════════════════════════════════
 
 /**
  * Check if a user can edit a specific entity post.
@@ -587,10 +547,6 @@ function owbn_user_can_edit_entity_metadata(int $user_id = null): bool
     return false;
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PERMALINKS & REWRITES
-// ══════════════════════════════════════════════════════════════════════════════
-
 /**
  * Custom permalink filter for entity types using their slug meta key.
  *
@@ -615,9 +571,6 @@ function owbn_custom_entity_permalink($post_link, $post)
     return home_url("/{$url_slug}/{$slug}/");
 }
 
-/**
- * Register rewrite rules for all entity types.
- */
 function owbn_custom_entity_rewrite_rules()
 {
     foreach (owbn_get_entity_types() as $post_type => $config) {
@@ -633,10 +586,6 @@ function owbn_custom_entity_rewrite_rules()
         );
     }
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// TEMPLATE INCLUDE
-// ══════════════════════════════════════════════════════════════════════════════
 
 /**
  * Load entity-specific single templates from the plugin.
@@ -661,13 +610,6 @@ function owbn_entity_template_include($template)
     return $template;
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// FILE UPLOAD SUPPORT
-// ══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Add enctype="multipart/form-data" to the post edit form for entity types.
- */
 function owbn_add_entity_enctype()
 {
     global $post;
@@ -678,15 +620,6 @@ function owbn_add_entity_enctype()
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// INITIALIZATION CALLBACKS
-// ══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Register CPTs and meta for all entity types.
- *
- * Hooked to 'init'.
- */
 function owbn_init_entity_types()
 {
     foreach (owbn_get_entity_types() as $config) {
@@ -695,21 +628,12 @@ function owbn_init_entity_types()
     }
 }
 
-/**
- * Add metaboxes for all entity types.
- *
- * Hooked to 'add_meta_boxes'.
- */
 function owbn_init_entity_meta_boxes()
 {
     foreach (owbn_get_entity_types() as $config) {
         owbn_add_entity_meta_box($config);
     }
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// HOOK REGISTRATIONS
-// ══════════════════════════════════════════════════════════════════════════════
 
 add_action('init', 'owbn_init_entity_types');
 add_action('add_meta_boxes', 'owbn_init_entity_meta_boxes');

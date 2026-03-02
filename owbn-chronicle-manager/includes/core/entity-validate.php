@@ -6,8 +6,6 @@
  * Replaces per-entity validation files (chronicle-validate.php, coordinator-validate.php)
  * with a single generic implementation driven by entity config.
  *
- * @package OWBN Chronicle Manager
- * @since 2.0.0
  */
 
 if (!defined('ABSPATH')) exit;
@@ -217,9 +215,5 @@ function owbn_force_draft_on_entity_error(array $data, array $postarr): array
 
     return $data;
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// HOOK REGISTRATION
-// ══════════════════════════════════════════════════════════════════════════════
 
 add_filter('wp_insert_post_data', 'owbn_force_draft_on_entity_error', 10, 2);

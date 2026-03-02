@@ -5,8 +5,6 @@
  * Registers the top-level OWBN C&C menu. Chronicle and Coordinator CPTs
  * attach to this menu via show_in_menu in their entity configs.
  *
- * @package OWBN Chronicle Manager
- * @since 2.4.0
  */
 
 defined('ABSPATH') || exit;

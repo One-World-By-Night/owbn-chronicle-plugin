@@ -1,12 +1,4 @@
 <?php
-/**
- * File: includes/hooks/admin-remove-add.php
- * Text Domain: owbn-chronicle-manager
- * @version 2.0.0
- *
- * Removes "Add New" options for non-admins across all registered entity types.
- */
-
 if (!defined('ABSPATH')) exit;
 
 function owbn_user_can_create()
@@ -16,9 +8,6 @@ function owbn_user_can_create()
     return (bool) array_intersect($user->roles, ['administrator', 'exec_team', 'web_team']);
 }
 
-/**
- * Remove from admin bar "+ New" menu
- */
 add_action('admin_bar_menu', function($wp_admin_bar) {
     if (owbn_user_can_create()) return;
     foreach (owbn_get_entity_post_types() as $post_type) {
@@ -26,9 +15,6 @@ add_action('admin_bar_menu', function($wp_admin_bar) {
     }
 }, 999);
 
-/**
- * Remove "Add New" submenu items
- */
 add_action('admin_menu', function() {
     if (owbn_user_can_create()) return;
     foreach (owbn_get_entity_post_types() as $post_type) {
@@ -36,9 +22,6 @@ add_action('admin_menu', function() {
     }
 }, 999);
 
-/**
- * Hide "Add New" button on list pages via CSS
- */
 add_action('admin_head', function() {
     if (owbn_user_can_create()) return;
 
@@ -48,9 +31,6 @@ add_action('admin_head', function() {
     echo '<style>.page-title-action { display: none !important; }</style>';
 });
 
-/**
- * Block direct access to post-new.php for these types
- */
 add_action('load-post-new.php', function() {
     if (owbn_user_can_create()) return;
 

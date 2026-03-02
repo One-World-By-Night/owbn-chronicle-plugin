@@ -1,9 +1,6 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-/**
- * Load field definitions if not already loaded
- */
 if (!function_exists('owbn_get_chronicle_field_definitions')) {
     require_once plugin_dir_path(__FILE__) . '/../fields.php';
 }
@@ -159,9 +156,6 @@ function owbn_render_chronicle_full($post_id)
     return ob_get_clean();
 }
 
-/**
- * Render grouped fields (repeatable sets)
- */
 function owbn_render_group_field($group_data, $field_def)
 {
     if (!is_array($group_data)) return '';

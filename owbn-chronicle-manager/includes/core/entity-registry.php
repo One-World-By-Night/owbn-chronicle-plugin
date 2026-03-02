@@ -5,8 +5,6 @@
  * Central registry for all entity types (chronicles, coordinators, etc.)
  * All downstream functions look up config by post type or entity key.
  *
- * @package OWBN Chronicle Manager
- * @since 2.0.0
  */
 
 if (!defined('ABSPATH')) exit;

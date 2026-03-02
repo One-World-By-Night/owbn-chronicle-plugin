@@ -1,11 +1,4 @@
 <?php
-/** File: includes/render/render-links-uploads-fields.php
- * Text Domain: owbn-chronicle-manager
- * @version 3.0.0
- * @author greghacke
- * Function: Links, uploads, social, email, and player list field rendering
- */
-
 if (!defined('ABSPATH')) exit;
 
 // Render document links field

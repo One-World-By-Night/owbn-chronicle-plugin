@@ -6,8 +6,6 @@
  * Field definitions are provided by owbn_get_chronicle_field_definitions()
  * in includes/fields.php (unchanged from v1).
  *
- * @package OWBN Chronicle Manager
- * @since 2.0.0
  */
 
 if (!defined('ABSPATH')) exit;

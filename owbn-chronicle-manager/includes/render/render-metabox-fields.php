@@ -1,15 +1,4 @@
 <?php
-/** File: includes/render/render-metabox-fields.php
- * Text Domain: owbn-chronicle-manager
- * @version 3.0.0
- * @author greghacke
- * Function: Entity metabox field rendering helpers
- *
- * Note: The main metabox rendering function owbn_render_entity_metabox()
- * lives in includes/core/entity-init.php. This file contains only the
- * individual field-type rendering helpers.
- */
-
 if (!defined('ABSPATH')) exit;
 
 // Render the slug field with optional disabling

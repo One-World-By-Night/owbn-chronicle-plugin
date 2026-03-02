@@ -1,21 +1,7 @@
 <?php
-/** File: includes/hooks/helpers.php
- * Text Domain: owbn-chronicle-manager
- * @version 2.3.0
- * @author greghacke
- * Function: Shared helper functions for save handlers and validation
- */
-
 if (!defined('ABSPATH')) exit;
 
-// ══════════════════════════════════════════════════════════════════════════════
-// POST VALUE HELPERS
-// ══════════════════════════════════════════════════════════════════════════════
-
 if (!function_exists('owbn_safe_post_value')) {
-    /**
-     * Safe post value retrieval
-     */
     function owbn_safe_post_value($key, $source = null)
     {
         // phpcs:ignore WordPress.Security.NonceVerification.Missing
@@ -26,9 +12,6 @@ if (!function_exists('owbn_safe_post_value')) {
 }
 
 if (!function_exists('owbn_users_changed')) {
-    /**
-     * Check if user assignments have changed
-     */
     function owbn_users_changed($old, $new)
     {
         $old_users = array_filter(array_map(fn($u) => trim(strtolower((string)$u)), is_array($old) ? $old : []));
@@ -40,9 +23,6 @@ if (!function_exists('owbn_users_changed')) {
 }
 
 if (!function_exists('owbn_is_admin_user')) {
-    /**
-     * Check if user has admin/exec privileges
-     */
     function owbn_is_admin_user($user = null)
     {
         if ($user === null) {
@@ -57,14 +37,7 @@ if (!function_exists('owbn_is_admin_user')) {
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// FIELD SANITIZATION HELPERS
-// ══════════════════════════════════════════════════════════════════════════════
-
 if (!function_exists('owbn_sanitize_user_info')) {
-    /**
-     * Sanitize user_info field data
-     */
     function owbn_sanitize_user_info($info)
     {
         if (!is_array($info)) return [];
@@ -80,9 +53,6 @@ if (!function_exists('owbn_sanitize_user_info')) {
 }
 
 if (!function_exists('owbn_sanitize_ast_group')) {
-    /**
-     * Sanitize ast_group (staff list) field data
-     */
     function owbn_sanitize_ast_group($group_data, $meta_fields)
     {
         $cleaned = [];
@@ -117,9 +87,6 @@ if (!function_exists('owbn_sanitize_ast_group')) {
 }
 
 if (!function_exists('owbn_sanitize_document_links')) {
-    /**
-     * Sanitize document_links_group field data with file upload handling
-     */
     function owbn_sanitize_document_links($group_data, $post_id, $field_key, $existing_meta = null)
     {
         $cleaned = [];
@@ -161,9 +128,6 @@ if (!function_exists('owbn_sanitize_document_links')) {
 }
 
 if (!function_exists('owbn_sanitize_email_lists')) {
-    /**
-     * Sanitize email_lists_group field data
-     */
     function owbn_sanitize_email_lists($group_data)
     {
         $cleaned = [];
@@ -189,9 +153,6 @@ if (!function_exists('owbn_sanitize_email_lists')) {
 }
 
 if (!function_exists('owbn_sanitize_player_lists')) {
-    /**
-     * Sanitize player_lists_group field data
-     */
     function owbn_sanitize_player_lists($group_data)
     {
         $cleaned = [];
@@ -217,9 +178,6 @@ if (!function_exists('owbn_sanitize_player_lists')) {
 }
 
 if (!function_exists('owbn_sanitize_social_links')) {
-    /**
-     * Sanitize social_links_group field data
-     */
     function owbn_sanitize_social_links($group_data)
     {
         $cleaned = [];
@@ -240,10 +198,6 @@ if (!function_exists('owbn_sanitize_social_links')) {
         return $cleaned;
     }
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// API RESPONSE HELPERS
-// ══════════════════════════════════════════════════════════════════════════════
 
 /**
  * Filter personnel data for API responses.
@@ -316,9 +270,6 @@ function owbn_strip_wysiwyg_subfields($value, $definition)
     return $value;
 }
 
-/**
- * Format document links for API response
- */
 function owbn_format_document_links($document_links)
 {
     if (!is_array($document_links)) {
