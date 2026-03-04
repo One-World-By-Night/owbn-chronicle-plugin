@@ -14,7 +14,7 @@ WordPress plugin for managing OWbN Chronicle and Coordinator data using custom p
 
 ## Adding Entity Types
 
-Each entity type needs a config file in `includes/entities/`, field definitions in `includes/fields.php`, and one `require_once` in the main plugin file. See `chronicle-config.php` for the pattern.
+Add a config file in `includes/entities/`, add field definitions to `includes/fields.php`, and add a `require_once` in the main plugin file. See `chronicle-config.php` for the pattern.
 
 ## Changelog
 
@@ -28,7 +28,7 @@ Each entity type needs a config file in `includes/entities/`, field definitions 
 
 ### 2.6.0
 
-- Removed blanket edit_posts grant for non-admin users
+- Removed blanket `edit_posts` grant for non-admin users
 - Fixed menu access for non-admin ASC role holders
 
 ### 2.5.0
