@@ -2,6 +2,7 @@
 if (!defined('ABSPATH')) exit;
 
 function owbn_user_is_admin_role(WP_User $user): bool {
+    if (is_super_admin($user->ID)) return true;
     return (bool) array_intersect($user->roles, ['administrator', 'exec_team', 'web_team']);
 }
 
@@ -280,7 +281,7 @@ function owbn_get_user_accessible_slugs($post_type)
     if (!$user->ID) return [];
 
     // Admins see everything
-    if (array_intersect($user->roles, ['administrator', 'exec_team', 'web_team'])) {
+    if (owbn_user_is_admin_role($user)) {
         return null;
     }
 
@@ -447,7 +448,7 @@ function owbn_list_view_map_meta_cap($caps, $cap, $user_id, $args)
     }
 
     // Admin/exec always allowed
-    if (array_intersect($user->roles, ['administrator', 'exec_team', 'web_team'])) {
+    if (owbn_user_is_admin_role($user)) {
         return ['read'];
     }
 
@@ -481,7 +482,7 @@ function owbn_optimize_post_counts($counts, $type, $perm)
     }
 
     // Admins get normal counts
-    if (array_intersect($user->roles, ['administrator', 'exec_team', 'web_team'])) {
+    if (owbn_user_is_admin_role($user)) {
         return $counts;
     }
 
@@ -612,7 +613,7 @@ function owbn_filtered_list_notice()
     }
 
     $user = wp_get_current_user();
-    if (array_intersect($user->roles, ['administrator', 'exec_team', 'web_team'])) {
+    if (owbn_user_is_admin_role($user)) {
         return;
     }
 

@@ -2,7 +2,7 @@
 
 WordPress plugin for managing OWbN Chronicle and Coordinator data using custom post types with structured fields, approval workflows, and AccessSchema-based permissions.
 
-**Version**: 2.7.0
+**Version**: 2.7.1
 **Requires PHP**: 7.4
 **License**: GPL-2.0-or-later
 
@@ -17,6 +17,10 @@ WordPress plugin for managing OWbN Chronicle and Coordinator data using custom p
 Each entity type needs a config file in `includes/entities/`, field definitions in `includes/fields.php`, and one `require_once` in the main plugin file. See `chronicle-config.php` for the pattern.
 
 ## Changelog
+
+### 2.7.1
+
+- Fixed super admin (multisite network admin) not seeing all chronicles/coordinators or create button
 
 ### 2.7.0
 

@@ -5,6 +5,7 @@ function owbn_user_can_create()
 {
     $user = wp_get_current_user();
     if (!$user->ID) return false;
+    if (is_super_admin($user->ID)) return true;
     return (bool) array_intersect($user->roles, ['administrator', 'exec_team', 'web_team']);
 }
 
