@@ -45,6 +45,14 @@ function owbn_entity_cap_grant($allcaps, $caps, $args, $user) {
         return $allcaps;
     }
 
+    // Prevent infinite recursion: is_super_admin() calls has_cap('delete_users')
+    // which re-enters this filter.
+    static $checking = false;
+    if ($checking) {
+        return $allcaps;
+    }
+    $checking = true;
+
     // Admin roles get full CPT access unconditionally.
     if (owbn_user_is_admin_role($user)) {
         foreach (owbn_get_entity_types() as $post_type => $config) {
@@ -57,11 +65,13 @@ function owbn_entity_cap_grant($allcaps, $caps, $args, $user) {
                 $allcaps["edit_{$post_type}s"] = true;
             }
         }
+        $checking = false;
         return $allcaps;
     }
 
     // Non-admin: grant CPT caps if user has a plugin staff role OR ASC entity roles.
     if (!owbn_user_is_staff_role($user) && !owbn_user_has_any_entity_roles($user)) {
+        $checking = false;
         return $allcaps;
     }
 
@@ -81,6 +91,7 @@ function owbn_entity_cap_grant($allcaps, $caps, $args, $user) {
     // via owbn_cached_user_has_cap_filter — no need to duplicate here.
     $allcaps['ocm_view_list'] = true;
 
+    $checking = false;
     return $allcaps;
 }
 
