@@ -102,6 +102,7 @@ function owbn_register_entity_meta(array $config): void
         'session_group',
         'ast_group',
         'repeatable_group',
+        'readonly_history',
         'document_links_group',
         'social_links_group',
         'email_lists_group',
@@ -336,6 +337,10 @@ function owbn_render_entity_metabox($post)
 
                 case 'location_group':
                     owbn_render_location_group($key, $value, $meta);
+                    break;
+
+                case 'readonly_history':
+                    owbn_render_readonly_history($key, $value, $meta);
                     break;
 
                 case 'date':

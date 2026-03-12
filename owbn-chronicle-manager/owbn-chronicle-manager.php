@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OWBN Chronicle & Coordinator Manager
  * Description: Manage OWBN Chronicle & Coordinator information using structured custom post types, shortcodes, and approval workflows.
- * Version: 2.7.1
+ * Version: 2.8.0
  * Author: greghacke
  * Author URI: https://www.owbn.net
  * Text Domain: owbn-chronicle-manager
@@ -15,7 +15,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('OWBN_CM_VERSION', '2.7.1');
+define('OWBN_CM_VERSION', '2.8.0');
 
 require_once plugin_dir_path(__FILE__) . 'includes/core/entity-registry.php';
 require_once plugin_dir_path(__FILE__) . 'includes/core/entity-init.php';
@@ -33,6 +33,8 @@ require_once plugin_dir_path(__FILE__) . 'includes/hooks/helpers.php';
 require_once plugin_dir_path(__FILE__) . 'includes/hooks/admin-list-filters.php';
 require_once plugin_dir_path(__FILE__) . 'includes/hooks/admin-notices.php';
 require_once plugin_dir_path(__FILE__) . 'includes/hooks/admin-remove-add.php';
+require_once plugin_dir_path(__FILE__) . 'includes/hooks/entity-history.php';
+require_once plugin_dir_path(__FILE__) . 'includes/hooks/entity-revisions.php';
 
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-metabox-fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-location-fields.php';
@@ -119,5 +121,11 @@ function owbn_run_upgrade(string $from): void
     // v2.1.0: Refresh stale role caps so chron_staff/coord_staff get required capabilities
     if (version_compare($from, '2.1.0', '<')) {
         owbn_refresh_custom_role_caps();
+    }
+
+    // v2.8.0: Initialize history snapshots for coordinator and chronicle staff
+    if (version_compare($from, '2.8.0', '<')) {
+        owbn_init_coordinator_snapshot();
+        owbn_init_chronicle_staff_snapshot();
     }
 }

@@ -355,6 +355,19 @@ function owbn_get_chronicle_field_definitions()
                 'source' => 'owbn_chronicle_list',
             ],
         ],
+        'Staff History' => [
+            'staff_history' => [
+                'label' => __('Previous Staff', 'owbn-chronicle-manager'),
+                'type'  => 'readonly_history',
+                'columns' => [
+                    'role'         => __('Role', 'owbn-chronicle-manager'),
+                    'display_name' => __('Name', 'owbn-chronicle-manager'),
+                    'actual_email' => __('Email', 'owbn-chronicle-manager'),
+                    'start_date'   => __('Start', 'owbn-chronicle-manager'),
+                    'end_date'     => __('End', 'owbn-chronicle-manager'),
+                ],
+            ],
+        ],
     ];
 }
 
@@ -372,6 +385,10 @@ function owbn_get_coordinator_field_definitions()
             ],
             'term_start_date' => [
                 'label' => __('Term Start Date', 'owbn-chronicle-manager'),
+                'type'  => 'date',
+            ],
+            'term_end_date' => [
+                'label' => __('Term End Date', 'owbn-chronicle-manager'),
                 'type'  => 'date',
             ],
             'web_url' => [
@@ -428,6 +445,18 @@ function owbn_get_coordinator_field_definitions()
                         'label' => __('Display Email', 'owbn-chronicle-manager'),
                         'type'  => 'email',
                     ],
+                ],
+            ],
+        ],
+        'History' => [
+            'coordinator_history' => [
+                'label' => __('Previous Coordinators', 'owbn-chronicle-manager'),
+                'type'  => 'readonly_history',
+                'columns' => [
+                    'display_name'    => __('Name', 'owbn-chronicle-manager'),
+                    'actual_email'    => __('Email', 'owbn-chronicle-manager'),
+                    'term_start_date' => __('Term Start', 'owbn-chronicle-manager'),
+                    'term_end_date'   => __('Term End', 'owbn-chronicle-manager'),
                 ],
             ],
         ],

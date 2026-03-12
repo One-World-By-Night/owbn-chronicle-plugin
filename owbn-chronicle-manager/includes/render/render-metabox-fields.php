@@ -186,6 +186,36 @@ function owbn_render_repeatable_group($key, $value, $meta)
     echo '</div>';
 }
 
+// Render a read-only history table (e.g., previous coordinators)
+function owbn_render_readonly_history($key, $value, $meta)
+{
+    $rows    = is_array($value) ? $value : [];
+    $columns = $meta['columns'] ?? [];
+
+    if (empty($rows)) {
+        echo '<p class="description">' . esc_html__('No history recorded.', 'owbn-chronicle-manager') . '</p>';
+        return;
+    }
+
+    echo '<table class="widefat fixed striped">';
+    echo '<thead><tr>';
+    foreach ($columns as $col_key => $col_label) {
+        echo '<th>' . esc_html($col_label) . '</th>';
+    }
+    echo '</tr></thead><tbody>';
+
+    foreach ($rows as $row) {
+        echo '<tr>';
+        foreach ($columns as $col_key => $col_label) {
+            $cell = $row[$col_key] ?? '';
+            echo '<td>' . esc_html($cell) . '</td>';
+        }
+        echo '</tr>';
+    }
+
+    echo '</tbody></table>';
+}
+
 // Render the entity select field for selecting related entities (e.g., parent chronicles)
 function owbn_render_entity_select_field($key, $value, $meta, $label, $error_class, $disabled_attr = '', $post_type = 'owbn_chronicle')
 {

@@ -159,6 +159,10 @@ function owbn_save_entity_meta(int $post_id, WP_Post $post): void
 function owbn_save_entity_field(int $post_id, string $key, array $meta, $raw, bool $staff_user_dirty): bool
 {
     switch ($meta['type']) {
+        case 'readonly_history':
+            // Read-only — never saved from POST data.
+            break;
+
         case 'slug':
             update_post_meta($post_id, $key, strtolower(sanitize_text_field($raw)));
             break;
