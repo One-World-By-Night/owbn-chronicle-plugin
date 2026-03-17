@@ -166,8 +166,8 @@ function owbn_force_draft_on_entity_error(array $data, array $postarr): array
 
     $entity_key = $config['entity_key'];
 
-    // Allow trashing or auto-draft
-    if (isset($data['post_status']) && in_array($data['post_status'], ['trash', 'auto-draft'], true)) {
+    // Allow trashing, auto-draft, or decommissioning without field validation
+    if (isset($data['post_status']) && in_array($data['post_status'], ['trash', 'auto-draft', 'decommissioned'], true)) {
         return $data;
     }
 
