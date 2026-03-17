@@ -35,7 +35,7 @@ owbn_register_entity_type([
     // Save behavior
     'immutable_fields'  => ['chronicle_slug'],
     'restricted_fields' => ['chronicle_slug', 'chronicle_start_date', 'chronicle_region', 'chronicle_probationary', 'chronicle_satellite', 'chronicle_parent'],
-    'staff_fields'      => ['hst_info', 'cm_info'],
+    'staff_fields'      => ['hst_info', 'cm_info', 'ast_list'],
 
     // Slug pattern for validation
     'slug_pattern' => '/^[a-z0-9]{2,8}$/',

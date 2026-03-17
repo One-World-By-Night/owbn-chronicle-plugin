@@ -35,7 +35,7 @@ owbn_register_entity_type([
     // Save behavior
     'immutable_fields'  => [],
     'restricted_fields' => ['coordinator_slug'],
-    'staff_fields'      => ['coord_info'],
+    'staff_fields'      => ['coord_info', 'subcoord_list'],
 
     // Slug pattern for validation
     'slug_pattern' => '/^[a-z0-9-]{2,32}$/',

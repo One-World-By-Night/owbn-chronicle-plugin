@@ -363,16 +363,9 @@ function owbn_handle_entity_staff_change(int $post_id, array $config): void
         }
     }
 
-    // If not admin or self-promoted, set post to draft and flag for notice
+    // Flag for admin review but keep the post published — old data stays visible
     if (!$is_allowed || $self_promoted) {
-        $post = get_post($post_id);
-        if ($post->post_status !== 'draft') {
-            wp_update_post([
-                'ID'          => $post_id,
-                'post_status' => 'draft',
-            ]);
-            set_transient("owbn_{$entity_key}_dirty_notice_{$post_id}", true, 60);
-        }
+        set_transient("owbn_{$entity_key}_dirty_notice_{$post_id}", true, 60);
     }
 }
 
