@@ -30,7 +30,7 @@ function owbn_render_user_info($key, $value, $meta)
     $actual_email = $value['actual_email'] ?? '';
     $display_email = $value['display_email'] ?? $actual_email;
 
-    $users = get_users(['orderby' => 'display_name', 'order' => 'ASC', 'fields' => ['ID', 'display_name']]);
+    $users = get_users(['orderby' => 'display_name', 'order' => 'ASC', 'fields' => ['ID', 'display_name', 'user_email']]);
 
     // Check if stored user_id matches any user or special value
     $user_exists = false;
@@ -62,9 +62,9 @@ function owbn_render_user_info($key, $value, $meta)
     }
 
     foreach ($users as $user) {
-        // Cast both to string for reliable comparison
         $is_selected = ((string)$user_id === (string)$user->ID);
-        echo "<option value=\"" . esc_attr($user->ID) . "\" " . selected($is_selected, true, false) . ">" . esc_html($user->display_name) . "</option>\n";
+        $label = $user->display_name . ' (' . $user->user_email . ')';
+        echo "<option value=\"" . esc_attr($user->ID) . "\" " . selected($is_selected, true, false) . ">" . esc_html($label) . "</option>\n";
     }
     echo "</select>\n";
     echo "</label>\n";
@@ -112,7 +112,7 @@ function owbn_render_ast_group($field_key, $entries, $meta, $context = 'ast_list
     $prefix = ($context === 'subcoord_list') ? 'subcoord' : 'ast';
     $entries = is_array($entries) ? $entries : [];
 
-    $users = get_users(['orderby' => 'display_name', 'order' => 'ASC']);
+    $users = get_users(['orderby' => 'display_name', 'order' => 'ASC', 'fields' => ['ID', 'display_name', 'user_email']]);
 
     echo '<div id="' . esc_attr($prefix) . '-group-wrapper" class="owbn-' . esc_attr($prefix) . '-wrapper">' . "\n";
 
@@ -169,7 +169,7 @@ function render_ast_subcoord_block($prefix, $field_key, $index, $entry, $users, 
                     <?php foreach ($users as $user): ?>
                         <?php $is_selected = ((string)$user_id === (string)$user->ID); ?>
                         <option value="<?php echo esc_attr($user->ID); ?>" <?php selected($is_selected, true); ?>>
-                            <?php echo esc_html($user->display_name); ?>
+                            <?php echo esc_html($user->display_name . ' (' . $user->user_email . ')'); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
