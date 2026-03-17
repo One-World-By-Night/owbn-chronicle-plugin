@@ -202,13 +202,9 @@ function render_email_list_block($key, $index, $group, $subfields)
     $list_name = $group['list_name'] ?? '';
     $email = $group['email_address'] ?? '';
     $desc = $group['description'] ?? '';
-    $header = $list_name ?: 'Email List';
+    $header = $list_name ?: ($email ?: 'Email List');
 
     $is_template = ($index === '__INDEX__');
-    $is_empty = !$list_name && !$email && !$desc;
-
-    // Only require name if not template and not empty
-    $required_attr = (!$is_template && !$is_empty) ? ' required' : '';
     $disabled_attr = $is_template ? ' disabled' : '';
 
 ?>
@@ -225,12 +221,8 @@ function render_email_list_block($key, $index, $group, $subfields)
                     <input type="text"
                         name="<?php echo esc_attr("{$key}[{$index}][list_name]"); ?>"
                         value="<?php echo esc_attr($list_name); ?>"
-                        <input type="text"
-                        name="<?php echo esc_attr("{$key}[{$index}][title]"); ?>"
-                        value="<?php echo esc_attr($title); ?>"
                         class="regular-text"
-                        <?php echo $required_attr ? esc_attr($required_attr) : ''; ?>
-                        <?php echo $disabled_attr ? esc_attr($disabled_attr) : ''; ?>>
+                        <?php echo esc_attr($disabled_attr); ?>>
                 </div>
 
                 <div class="owbn-email-field">
