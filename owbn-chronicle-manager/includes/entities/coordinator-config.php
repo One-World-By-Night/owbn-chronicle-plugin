@@ -47,6 +47,7 @@ owbn_register_entity_type([
     'access_patterns' => [
         'coordinator/{slug}/coordinator',
         'coordinator/{slug}/sub-coordinator',
+        'exec/{slug}/coordinator',
     ],
 
     // API
