@@ -38,21 +38,6 @@ function owbn_render_chronicle_card($post_id)
 
     $game_type = $online_only ? 'Virtual' : 'In-person';
 
-    // IC Location (Correct key: ic_location_list)
-    $ic_locations = get_post_meta($post_id, 'ic_location_list', true);
-    $ic_location = '—';
-    if (is_array($ic_locations) && !empty($ic_locations)) {
-        $first_ic = $ic_locations[0];
-        $ic_parts = [];
-
-        if (!empty($first_ic['country'])) $ic_parts[] = strtoupper($first_ic['country']);
-        if (!empty($first_ic['region']))  $ic_parts[] = $first_ic['region'];
-        if (!empty($first_ic['city']))    $ic_parts[] = $first_ic['city'];
-        if (!empty($first_ic['name']))    $ic_parts[] = $first_ic['name'];
-
-        $ic_location = implode(', ', $ic_parts);
-    }
-
     // Description from post content
     $post = get_post($post_id);
     $description = !empty($post) ? $post->post_content : '';
@@ -149,7 +134,6 @@ function owbn_render_chronicle_card($post_id)
                     <strong>Genres:</strong> <?php echo esc_html($genre_display); ?>
                 </div>
                 <div class="owbn-chronicle-card-location">
-                    IC: <?php echo esc_html($ic_location); ?> |
                     <?php echo esc_html($region); ?><br />
                     OOC: <?php echo esc_html($location); ?> |
                     <?php echo esc_html($game_type); ?><br />

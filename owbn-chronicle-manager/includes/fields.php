@@ -158,39 +158,6 @@ function owbn_get_chronicle_field_definitions()
                     ],
                 ]
             ],
-            'ic_location_list' => [
-                'label' => __('IC Locations', 'owbn-chronicle-manager'),
-                'type'  => 'location_group',
-                'fields' => [
-                    'name' => [
-                        'label' => __('Site Name', 'owbn-chronicle-manager'),
-                        'type' => 'text',
-                        'required' => true,
-                    ],
-                    'country' => [
-                        'label' => __('Country', 'owbn-chronicle-manager'),
-                        'type'  => 'select',
-                        'options' => owbn_get_country_list(),
-                        'search'  => true, // enable Select2 search
-                    ],
-                    'region' => [
-                        'label' => __('State / Province / Region', 'owbn-chronicle-manager'),
-                        'type'  => 'text',
-                    ],
-                    'city' => [
-                        'label' => __('City / Municipality', 'owbn-chronicle-manager'),
-                        'type'  => 'text',
-                    ],
-                    'address' => [
-                        'label' => __('Street Address (optional)', 'owbn-chronicle-manager'),
-                        'type'  => 'text',
-                    ],
-                    'notes' => [
-                        'label' => __('Game Site Notes', 'owbn-chronicle-manager'),
-                        'type'  => 'wysiwyg',
-                    ],
-                ]
-            ],
             'game_site_list' => [
                 'label' => __('Game Sites', 'owbn-chronicle-manager'),
                 'type'  => 'location_group',

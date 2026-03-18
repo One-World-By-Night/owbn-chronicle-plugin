@@ -89,7 +89,6 @@ function owbn_render_chronicle_full($post_id)
                         break;
 
                     case 'ooc_location':
-                    case 'ic_location':
                         // Single location object
                         if (is_array($value)) {
                             $parts = [];
