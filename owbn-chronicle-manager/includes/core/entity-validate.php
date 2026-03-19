@@ -141,6 +141,29 @@ function owbn_validate_entity_submission(string $post_type, array $postarr): arr
         }
     }
 
+    // ── Required documents validation (non-admin only, on update) ─────
+    $required_docs = $config['required_documents'] ?? [];
+    if (!empty($required_docs) && $post_id && !owbn_is_admin_user()) {
+        $doc_links = owbn_safe_post_value('document_links', $postarr);
+        $doc_links = is_array($doc_links) ? $doc_links : [];
+
+        $found_titles = [];
+        foreach ($doc_links as $doc) {
+            $title = trim($doc['title'] ?? '');
+            $link = trim($doc['link'] ?? '');
+            $file_id = $doc['file_id'] ?? '';
+            if (!empty($title) && (!empty($link) || !empty($file_id))) {
+                $found_titles[] = $title;
+            }
+        }
+
+        foreach ($required_docs as $req_title) {
+            if (!in_array($req_title, $found_titles, true)) {
+                $errors[] = 'document_links:' . $req_title;
+            }
+        }
+    }
+
     return $errors;
 }
 

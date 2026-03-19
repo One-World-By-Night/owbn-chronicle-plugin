@@ -23,6 +23,12 @@ function owbn_admin_notice_entity_errors()
 
     $labels = [];
     foreach ($errors as $error_key) {
+        // Handle required document errors (format: document_links:Title)
+        if (strpos($error_key, 'document_links:') === 0) {
+            $doc_title = substr($error_key, strlen('document_links:'));
+            $labels[] = sprintf(__('Required document: %s (URL or upload needed)', 'owbn-chronicle-manager'), $doc_title);
+            continue;
+        }
         foreach ($definitions as $section => $fields) {
             if (isset($fields[$error_key])) {
                 $labels[] = $fields[$error_key]['label'];

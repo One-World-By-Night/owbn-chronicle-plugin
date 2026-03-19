@@ -40,6 +40,9 @@ owbn_register_entity_type([
     // Slug pattern for validation
     'slug_pattern' => '/^[a-z0-9]{2,8}$/',
 
+    // Required document links (pre-populated and validated on update)
+    'required_documents' => ['House Rules', 'Disciplinary Policy', 'Accessibility Policy'],
+
     // Staff-specific rules
     'exclusive_fields'  => [
         ['condition' => ['chronicle_satellite', '1'], 'clear' => ['cm_info']],

@@ -12,6 +12,13 @@ function owbn_get_chronicle_field_definitions()
                 'max_length' => 6,
                 'required' => true,
             ],
+            'chronicle_probationary' => ['label' => __('Probationary?', 'owbn-chronicle-manager'), 'type' => 'boolean'],
+            'chronicle_satellite' => ['label' => __('Satellite?', 'owbn-chronicle-manager'), 'type' => 'boolean'],
+            'chronicle_parent' => [
+                'label' => __('Parent Chronicle', 'owbn-chronicle-manager'),
+                'type'  => 'chronicle_select',
+                'source' => 'owbn_chronicle_list',
+            ],
             'genres' => [
                 'label' => __('Genres', 'owbn-chronicle-manager'),
                 'type' => 'multi_select',
@@ -313,13 +320,6 @@ function owbn_get_chronicle_field_definitions()
                 'label'   => __('Region', 'owbn-chronicle-manager'),
                 'type'    => 'select',
                 'options' => get_option('owbn_region_list', []),
-            ],
-            'chronicle_probationary' => ['label' => __('Probationary?', 'owbn-chronicle-manager'), 'type' => 'boolean'],
-            'chronicle_satellite' => ['label' => __('Satellite?', 'owbn-chronicle-manager'), 'type' => 'boolean'],
-            'chronicle_parent' => [
-                'label' => __('Parent Chronicle', 'owbn-chronicle-manager'),
-                'type'  => 'chronicle_select',
-                'source' => 'owbn_chronicle_list',
             ],
         ],
         'Staff History' => [

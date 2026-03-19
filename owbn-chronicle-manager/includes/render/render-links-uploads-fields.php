@@ -5,13 +5,30 @@ if (!defined('ABSPATH')) exit;
 function owbn_render_document_links_field($key, $value, $meta)
 {
     $groups = is_array($value) ? $value : [];
+
+    // Pre-populate required documents if not already present
+    $post_type = get_post_type();
+    $config = owbn_get_entity_config($post_type);
+    $required_docs = $config['required_documents'] ?? [];
+    if (!empty($required_docs)) {
+        $existing_titles = array_map(function ($g) {
+            return $g['title'] ?? '';
+        }, $groups);
+        foreach ($required_docs as $doc_title) {
+            if (!in_array($doc_title, $existing_titles, true)) {
+                array_unshift($groups, ['title' => $doc_title, 'link' => '', 'file_id' => '']);
+            }
+        }
+    }
+
     if (empty($groups)) $groups[] = [];
 
     echo '<div class="owbn-repeatable-group" data-key="' . esc_attr($key) . '">' . "\n";
 
     foreach ($groups as $i => $group) {
+        $is_required_doc = in_array($group['title'] ?? '', $required_docs, true);
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-        echo render_document_link_block($key, $i, $group);
+        echo render_document_link_block($key, $i, $group, $is_required_doc);
     }
 
     // Template block (hidden)
@@ -24,7 +41,7 @@ function owbn_render_document_links_field($key, $value, $meta)
     echo '</div>' . "\n";
 }
 
-function render_document_link_block($key, $index, $group)
+function render_document_link_block($key, $index, $group, $is_required_doc = false)
 {
     ob_start();
 
@@ -33,6 +50,7 @@ function render_document_link_block($key, $index, $group)
     $file_id = $group['file_id'] ?? '';
     $file_url = $file_id ? wp_get_attachment_url($file_id) : '';
     $header = $title ?: 'Document Link';
+    if ($is_required_doc) $header .= ' (required)';
 
     // Identify if this is a template or an empty block
     $is_template = ($index === '__INDEX__');
@@ -54,12 +72,19 @@ function render_document_link_block($key, $index, $group)
             <div class="owbn-document-row-wrap">
                 <div class="owbn-document-row">
                     <label>Title (required)</label><br>
+                    <?php if ($is_required_doc): ?>
+                        <input type="hidden"
+                            name="<?php echo esc_attr("{$key}[{$index}][title]"); ?>"
+                            value="<?php echo esc_attr($title); ?>">
+                        <input type="text" value="<?php echo esc_attr($title); ?>" class="regular-text" disabled>
+                    <?php else: ?>
                     <input type="text"
                         name="<?php echo esc_attr("{$key}[{$index}][title]"); ?>"
                         value="<?php echo esc_attr($title); ?>"
                         class="regular-text"
                         <?php echo $required_attr ? esc_attr($required_attr) : ''; ?>
                         <?php echo $disabled_attr ? esc_attr($disabled_attr) : ''; ?>>
+                    <?php endif; ?>
                 </div>
 
                 <div class="owbn-document-row">
@@ -92,7 +117,9 @@ function render_document_link_block($key, $index, $group)
                 </div>
             </div>
 
-            <button type="button" class="button remove-document-link">Remove</button>
+            <?php if (!$is_required_doc): ?>
+                <button type="button" class="button remove-document-link">Remove</button>
+            <?php endif; ?>
         </div>
     </div>
 <?php
