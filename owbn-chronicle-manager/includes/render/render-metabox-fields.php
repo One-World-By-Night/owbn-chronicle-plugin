@@ -228,36 +228,60 @@ function owbn_render_entity_select_field($key, $value, $meta, $label, $error_cla
     echo "<th><label for=\"" . esc_attr($key) . "\">" . esc_html($label) . "</label></th>\n";
     echo "<td class=\"" . esc_attr(trim($error_class)) . "\">\n";
 
-    $args = [
-        'post_type'      => 'owbn_chronicle',
-        'posts_per_page' => -1,
-        'post_status'    => 'publish',
-        'orderby'        => 'title',
-        'order'          => 'ASC',
-        'post__not_in'   => [$post->ID],
-    ];
+    // Try local chronicles first, fall back to owbn-client remote list
+    $chronicles = [];
+    if (post_type_exists('owbn_chronicle')) {
+        $chronicles = get_posts([
+            'post_type'      => 'owbn_chronicle',
+            'posts_per_page' => -1,
+            'post_status'    => 'publish',
+            'orderby'        => 'title',
+            'order'          => 'ASC',
+            'post__not_in'   => [$post->ID],
+        ]);
+    }
 
-    $chronicles = get_posts($args);
+    // If no local chronicles, try remote via owbn-client
+    $use_remote = empty($chronicles) && function_exists('owc_get_chronicles');
+    if ($use_remote) {
+        $remote = owc_get_chronicles();
+        if (!is_wp_error($remote) && is_array($remote)) {
+            $chronicles = $remote;
+        }
+    }
 
-    // Conditional wrapper
-    echo "<div id=\"owbn-parent-chronicle-select\" style=\"display:none\">\n";
+    $is_parent_field = ($key === 'chronicle_parent');
+
+    if ($is_parent_field) {
+        echo "<div id=\"owbn-parent-chronicle-select\" style=\"display:none\">\n";
+    }
+
     echo "<select name=\"" . esc_attr($key) . "\" id=\"" . esc_attr($key) . "\" class=\"regular-text owbn-select2 single\" style=\"width: 100%;\" " . esc_attr($disabled_html) . ">\n";
     echo "<option value=\"\">" . esc_html__('— Select —', 'owbn-chronicle-manager') . "</option>\n";
 
     foreach ($chronicles as $chron) {
-        $id = $chron->ID;
-        $title = $chron->post_title;
-        echo "<option value=\"" . esc_attr($id) . "\" " . selected($value, $id, false) . ">" . esc_html($title) . "</option>\n";
+        if ($use_remote) {
+            // Remote data: array with slug/title
+            $opt_val = $chron['slug'] ?? '';
+            $opt_label = $chron['title'] ?? $opt_val;
+        } else {
+            // Local post object
+            $opt_val = $chron->ID;
+            $opt_label = $chron->post_title;
+        }
+        echo "<option value=\"" . esc_attr($opt_val) . "\" " . selected($value, $opt_val, false) . ">" . esc_html($opt_label) . "</option>\n";
     }
 
     echo "</select>\n";
-    echo "<p class=\"description\">" . esc_html__('Only applicable to Satellite Chronicles.', 'owbn-chronicle-manager') . "</p>\n";
-    echo "</div>\n";
 
-    // Default visible message
-    echo "<div id=\"owbn-parent-chronicle-message\" style=\"margin-top: 10px; padding: 8px; background-color: #e8f5e9; border-left: 3px solid #4CAF50;\">\n";
-    echo "<em>" . esc_html__('Only Satellite Chronicles have parents.', 'owbn-chronicle-manager') . "</em>\n";
-    echo "</div>\n";
+    if ($is_parent_field) {
+        echo "<p class=\"description\">" . esc_html__('Only applicable to Satellite Chronicles.', 'owbn-chronicle-manager') . "</p>\n";
+        echo "</div>\n";
+
+        echo "<div id=\"owbn-parent-chronicle-message\" style=\"margin-top: 10px; padding: 8px; background-color: #e8f5e9; border-left: 3px solid #4CAF50;\">\n";
+        echo "<em>" . esc_html__('Only Satellite Chronicles have parents.', 'owbn-chronicle-manager') . "</em>\n";
+        echo "</div>\n";
+    }
 
     echo "</td>\n</tr>\n";
 }
