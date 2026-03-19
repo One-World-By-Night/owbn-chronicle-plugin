@@ -1,5 +1,19 @@
 <?php
 /**
+ * Resolve coordinator staff role map based on coordinator_type.
+ * Administrative → exec/{slug}, Genre/Clan → coordinator/{slug}
+ */
+function owbn_coordinator_staff_role_map( int $post_id ): array {
+    $type = get_post_meta( $post_id, 'coordinator_type', true );
+    $prefix = ( $type === 'Administrative' ) ? 'exec' : 'coordinator';
+
+    return [
+        'coord_info'    => "{$prefix}/{slug}/coordinator",
+        'subcoord_list' => "{$prefix}/{slug}/sub-coordinator",
+    ];
+}
+
+/**
  * Coordinator Entity Configuration
  *
  * Registers the coordinator entity type with the entity registry.
@@ -51,10 +65,8 @@ owbn_register_entity_type([
     ],
 
     // Staff field → role path mapping for auto grant/revoke
-    'staff_role_map' => [
-        'coord_info'    => 'coordinator/{slug}/coordinator',
-        'subcoord_list' => 'coordinator/{slug}/sub-coordinator',
-    ],
+    // Uses a callable to resolve exec/ vs coordinator/ based on coordinator_type
+    'staff_role_map' => 'owbn_coordinator_staff_role_map',
 
     // API
     'api_key_option'    => 'owbn_coordinators_api_key',

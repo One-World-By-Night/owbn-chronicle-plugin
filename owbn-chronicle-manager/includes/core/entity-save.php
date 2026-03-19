@@ -722,6 +722,13 @@ function owbn_sync_staff_roles( int $post_id, array $config, array $old_values, 
     if ( empty( $staff_role_map ) ) {
         return;
     }
+    // Support callable that resolves dynamically per post
+    if ( is_string( $staff_role_map ) && is_callable( $staff_role_map ) ) {
+        $staff_role_map = call_user_func( $staff_role_map, $post_id );
+    }
+    if ( empty( $staff_role_map ) || ! is_array( $staff_role_map ) ) {
+        return;
+    }
 
     $slug_key = $config['slug_meta_key'];
     $slug     = get_post_meta( $post_id, $slug_key, true );
