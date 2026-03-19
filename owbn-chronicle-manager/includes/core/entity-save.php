@@ -672,7 +672,12 @@ function owbn_send_change_notification( int $post_id, array $config, array $old_
         $old = $old_values[ $key ];
         $new = $new_values !== null ? ( $new_values[ $key ] ?? $old ) : get_post_meta( $post_id, $key, true );
 
-        // Normalize for comparison
+        // Normalize for comparison — treat empty arrays, empty strings, and null as equivalent
+        $old_empty = empty( $old ) || ( is_array( $old ) && count( array_filter( $old, function( $v ) { return ! empty( $v ); } ) ) === 0 );
+        $new_empty = empty( $new ) || ( is_array( $new ) && count( array_filter( $new, function( $v ) { return ! empty( $v ); } ) ) === 0 );
+        if ( $old_empty && $new_empty ) {
+            continue;
+        }
         $old_compare = is_array( $old ) ? wp_json_encode( $old ) : (string) $old;
         $new_compare = is_array( $new ) ? wp_json_encode( $new ) : (string) $new;
 
