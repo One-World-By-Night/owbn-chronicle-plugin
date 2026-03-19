@@ -306,9 +306,13 @@ function owbn_save_entity_field(int $post_id, string $key, array $meta, $raw, bo
             break;
 
         case 'chronicle_select':
-            $parent_id = intval($raw);
-            if ($parent_id > 0 && get_post_type($parent_id) === 'owbn_chronicle') {
-                update_post_meta($post_id, $key, $parent_id);
+            // Supports both local post ID and remote slug
+            $raw_val = is_array($raw) ? '' : trim($raw);
+            if (is_numeric($raw_val) && intval($raw_val) > 0 && get_post_type(intval($raw_val)) === 'owbn_chronicle') {
+                update_post_meta($post_id, $key, intval($raw_val));
+            } elseif (!empty($raw_val)) {
+                // Store as slug (remote chronicle)
+                update_post_meta($post_id, $key, sanitize_text_field($raw_val));
             } else {
                 delete_post_meta($post_id, $key);
             }
