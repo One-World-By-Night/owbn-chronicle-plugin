@@ -5,11 +5,14 @@
  */
 function owbn_coordinator_staff_role_map( int $post_id ): array {
     $type = get_post_meta( $post_id, 'coordinator_type', true );
-    $prefix = ( $type === 'Administrative' ) ? 'exec' : 'coordinator';
+    $is_exec = ( $type === 'Administrative' );
+    $prefix  = $is_exec ? 'exec' : 'coordinator';
+    // Exec uses "staff", genre/clan uses "sub-coordinator"
+    $staff_role = $is_exec ? 'staff' : 'sub-coordinator';
 
     return [
         'coord_info'    => "{$prefix}/{slug}/coordinator",
-        'subcoord_list' => "{$prefix}/{slug}/sub-coordinator",
+        'subcoord_list' => "{$prefix}/{slug}/{$staff_role}",
     ];
 }
 
