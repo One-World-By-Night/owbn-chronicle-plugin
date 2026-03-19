@@ -253,6 +253,12 @@ function owbn_handle_pending_changeset_action()
     if (empty($pending) || empty($pending['fields'])) return;
 
     if ($action === 'approve') {
+        // Capture old values before applying
+        $old_values = [];
+        foreach ($pending['fields'] as $field_key => $field_value) {
+            $old_values[$field_key] = get_post_meta($post_id, $field_key, true);
+        }
+
         // Apply each pending field to live post meta
         foreach ($pending['fields'] as $field_key => $field_value) {
             update_post_meta($post_id, $field_key, $field_value);
@@ -270,6 +276,11 @@ function owbn_handle_pending_changeset_action()
                     delete_post_meta($post_id, $field_to_clear);
                 }
             }
+        }
+
+        // Send notification about approved changes
+        if (function_exists('owbn_send_change_notification')) {
+            owbn_send_change_notification($post_id, $config, $old_values);
         }
 
         set_transient("owbn_{$entity_key}_pending_approved_{$post_id}", true, 60);

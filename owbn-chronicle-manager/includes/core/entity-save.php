@@ -54,6 +54,14 @@ function owbn_save_entity_meta(int $post_id, WP_Post $post): void
 
     $definitions = call_user_func($field_definitions_callable);
 
+    // Capture old values for change notification
+    $old_values = [];
+    foreach ($definitions as $fields) {
+        foreach ($fields as $key => $meta) {
+            $old_values[$key] = get_post_meta($post_id, $key, true);
+        }
+    }
+
     // Get immutable and restricted fields from config
     $immutable_fields  = $config['immutable_fields'] ?? [];
     $restricted_fields = $config['restricted_fields'] ?? [];
@@ -133,6 +141,14 @@ function owbn_save_entity_meta(int $post_id, WP_Post $post): void
         ]);
 
         set_transient("owbn_{$entity_key}_pending_notice_{$post_id}", true, 60);
+
+        // Notify about pending changeset
+        $pending_new = $old_values;
+        foreach ($pending_values as $k => $v) {
+            $pending_new[$k] = $v;
+        }
+        owbn_send_change_notification($post_id, $config, $old_values, $pending_new, true);
+
         return; // Do NOT call owbn_handle_entity_staff_change — post stays published
     }
 
@@ -144,6 +160,9 @@ function owbn_save_entity_meta(int $post_id, WP_Post $post): void
         }
         owbn_handle_entity_staff_change($post_id, $config);
     }
+
+    // Send change notification for all saves (staff dirty or not)
+    owbn_send_change_notification($post_id, $config, $old_values);
 }
 
 /**
@@ -601,6 +620,73 @@ function owbn_sync_entity_slug_with_post_name($data, $postarr)
     }
 
     return $data;
+}
+
+/**
+ * Diff old vs new field values and send change notification.
+ *
+ * @param int    $post_id     The post ID.
+ * @param array  $config      Entity config.
+ * @param array  $old_values  Old field values keyed by meta key.
+ * @param array  $new_values  New field values keyed by meta key (if null, reads current meta).
+ * @param bool   $pending     Whether this is a pending changeset.
+ */
+function owbn_send_change_notification( int $post_id, array $config, array $old_values, ?array $new_values = null, bool $pending = false ): void {
+    if ( ! function_exists( 'owc_send_change_notification' ) ) {
+        return;
+    }
+
+    $entity_type  = $config['singular'];
+    $entity_key   = $config['entity_key'];
+    $slug_key     = $config['slug_meta_key'];
+    $slug         = get_post_meta( $post_id, $slug_key, true );
+    $entity_title = get_the_title( $post_id );
+    if ( empty( $entity_title ) || $entity_title === 'Auto Draft' ) {
+        $entity_title = $slug ?: "#{$post_id}";
+    }
+
+    // Get field definitions for labels
+    $field_defs_callable = $config['field_definitions'] ?? null;
+    $definitions = is_callable( $field_defs_callable ) ? call_user_func( $field_defs_callable ) : [];
+
+    // Build label lookup
+    $labels = [];
+    foreach ( $definitions as $fields ) {
+        foreach ( $fields as $key => $meta ) {
+            $labels[ $key ] = $meta['label'] ?? $key;
+        }
+    }
+
+    $changes = [];
+    $keys_to_check = array_keys( $old_values );
+
+    // If new_values provided (pending changeset), use those
+    // Otherwise read current meta for each key
+    foreach ( $keys_to_check as $key ) {
+        $old = $old_values[ $key ];
+        $new = $new_values !== null ? ( $new_values[ $key ] ?? $old ) : get_post_meta( $post_id, $key, true );
+
+        // Normalize for comparison
+        $old_compare = is_array( $old ) ? wp_json_encode( $old ) : (string) $old;
+        $new_compare = is_array( $new ) ? wp_json_encode( $new ) : (string) $new;
+
+        if ( $old_compare !== $new_compare ) {
+            $label = $labels[ $key ] ?? $key;
+            $changes[ $label ] = [
+                'before' => $old,
+                'after'  => $new,
+            ];
+        }
+    }
+
+    if ( empty( $changes ) ) {
+        return;
+    }
+
+    $current_user = wp_get_current_user();
+    $changed_by   = $current_user->ID ? $current_user->display_name . ' (' . $current_user->user_email . ')' : 'Unknown';
+
+    owc_send_change_notification( $entity_type, $entity_title, $slug, $changes, $changed_by, $post_id, $pending );
 }
 
 add_action('save_post', 'owbn_save_entity_meta', 10, 2);
