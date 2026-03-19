@@ -142,11 +142,14 @@ function owbn_save_entity_meta(int $post_id, WP_Post $post): void
 
         set_transient("owbn_{$entity_key}_pending_notice_{$post_id}", true, 60);
 
-        // Notify about pending changeset
+        // Revoke removed users immediately (no approval needed for revokes)
         $pending_new = $old_values;
         foreach ($pending_values as $k => $v) {
             $pending_new[$k] = $v;
         }
+        owbn_sync_staff_roles($post_id, $config, $old_values, $pending_new, true);
+
+        // Notify about pending changeset
         owbn_send_change_notification($post_id, $config, $old_values, $pending_new, true);
 
         return; // Do NOT call owbn_handle_entity_staff_change — post stays published
@@ -160,6 +163,9 @@ function owbn_save_entity_meta(int $post_id, WP_Post $post): void
         }
         owbn_handle_entity_staff_change($post_id, $config);
     }
+
+    // Sync accessSchema roles for admin saves (both grant and revoke)
+    owbn_sync_staff_roles($post_id, $config, $old_values);
 
     // Send change notification for all saves (staff dirty or not)
     owbn_send_change_notification($post_id, $config, $old_values);
@@ -687,6 +693,106 @@ function owbn_send_change_notification( int $post_id, array $config, array $old_
     $changed_by   = $current_user->ID ? $current_user->display_name . ' (' . $current_user->user_email . ')' : 'Unknown';
 
     owc_send_change_notification( $entity_type, $entity_title, $slug, $changes, $changed_by, $post_id, $pending );
+}
+
+/**
+ * Sync accessSchema roles when staff fields change.
+ *
+ * Compares old vs new user IDs in staff fields and calls
+ * owc_asc_revoke_role() for removed users and owc_asc_grant_role() for added users.
+ * Revokes fire immediately. Grants fire immediately for admin saves.
+ *
+ * @param int   $post_id    The post ID.
+ * @param array $config     Entity config.
+ * @param array $old_values Old field values (from before save).
+ * @param array $new_values New field values (if null, reads current meta).
+ * @param bool  $revoke_only If true, only process revokes (for non-admin pending saves).
+ */
+function owbn_sync_staff_roles( int $post_id, array $config, array $old_values, ?array $new_values = null, bool $revoke_only = false ): void {
+    if ( ! function_exists( 'owc_asc_revoke_role' ) || ! function_exists( 'owc_asc_grant_role' ) ) {
+        return;
+    }
+
+    $staff_role_map = $config['staff_role_map'] ?? [];
+    if ( empty( $staff_role_map ) ) {
+        return;
+    }
+
+    $slug_key = $config['slug_meta_key'];
+    $slug     = get_post_meta( $post_id, $slug_key, true );
+    if ( empty( $slug ) ) {
+        return;
+    }
+
+    foreach ( $staff_role_map as $field_key => $role_pattern ) {
+        $role_path = str_replace( '{slug}', $slug, $role_pattern );
+
+        $old = $old_values[ $field_key ] ?? null;
+        $new = $new_values !== null ? ( $new_values[ $field_key ] ?? $old ) : get_post_meta( $post_id, $field_key, true );
+
+        $old_user_ids = owbn_extract_user_ids( $old );
+        $new_user_ids = owbn_extract_user_ids( $new );
+
+        // Revoke removed users (always immediate)
+        $removed = array_diff( $old_user_ids, $new_user_ids );
+        foreach ( $removed as $user_id ) {
+            $user = get_user_by( 'id', $user_id );
+            if ( $user && $user->user_email ) {
+                $result = owc_asc_revoke_role( 'owbn-cc', $user->user_email, $role_path );
+                if ( is_wp_error( $result ) ) {
+                    error_log( "[OWBN CC] Role revoke failed for {$user->user_email} / {$role_path}: " . $result->get_error_message() );
+                }
+            }
+        }
+
+        // Grant added users (skip if revoke_only)
+        if ( ! $revoke_only ) {
+            $added = array_diff( $new_user_ids, $old_user_ids );
+            foreach ( $added as $user_id ) {
+                $user = get_user_by( 'id', $user_id );
+                if ( $user && $user->user_email ) {
+                    $result = owc_asc_grant_role( 'owbn-cc', $user->user_email, $role_path );
+                    if ( is_wp_error( $result ) ) {
+                        error_log( "[OWBN CC] Role grant failed for {$user->user_email} / {$role_path}: " . $result->get_error_message() );
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Extract user IDs from a staff field value.
+ *
+ * Handles both user_info (single user) and ast_group (list of users) field types.
+ *
+ * @param mixed $value The field value.
+ * @return array Array of non-empty user ID strings.
+ */
+function owbn_extract_user_ids( $value ): array {
+    if ( empty( $value ) || ! is_array( $value ) ) {
+        return [];
+    }
+
+    // user_info type: { user: "123", display_name: "..." }
+    if ( isset( $value['user'] ) ) {
+        $uid = $value['user'];
+        return ( ! empty( $uid ) && $uid !== '__new__' ) ? [ $uid ] : [];
+    }
+
+    // ast_group type: [ { user: "123", ... }, { user: "456", ... } ]
+    if ( isset( $value[0] ) && is_array( $value[0] ) ) {
+        $ids = [];
+        foreach ( $value as $row ) {
+            $uid = $row['user'] ?? '';
+            if ( ! empty( $uid ) && $uid !== '__new__' ) {
+                $ids[] = $uid;
+            }
+        }
+        return $ids;
+    }
+
+    return [];
 }
 
 add_action('save_post', 'owbn_save_entity_meta', 10, 2);

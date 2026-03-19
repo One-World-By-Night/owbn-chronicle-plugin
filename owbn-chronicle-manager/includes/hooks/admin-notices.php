@@ -278,6 +278,11 @@ function owbn_handle_pending_changeset_action()
             }
         }
 
+        // Sync roles — grants for added users (revokes already fired on initial save)
+        if (function_exists('owbn_sync_staff_roles')) {
+            owbn_sync_staff_roles($post_id, $config, $old_values);
+        }
+
         // Send notification about approved changes
         if (function_exists('owbn_send_change_notification')) {
             owbn_send_change_notification($post_id, $config, $old_values);

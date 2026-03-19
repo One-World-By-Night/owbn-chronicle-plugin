@@ -50,6 +50,12 @@ owbn_register_entity_type([
         'exec/{slug}/coordinator',
     ],
 
+    // Staff field → role path mapping for auto grant/revoke
+    'staff_role_map' => [
+        'coord_info'    => 'coordinator/{slug}/coordinator',
+        'subcoord_list' => 'coordinator/{slug}/sub-coordinator',
+    ],
+
     // API
     'api_key_option'    => 'owbn_coordinators_api_key',
     'list_fields'       => [

@@ -52,6 +52,13 @@ owbn_register_entity_type([
         'chronicle/{slug}/hst',
     ],
 
+    // Staff field → role path mapping for auto grant/revoke
+    'staff_role_map' => [
+        'hst_info'  => 'chronicle/{slug}/hst',
+        'cm_info'   => 'chronicle/{slug}/cm',
+        'ast_list'  => 'chronicle/{slug}/staff',
+    ],
+
     // API
     'api_key_option'    => 'owbn_chronicles_api_key',
     'list_fields'       => [
