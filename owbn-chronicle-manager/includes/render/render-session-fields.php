@@ -83,8 +83,78 @@ function owbn_render_session_group($key, $value, $meta) {
         echo '</div>' . "\n"; // .block
     }
 
+    // Hidden template block for JS cloning (uses __INDEX__ placeholders)
+    echo '<div class="owbn-session-block owbn-session-template" style="display:none;">' . "\n";
+    echo '<div class="owbn-session-header">' . "\n";
+    echo '<strong>New Session</strong>' . "\n";
+    echo '<button type="button" class="toggle-session button">Toggle</button>' . "\n";
+    echo '</div>' . "\n";
+    echo '<div class="owbn-session-body">' . "\n";
+
+    echo '<div class="owbn-session-row">' . "\n";
+    render_session_template_field($key, '__INDEX__', 'session_type', $subfields['session_type']);
+    render_session_template_field($key, '__INDEX__', 'genres', $subfields['genres']);
+    echo '</div>' . "\n";
+
+    echo '<div class="owbn-session-row">' . "\n";
+    render_session_template_field($key, '__INDEX__', 'frequency', $subfields['frequency']);
+    render_session_template_field($key, '__INDEX__', 'day', $subfields['day']);
+    render_session_template_field($key, '__INDEX__', 'checkin_time', $subfields['checkin_time']);
+    render_session_template_field($key, '__INDEX__', 'start_time', $subfields['start_time']);
+    echo '</div>' . "\n";
+
+    echo '<div class="owbn-session-row-full">' . "\n";
+    render_session_template_field($key, '__INDEX__', 'notes', $subfields['notes']);
+    echo '</div>' . "\n";
+
+    echo '<button type="button" class="button remove-session">Remove</button>' . "\n";
+    echo '</div>' . "\n"; // .body
+    echo '</div>' . "\n"; // .template block
+
     echo '<button type="button" class="button add-session" data-field="' . esc_attr($key) . '">Add</button>' . "\n";
     echo '</div>' . "\n"; // .repeatable-group
+}
+
+// Render a template field for JS cloning (no wp_editor, uses __INDEX__ placeholder)
+function render_session_template_field($key, $index, $subkey, $meta) {
+    $field_id = "{$key}_{$index}_{$subkey}";
+    $field_name = "{$key}[{$index}][{$subkey}]";
+
+    echo '<div class="owbn-session-field">' . "\n";
+    echo '<label for="' . esc_attr($field_id) . '">' . esc_html($meta['label']) . '</label><br>' . "\n";
+
+    switch ($meta['type']) {
+        case 'select':
+            echo '<select class="owbn-select2" name="' . esc_attr($field_name) . '" id="' . esc_attr($field_id) . '">' . "\n";
+            foreach ($meta['options'] as $opt) {
+                echo '<option value="' . esc_attr($opt) . '">' . esc_html($opt) . '</option>' . "\n";
+            }
+            echo '</select>' . "\n";
+            break;
+
+        case 'time':
+            echo '<input type="time" name="' . esc_attr($field_name) . '" value="">' . "\n";
+            break;
+
+        case 'wysiwyg':
+            // Plain textarea for template — JS will init TinyMCE after cloning
+            echo '<textarea name="' . esc_attr($field_name) . '" id="' . esc_attr($field_id) . '" rows="4" style="width:100%;"></textarea>' . "\n";
+            break;
+
+        case 'multi_select':
+            $opts = get_option('owbn_genre_list', []);
+            echo '<select class="owbn-select2" name="' . esc_attr($field_name) . '[]" multiple="multiple">' . "\n";
+            foreach ($opts as $opt) {
+                echo '<option value="' . esc_attr($opt) . '">' . esc_html($opt) . '</option>' . "\n";
+            }
+            echo '</select>' . "\n";
+            break;
+
+        default:
+            echo '<input type="text" name="' . esc_attr($field_name) . '" value="">' . "\n";
+    }
+
+    echo '</div>' . "\n";
 }
 
 // Render a single session field based on its type

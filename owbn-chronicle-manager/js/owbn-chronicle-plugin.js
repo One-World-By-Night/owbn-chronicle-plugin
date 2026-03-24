@@ -75,7 +75,7 @@
 
         template.find('textarea').each(function () {
             const id = $(this).attr('id');
-            if (id && tinymce.get(id)) {
+            if (id && typeof tinymce !== 'undefined' && tinymce.get(id)) {
                 tinymce.get(id).remove();
             }
         });
