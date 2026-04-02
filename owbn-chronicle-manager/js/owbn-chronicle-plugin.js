@@ -390,7 +390,7 @@
             sorted.forEach(value => {
                 let label = value;
                 if (dataAttr === 'probationary' || dataAttr === 'satellite') {
-                    label = value === '1' ? 'Yes' : 'No';
+                    label = value === '1' ? (window.owbnChronicleI18n && owbnChronicleI18n.yes || 'Yes') : (window.owbnChronicleI18n && owbnChronicleI18n.no || 'No');
                 }
                 $select.append(`<option value="${value}">${label}</option>`);
             });
@@ -431,7 +431,7 @@
             sorted.forEach(value => {
                 let label = value;
                 if (key === 'probationary' || key === 'satellite') {
-                    label = value === '1' ? 'Yes' : 'No';
+                    label = value === '1' ? (window.owbnChronicleI18n && owbnChronicleI18n.yes || 'Yes') : (window.owbnChronicleI18n && owbnChronicleI18n.no || 'No');
                 }
 
                 $select.append(`<option value="${value}">${label}</option>`);

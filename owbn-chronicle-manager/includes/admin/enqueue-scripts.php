@@ -45,6 +45,11 @@ function owbn_enqueue_admin_assets($hook)
         '1.0.0',
         true
     );
+
+    wp_localize_script( 'owbn-chronicle-js', 'owbnChronicleI18n', array(
+        'yes' => __( 'Yes', 'owbn-chronicle-manager' ),
+        'no'  => __( 'No', 'owbn-chronicle-manager' ),
+    ) );
 }
 add_action('admin_enqueue_scripts', 'owbn_enqueue_admin_assets');
 
