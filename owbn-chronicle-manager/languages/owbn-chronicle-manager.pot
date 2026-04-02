@@ -1,0 +1,700 @@
+# Copyright (C) 2026 greghacke
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: OWBN Chronicle & Coordinator Manager 2.12.4\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/owbn-chronicle-manager\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-04-02T23:48:27+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: owbn-chronicle-manager\n"
+
+#. Plugin Name of the plugin
+#: owbn-chronicle-manager.php
+msgid "OWBN Chronicle & Coordinator Manager"
+msgstr ""
+
+#. Description of the plugin
+#: owbn-chronicle-manager.php
+msgid "Manage OWBN Chronicle & Coordinator information using structured custom post types, shortcodes, and approval workflows."
+msgstr ""
+
+#. Author of the plugin
+#: owbn-chronicle-manager.php
+msgid "greghacke"
+msgstr ""
+
+#. Author URI of the plugin
+#: owbn-chronicle-manager.php
+msgid "https://www.owbn.net"
+msgstr ""
+
+#: includes/admin/cc-settings.php:55
+msgid "C&C Plugin Settings"
+msgstr ""
+
+#: includes/admin/cc-settings.php:59
+msgid "Chronicle and Coordinator data is managed locally on this site and served through the OWBN Client API Gateway under the"
+msgstr ""
+
+#: includes/admin/cc-settings.php:61
+msgid "namespace. Configure the gateway in the OWBN Client settings."
+msgstr ""
+
+#: includes/admin/cc-settings.php:71
+msgid "Chronicles"
+msgstr ""
+
+#: includes/admin/cc-settings.php:74
+#: includes/admin/cc-settings.php:91
+msgid "Enable"
+msgstr ""
+
+#: includes/admin/cc-settings.php:79
+msgid "Enable Chronicle management"
+msgstr ""
+
+#: includes/admin/cc-settings.php:88
+msgid "Coordinators"
+msgstr ""
+
+#: includes/admin/cc-settings.php:96
+msgid "Enable Coordinator management"
+msgstr ""
+
+#: includes/admin/cc-settings.php:105
+msgid "Genre List"
+msgstr ""
+
+#: includes/admin/cc-settings.php:108
+msgid "Available Genres"
+msgstr ""
+
+#: includes/admin/cc-settings.php:111
+msgid "One genre per line."
+msgstr ""
+
+#: includes/admin/cc-settings.php:119
+msgid "Region List"
+msgstr ""
+
+#: includes/admin/cc-settings.php:122
+msgid "Available Regions"
+msgstr ""
+
+#: includes/admin/cc-settings.php:125
+msgid "One region per line."
+msgstr ""
+
+#: includes/admin/enqueue-scripts.php:50
+#: includes/render/render-location-fields.php:135
+#: includes/render/render-metabox-fields.php:28
+msgid "Yes"
+msgstr ""
+
+#: includes/admin/enqueue-scripts.php:51
+#: includes/render/render-location-fields.php:130
+#: includes/render/render-metabox-fields.php:23
+msgid "No"
+msgstr ""
+
+#: includes/admin/menu.php:19
+#: includes/admin/menu.php:20
+msgid "OWBN C&C"
+msgstr ""
+
+#: includes/admin/menu.php:31
+msgid "C&C Settings"
+msgstr ""
+
+#: includes/admin/menu.php:32
+msgid "Settings"
+msgstr ""
+
+#: includes/core/entity-init.php:29
+msgid "Add New"
+msgstr ""
+
+#. translators: %s: entity singular name
+#: includes/core/entity-init.php:168
+#, php-format
+msgid "You do not have permission to edit this %s."
+msgstr ""
+
+#: includes/core/entity-init.php:197
+msgid "REMOTE"
+msgstr ""
+
+#: includes/core/entity-init.php:206
+msgid "LOCAL"
+msgstr ""
+
+#: includes/core/entity-init.php:227
+msgid "Unknown"
+msgstr ""
+
+#: includes/core/entity-init.php:231
+#: includes/core/entity-init.php:252
+msgid "Pending Staff Changes"
+msgstr ""
+
+#: includes/core/entity-init.php:235
+#, php-format
+msgid "Submitted by %s on %s"
+msgstr ""
+
+#: includes/core/entity-init.php:240
+msgid "Self-promotion detected"
+msgstr ""
+
+#: includes/core/entity-init.php:244
+msgid "Fields:"
+msgstr ""
+
+#: includes/core/entity-init.php:246
+msgid "Use the Approve/Reject buttons above to act on these changes."
+msgstr ""
+
+#: includes/core/entity-init.php:254
+msgid "Your staff changes are awaiting admin approval. Other field changes were saved."
+msgstr ""
+
+#: includes/core/post-statuses.php:14
+msgctxt "post status"
+msgid "Decommissioned"
+msgstr ""
+
+#: includes/core/post-statuses.php:19
+#, php-format
+msgid "Decommissioned <span class=\"count\">(%s)</span>"
+msgid_plural "Decommissioned <span class=\"count\">(%s)</span>"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/core/post-statuses.php:30
+#: includes/core/post-statuses.php:47
+#: includes/core/post-statuses.php:51
+msgid "Decommissioned"
+msgstr ""
+
+#: includes/fields.php:9
+msgid "Chronicle Slug"
+msgstr ""
+
+#: includes/fields.php:15
+msgid "Probationary?"
+msgstr ""
+
+#: includes/fields.php:16
+msgid "Satellite?"
+msgstr ""
+
+#: includes/fields.php:18
+msgid "Parent Chronicle"
+msgstr ""
+
+#: includes/fields.php:23
+#: includes/fields.php:78
+msgid "Genres"
+msgstr ""
+
+#: includes/fields.php:29
+msgid "Game Type"
+msgstr ""
+
+#: includes/fields.php:34
+msgid "Premise"
+msgstr ""
+
+#: includes/fields.php:35
+msgid "Game Theme"
+msgstr ""
+
+#: includes/fields.php:36
+msgid "Game Mood"
+msgstr ""
+
+#: includes/fields.php:37
+msgid "Information for Travellers"
+msgstr ""
+
+#: includes/fields.php:39
+msgid "Active Players"
+msgstr ""
+
+#: includes/fields.php:44
+msgid "Session List"
+msgstr ""
+
+#: includes/fields.php:48
+msgid "Session Type"
+msgstr ""
+
+#: includes/fields.php:54
+msgid "Frequency"
+msgstr ""
+
+#: includes/fields.php:59
+msgid "Day"
+msgstr ""
+
+#: includes/fields.php:65
+msgid "Check-in Time"
+msgstr ""
+
+#: includes/fields.php:69
+msgid "Start Time"
+msgstr ""
+
+#: includes/fields.php:74
+msgid "Game Date Notes"
+msgstr ""
+
+#: includes/fields.php:84
+#: includes/fields.php:362
+msgid "Website URL"
+msgstr ""
+
+#: includes/fields.php:88
+msgid "HST Selection Method"
+msgstr ""
+
+#: includes/fields.php:93
+msgid "CM Selection Method"
+msgstr ""
+
+#: includes/fields.php:98
+msgid "AST Selection Method"
+msgstr ""
+
+#: includes/fields.php:103
+msgid "HST Info"
+msgstr ""
+
+#: includes/fields.php:108
+msgid "CM Info"
+msgstr ""
+
+#: includes/fields.php:113
+msgid "AST List"
+msgstr ""
+
+#: includes/fields.php:117
+#: includes/fields.php:396
+#: includes/render/render-user-fields.php:53
+#: includes/render/render-user-fields.php:160
+msgid "User"
+msgstr ""
+
+#: includes/fields.php:121
+#: includes/fields.php:400
+#: includes/render/render-user-fields.php:75
+#: includes/render/render-user-fields.php:183
+msgid "Display Name"
+msgstr ""
+
+#: includes/fields.php:125
+#: includes/fields.php:408
+#: includes/render/render-user-fields.php:87
+#: includes/render/render-user-fields.php:191
+msgid "Actual Email"
+msgstr ""
+
+#: includes/fields.php:129
+#: includes/fields.php:412
+#: includes/render/render-user-fields.php:93
+#: includes/render/render-user-fields.php:195
+msgid "Display Email"
+msgstr ""
+
+#: includes/fields.php:133
+#: includes/fields.php:330
+#: includes/render/render-user-fields.php:187
+msgid "Role"
+msgstr ""
+
+#: includes/fields.php:139
+msgid "Admin Contact"
+msgstr ""
+
+#: includes/fields.php:145
+msgid "OOC Locations"
+msgstr ""
+
+#: includes/fields.php:149
+#: includes/fields.php:186
+msgid "Country"
+msgstr ""
+
+#: includes/fields.php:155
+#: includes/fields.php:192
+msgid "State / Province / Region"
+msgstr ""
+
+#: includes/fields.php:159
+#: includes/fields.php:196
+msgid "City / Municipality"
+msgstr ""
+
+#: includes/fields.php:163
+msgid "Location Notes"
+msgstr ""
+
+#: includes/fields.php:169
+msgid "Game Sites"
+msgstr ""
+
+#: includes/fields.php:173
+msgid "Site Name"
+msgstr ""
+
+#: includes/fields.php:178
+msgid "Online?"
+msgstr ""
+
+#: includes/fields.php:182
+msgid "Online URL"
+msgstr ""
+
+#: includes/fields.php:200
+msgid "Street Address (optional)"
+msgstr ""
+
+#: includes/fields.php:204
+msgid "Game Site Notes"
+msgstr ""
+
+#: includes/fields.php:212
+#: includes/fields.php:432
+msgid "Document Links"
+msgstr ""
+
+#: includes/fields.php:216
+#: includes/fields.php:436
+msgid "Title"
+msgstr ""
+
+#: includes/fields.php:221
+msgid "External URL (if no upload)"
+msgstr ""
+
+#: includes/fields.php:225
+msgid "Upload File (optional)"
+msgstr ""
+
+#: includes/fields.php:229
+#: includes/fields.php:448
+msgid "Last Updated"
+msgstr ""
+
+#: includes/fields.php:235
+msgid "Social Media URLs"
+msgstr ""
+
+#: includes/fields.php:239
+msgid "Platform"
+msgstr ""
+
+#: includes/fields.php:259
+msgid "Profile URL"
+msgstr ""
+
+#: includes/fields.php:266
+#: includes/fields.php:454
+msgid "Staff Lists"
+msgstr ""
+
+#: includes/fields.php:270
+#: includes/fields.php:289
+#: includes/fields.php:458
+#: includes/fields.php:476
+msgid "List Name"
+msgstr ""
+
+#: includes/fields.php:275
+#: includes/fields.php:462
+msgid "Email Address"
+msgstr ""
+
+#: includes/fields.php:279
+#: includes/fields.php:466
+msgid "Description"
+msgstr ""
+
+#: includes/fields.php:285
+#: includes/fields.php:472
+msgid "Player Lists"
+msgstr ""
+
+#: includes/fields.php:293
+#: includes/fields.php:480
+msgid "Access"
+msgstr ""
+
+#: includes/fields.php:298
+#: includes/fields.php:485
+msgid "Address"
+msgstr ""
+
+#: includes/fields.php:302
+#: includes/fields.php:489
+msgid "IC/OOC"
+msgstr ""
+
+#: includes/fields.php:307
+#: includes/fields.php:494
+msgid "Moderator Email"
+msgstr ""
+
+#: includes/fields.php:311
+#: includes/fields.php:498
+msgid "Sign Up URL"
+msgstr ""
+
+#: includes/fields.php:318
+msgid "Start Date"
+msgstr ""
+
+#: includes/fields.php:320
+msgid "Region"
+msgstr ""
+
+#: includes/fields.php:327
+msgid "Previous Staff"
+msgstr ""
+
+#: includes/fields.php:331
+#: includes/fields.php:423
+msgid "Name"
+msgstr ""
+
+#: includes/fields.php:332
+#: includes/fields.php:424
+msgid "Email"
+msgstr ""
+
+#: includes/fields.php:333
+msgid "Start"
+msgstr ""
+
+#: includes/fields.php:334
+msgid "End"
+msgstr ""
+
+#: includes/fields.php:346
+msgid "Coordinator Slug"
+msgstr ""
+
+#: includes/fields.php:350
+msgid "Office Title"
+msgstr ""
+
+#: includes/fields.php:354
+msgid "Term Start Date"
+msgstr ""
+
+#: includes/fields.php:358
+msgid "Term End Date"
+msgstr ""
+
+#: includes/fields.php:366
+msgid "Office Description"
+msgstr ""
+
+#: includes/fields.php:370
+msgid "Appointment"
+msgstr ""
+
+#: includes/fields.php:375
+msgid "Type"
+msgstr ""
+
+#: includes/fields.php:380
+msgid "Hosting Chronicle"
+msgstr ""
+
+#: includes/fields.php:386
+msgid "Coordinator"
+msgstr ""
+
+#: includes/fields.php:392
+msgid "Sub-Coordinators"
+msgstr ""
+
+#: includes/fields.php:404
+msgid "Role/Title"
+msgstr ""
+
+#: includes/fields.php:420
+msgid "Previous Coordinators"
+msgstr ""
+
+#: includes/fields.php:425
+msgid "Term Start"
+msgstr ""
+
+#: includes/fields.php:426
+msgid "Term End"
+msgstr ""
+
+#: includes/fields.php:440
+msgid "External URL"
+msgstr ""
+
+#: includes/fields.php:444
+msgid "Upload File"
+msgstr ""
+
+#: includes/hooks/admin-list-filters.php:558
+#, php-format
+msgid "View &#8220;%s&#8221;"
+msgstr ""
+
+#: includes/hooks/admin-list-filters.php:559
+msgid "View"
+msgstr ""
+
+#: includes/hooks/admin-list-filters.php:636
+#, php-format
+msgid "Showing only %s you have access to."
+msgstr ""
+
+#: includes/hooks/admin-notices.php:29
+#, php-format
+msgid "Required document: %s (URL or upload needed)"
+msgstr ""
+
+#: includes/hooks/admin-notices.php:41
+msgid "Please fix the following required fields:"
+msgstr ""
+
+#: includes/hooks/admin-notices.php:71
+#, php-format
+msgid "%s Staff changes require authentication from Exec or Web Teams."
+msgstr ""
+
+#: includes/hooks/admin-notices.php:75
+msgid "Upon validation, this change will be published."
+msgstr ""
+
+#: includes/hooks/admin-notices.php:105
+#, php-format
+msgid "%s staff changes have been submitted and are pending admin approval."
+msgstr ""
+
+#: includes/hooks/admin-notices.php:110
+#, php-format
+msgid "Non-staff field changes were saved immediately. The %s remains published."
+msgstr ""
+
+#: includes/hooks/admin-notices.php:156
+msgid "Unknown user"
+msgstr ""
+
+#: includes/hooks/admin-notices.php:163
+#, php-format
+msgid "Pending %s Staff Changes Require Approval"
+msgstr ""
+
+#: includes/hooks/admin-notices.php:170
+#, php-format
+msgid "Submitted by %s on %s."
+msgstr ""
+
+#: includes/hooks/admin-notices.php:176
+msgid "(Self-promotion detected)"
+msgstr ""
+
+#: includes/hooks/admin-notices.php:184
+msgid "Field"
+msgstr ""
+
+#: includes/hooks/admin-notices.php:185
+msgid "Pending Value"
+msgstr ""
+
+#: includes/hooks/admin-notices.php:211
+msgid "Approve Changes"
+msgstr ""
+
+#: includes/hooks/admin-notices.php:214
+msgid "Reject Changes"
+msgstr ""
+
+#: includes/hooks/admin-notices.php:332
+#, php-format
+msgid "%s staff changes have been approved and applied."
+msgstr ""
+
+#: includes/hooks/admin-notices.php:343
+#, php-format
+msgid "%s staff changes have been rejected. The previous values remain."
+msgstr ""
+
+#: includes/hooks/admin-remove-add.php:40
+msgid "You do not have permission to create new items."
+msgstr ""
+
+#: includes/render/render-links-uploads-fields.php:159
+msgid "Social Link"
+msgstr ""
+
+#: includes/render/render-location-fields.php:19
+msgid "(Unnamed)"
+msgstr ""
+
+#: includes/render/render-location-fields.php:23
+msgid "(Online Only)"
+msgstr ""
+
+#: includes/render/render-location-fields.php:104
+#: includes/render/render-metabox-fields.php:38
+#: includes/render/render-metabox-fields.php:260
+#: includes/render/render-user-fields.php:55
+#: includes/render/render-user-fields.php:162
+msgid "— Select —"
+msgstr ""
+
+#: includes/render/render-metabox-fields.php:11
+msgid "2–8 lowercase alphanumeric characters"
+msgstr ""
+
+#: includes/render/render-metabox-fields.php:13
+msgid "Allowed: lowercase letters and numbers, 2–8 characters."
+msgstr ""
+
+#: includes/render/render-metabox-fields.php:63
+msgid "Select one or more options."
+msgstr ""
+
+#: includes/render/render-metabox-fields.php:196
+msgid "No history recorded."
+msgstr ""
+
+#: includes/render/render-metabox-fields.php:278
+msgid "Only applicable to Satellite Chronicles."
+msgstr ""
+
+#: includes/render/render-metabox-fields.php:282
+msgid "Only Satellite Chronicles have parents."
+msgstr ""
+
+#: includes/render/render-user-fields.php:56
+#: includes/render/render-user-fields.php:163
+msgid "[New User]"
+msgstr ""
+
+#: includes/render/render-user-fields.php:60
+#: includes/render/render-user-fields.php:166
+#, php-format
+msgid "[User ID: %s - Not Found]"
+msgstr ""
+
+#: includes/render/render-user-fields.php:103
+msgid "Satellite Chronicles are represented on council by their parent chronicle."
+msgstr ""
