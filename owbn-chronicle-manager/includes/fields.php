@@ -40,6 +40,12 @@ function owbn_get_chronicle_field_definitions()
                 'type' => 'select',
                 'options' => ['1-10', '11-20', '21-30', '31-40', '41-50', '51+']
             ],
+            'timezone' => [
+                'label' => __('Timezone', 'owbn-chronicle-manager'),
+                'type'  => 'select',
+                'source' => 'owbn_timezone_list',
+                'description' => __('Used to convert session times to each viewer\'s local time on the dashboard calendar.', 'owbn-chronicle-manager'),
+            ],
             'session_list' => [
                 'label' => __('Session List', 'owbn-chronicle-manager'),
                 'type'  => 'session_group',

@@ -34,6 +34,15 @@ function owbn_render_select_field($key, $value, $meta, $disabled_attr = '')
 {
     $options = $meta['options'] ?? [];
 
+    // Resolve options from a named source
+    if (empty($options) && !empty($meta['source'])) {
+        if ($meta['source'] === 'owbn_timezone_list' && class_exists('DateTimeZone')) {
+            $options = DateTimeZone::listIdentifiers();
+        } elseif ($meta['source'] === 'owbn_genre_list') {
+            $options = get_option('owbn_genre_list', []);
+        }
+    }
+
     echo "<select name=\"" . esc_attr($key) . "\" id=\"" . esc_attr($key) . "\" class=\"regular-text owbn-select2 single\" " . esc_attr($disabled_attr) . ">\n";
     echo "<option value=\"\">" . esc_html__('— Select —', 'owbn-chronicle-manager') . "</option>\n";
 
