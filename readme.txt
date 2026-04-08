@@ -2,7 +2,7 @@
 
 The organizational directory for One World by Night. Manages chronicle and coordinator records as structured WordPress content.
 
-Version: 2.12.4
+Version: 2.13.0
 Deployed to: council.owbn.net, chronicles.owbn.net (network-activated on both)
 
 ## What It Does
@@ -11,8 +11,9 @@ Every OWBN chronicle (local game chapter) and coordinator (genre/clan authority)
 
 Key features:
 
-- Chronicle profiles -- CM, HST, AST staff fields, status, meeting schedule, territory, genre focus
+- Chronicle profiles -- CM, HST, AST staff fields, status, session schedule, timezone, territory, genre focus
 - Coordinator profiles -- coordinator and sub-coordinator contacts, genre scope, proposals
+- Session schedule -- recurring session rules (frequency, day, start time) with chronicle timezone for cross-site calendar rendering
 - accessSchema integration -- edit access scoped to your own chronicle/coordinator record; staff field changes auto-sync ASC roles
 - Approval workflow -- changes can require approval before publishing
 - Shortcodes and Elementor -- display chronicle/coordinator data on front-end pages
