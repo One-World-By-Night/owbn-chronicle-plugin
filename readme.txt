@@ -2,7 +2,7 @@
 
 The organizational directory for One World by Night. Manages chronicle and coordinator records as structured WordPress content.
 
-Version: 2.13.0
+Version: 2.14.0
 Deployed to: council.owbn.net, chronicles.owbn.net (network-activated on both)
 
 ## What It Does
@@ -30,6 +30,12 @@ Staff role sync is bidirectional -- updating a chronicle's HST field grants that
 - WordPress 5.0+, PHP 7.4+
 - accessSchema for permissions
 - Network-activated on WordPress multisite
+
+## Changelog
+
+### 2.14.0
+
+- Added `owbn_chronicle_expand_session_dates($session, $tz_name, $from, $to)` helper in `includes/helpers/sessions.php` — canonical implementation of session_list recurrence expansion. Returns sorted UTC timestamps for each occurrence inside the requested window. "Every Other" uses an epoch-anchored parity (`floor(timestamp / 7 days) % 2`) so the same chronicle shows the same dates to every viewer regardless of when they load the calendar. Consumed by owbn-board's calendar tile (which falls back to a private copy on sites without chronicle-manager).
 
 ## License
 

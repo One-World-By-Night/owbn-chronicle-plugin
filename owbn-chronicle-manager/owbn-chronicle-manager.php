@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OWBN Chronicle & Coordinator Manager
  * Description: Manage OWBN Chronicle & Coordinator information using structured custom post types, shortcodes, and approval workflows.
- * Version: 2.13.0
+ * Version: 2.14.0
  * Author: greghacke
  * Author URI: https://www.owbn.net
  * Text Domain: owbn-chronicle-manager
@@ -15,7 +15,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('OWBN_CM_VERSION', '2.13.0');
+define('OWBN_CM_VERSION', '2.14.0');
 
 require_once plugin_dir_path(__FILE__) . 'includes/core/entity-registry.php';
 require_once plugin_dir_path(__FILE__) . 'includes/core/entity-init.php';
@@ -25,6 +25,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/core/post-statuses.php';
 
 require_once plugin_dir_path(__FILE__) . 'includes/fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/helpers/countries.php';
+require_once plugin_dir_path(__FILE__) . 'includes/helpers/sessions.php';
 
 require_once plugin_dir_path(__FILE__) . 'includes/entities/chronicle-config.php';
 require_once plugin_dir_path(__FILE__) . 'includes/entities/coordinator-config.php';
