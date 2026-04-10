@@ -64,6 +64,10 @@
         const template = container.find('.owbn-session-template').clone().removeClass('owbn-session-template').show();
         const lastIndex = container.find('.owbn-session-block').not('.owbn-session-template').length;
 
+        // The template is wrapped in <fieldset disabled> so nothing submits.
+        // Clear the disabled state on the clone so the user's inputs post.
+        template.find(':input').prop('disabled', false).removeAttr('disabled');
+
         template.find('[name], [id], [for]').each(function () {
             ['name', 'id', 'for'].forEach(attr => {
                 const val = $(this).attr(attr);

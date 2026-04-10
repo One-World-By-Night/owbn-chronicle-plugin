@@ -83,8 +83,12 @@ function owbn_render_session_group($key, $value, $meta) {
         echo '</div>' . "\n"; // .block
     }
 
-    // Hidden template block for JS cloning (uses __INDEX__ placeholders)
-    echo '<div class="owbn-session-block owbn-session-template" style="display:none;">' . "\n";
+    // Hidden template block for JS cloning (uses __INDEX__ placeholders).
+    // Marked aria-hidden and wrapped in a fieldset disabled so NO template
+    // inputs submit on form POST. The JS clone step removes the disabled
+    // attribute on the clone before inserting it into the form.
+    echo '<fieldset class="owbn-session-template-wrap" aria-hidden="true" disabled style="display:none;border:0;padding:0;margin:0;">' . "\n";
+    echo '<div class="owbn-session-block owbn-session-template">' . "\n";
     echo '<div class="owbn-session-header">' . "\n";
     echo '<strong>New Session</strong>' . "\n";
     echo '<button type="button" class="toggle-session button">Toggle</button>' . "\n";
@@ -110,6 +114,7 @@ function owbn_render_session_group($key, $value, $meta) {
     echo '<button type="button" class="button remove-session">Remove</button>' . "\n";
     echo '</div>' . "\n"; // .body
     echo '</div>' . "\n"; // .template block
+    echo '</fieldset>' . "\n"; // .template wrapper
 
     echo '<button type="button" class="button add-session" data-field="' . esc_attr($key) . '">Add</button>' . "\n";
     echo '</div>' . "\n"; // .repeatable-group

@@ -10,6 +10,31 @@
 
 if (!defined('ABSPATH')) exit;
 
+/**
+ * Produce a short human-readable validation error message for a field.
+ *
+ * Generic by field type so every field gets a sensible default without
+ * per-field configuration. Callers can override by setting
+ * `$meta['error_message']` in field definitions.
+ */
+function owbn_format_field_error_message(array $meta): string
+{
+    if (!empty($meta['error_message'])) {
+        return (string) $meta['error_message'];
+    }
+    $type = $meta['type'] ?? '';
+    switch ($type) {
+        case 'slug':
+            return __('Invalid or duplicate slug. Your other edits were saved; this field was not.', 'owbn-chronicle-manager');
+        case 'user_info':
+            return __('User, display name, and display email are all required. Your other edits were saved; this field was not.', 'owbn-chronicle-manager');
+        case 'select':
+            return __('Please choose a value. Your other edits were saved; this field was not.', 'owbn-chronicle-manager');
+        default:
+            return __('This field is required. Your other edits were saved; this field was not.', 'owbn-chronicle-manager');
+    }
+}
+
 function owbn_register_entity_cpt(array $config): void
 {
     if (!owbn_is_entity_enabled($config['post_type'])) return;
@@ -181,9 +206,44 @@ function owbn_render_entity_metabox($post)
     if (!is_array($field_groups)) return;
 
     $errors            = get_transient("owbn_{$entity_key}_errors_{$post->ID}") ?: [];
+    // Normalize errors: the transient may contain plain field keys, legacy
+    // `document_links:Title`, or new `publication_gate:Title` tokens. For
+    // inline field highlighting we only care about plain field keys.
+    $error_field_keys = [];
+    $error_messages   = [];
+    foreach ($errors as $err) {
+        if (!is_string($err)) continue;
+        if (strpos($err, 'publication_gate:') === 0 || strpos($err, 'document_links:') === 0) {
+            continue;
+        }
+        $error_field_keys[] = $err;
+    }
+    // Submitted-values overlay: when a field failed integrity validation, the
+    // user's typed values were stashed in a transient. Re-render those fields
+    // with the stashed value so the user can fix and resubmit without losing
+    // their typing.
+    $submitted_values  = get_transient("owbn_{$entity_key}_submitted_values_{$post->ID}") ?: [];
     $restricted_fields = $config['restricted_fields'] ?? [];
     $immutable_fields  = $config['immutable_fields'] ?? [];
     $can_edit_metadata = owbn_user_can_edit_entity_metadata($user_id);
+
+    // Persistent compliance gap banner — compliance meta is written by the
+    // save handler and lives in post meta, not transients, so it survives
+    // reloads and only disappears when the deficiency is actually resolved.
+    $compliance_meta_key = "_owbn_{$entity_key}_compliance_gaps";
+    $compliance_gaps     = get_post_meta($post->ID, $compliance_meta_key, true);
+    if (is_array($compliance_gaps) && !empty($compliance_gaps)) {
+        echo '<div class="owbn-compliance-banner" style="margin-bottom:15px;padding:12px 14px;background:#fffbea;border-left:4px solid #dba617;">';
+        echo '<strong><span class="dashicons dashicons-flag" style="vertical-align:text-bottom;"></span> ';
+        echo esc_html__('Required documents missing', 'owbn-chronicle-manager');
+        echo '</strong><br><small>';
+        echo esc_html__('This chronicle is missing URLs or uploads for the following required documents. Add them in the Document Links section below. Your other edits are still being saved normally.', 'owbn-chronicle-manager');
+        echo '</small><ul style="margin:8px 0 0 20px;list-style:disc;">';
+        foreach ($compliance_gaps as $gap_title) {
+            echo '<li>' . esc_html($gap_title) . '</li>';
+        }
+        echo '</ul></div>' . "\n";
+    }
 
     echo "\n<div class=\"owbn-meta-view\">\n";
 
@@ -263,9 +323,15 @@ function owbn_render_entity_metabox($post)
 
         foreach ($fields as $key => $meta) {
             $value       = get_post_meta($post->ID, $key, true);
+            // If this field errored on the last save, the user's submitted
+            // value was stashed — use it so they can fix without retyping.
+            if (isset($submitted_values[$key])) {
+                $value = $submitted_values[$key];
+            }
             $label       = $meta['label'] ?? $key;
             $type        = $meta['type'] ?? 'text';
-            $error_class = in_array($key, $errors, true) ? ' owbn-error-field' : '';
+            $is_errored  = in_array($key, $error_field_keys, true);
+            $error_class = $is_errored ? ' owbn-error-field' : '';
 
             // Immutable fields are disabled once a value is set.
             $is_immutable = in_array($key, $immutable_fields, true) && !empty($value);
@@ -367,6 +433,12 @@ function owbn_render_entity_metabox($post)
                     break;
             }
 
+            if ($is_errored) {
+                echo '<p class="owbn-field-error-message" style="color:#b32d2e;margin:6px 0 0;font-weight:600;">';
+                echo esc_html(owbn_format_field_error_message($meta));
+                echo '</p>';
+            }
+
             echo '</td></tr>';
         }
 
@@ -375,6 +447,13 @@ function owbn_render_entity_metabox($post)
     }
 
     echo '</div>';
+
+    // One-shot: consume the submitted-values transient now that we've rendered
+    // the form. The error-list transient stays for admin-notices to display,
+    // and is cleared by admin-notices after the banner renders.
+    if (!empty($submitted_values)) {
+        delete_transient("owbn_{$entity_key}_submitted_values_{$post->ID}");
+    }
 }
 
 /**

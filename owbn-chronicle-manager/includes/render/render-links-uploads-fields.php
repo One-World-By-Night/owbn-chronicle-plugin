@@ -23,12 +23,38 @@ function owbn_render_document_links_field($key, $value, $meta)
 
     if (empty($groups)) $groups[] = [];
 
+    // Summary of incomplete required docs so the user sees the whole problem
+    // at a glance, not after expanding every collapsed row.
+    $incomplete_required = [];
+    if (!empty($required_docs)) {
+        foreach ($groups as $g) {
+            if (!in_array($g['title'] ?? '', $required_docs, true)) continue;
+            $has_url  = !empty(trim((string) ($g['link'] ?? '')));
+            $has_file = !empty($g['file_id'] ?? '');
+            if (!$has_url && !$has_file) {
+                $incomplete_required[] = $g['title'];
+            }
+        }
+    }
+    if (!empty($incomplete_required)) {
+        echo '<div class="owbn-doc-summary" style="margin:0 0 10px;padding:10px 12px;background:#fffbea;border-left:4px solid #dba617;">';
+        echo '<strong>' . esc_html__('Required documents missing a URL or upload:', 'owbn-chronicle-manager') . '</strong>';
+        echo '<ul style="margin:6px 0 0 20px;list-style:disc;">';
+        foreach ($incomplete_required as $t) {
+            echo '<li>' . esc_html($t) . '</li>';
+        }
+        echo '</ul>';
+        echo '<small>' . esc_html__('Filling these will unblock publication. Other edits on this page save normally regardless.', 'owbn-chronicle-manager') . '</small>';
+        echo '</div>' . "\n";
+    }
+
     echo '<div class="owbn-repeatable-group" data-key="' . esc_attr($key) . '">' . "\n";
 
     foreach ($groups as $i => $group) {
         $is_required_doc = in_array($group['title'] ?? '', $required_docs, true);
+        $is_incomplete_required = $is_required_doc && in_array($group['title'] ?? '', $incomplete_required, true);
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-        echo render_document_link_block($key, $i, $group, $is_required_doc);
+        echo render_document_link_block($key, $i, $group, $is_required_doc, $is_incomplete_required);
     }
 
     // Template block (hidden)
@@ -41,7 +67,7 @@ function owbn_render_document_links_field($key, $value, $meta)
     echo '</div>' . "\n";
 }
 
-function render_document_link_block($key, $index, $group, $is_required_doc = false)
+function render_document_link_block($key, $index, $group, $is_required_doc = false, $is_incomplete_required = false)
 {
     ob_start();
 
@@ -50,7 +76,11 @@ function render_document_link_block($key, $index, $group, $is_required_doc = fal
     $file_id = $group['file_id'] ?? '';
     $file_url = $file_id ? wp_get_attachment_url($file_id) : '';
     $header = $title ?: 'Document Link';
-    if ($is_required_doc) $header .= ' (required)';
+    if ($is_required_doc) {
+        $header .= ' ' . ($is_incomplete_required
+            ? __('(required — needs URL or upload)', 'owbn-chronicle-manager')
+            : __('(required)', 'owbn-chronicle-manager'));
+    }
 
     // Identify if this is a template or an empty block
     $is_template = ($index === '__INDEX__');
@@ -60,14 +90,20 @@ function render_document_link_block($key, $index, $group, $is_required_doc = fal
     $required_attr = (!$is_template && !$is_empty) ? ' required' : '';
     $disabled_attr = $is_template ? ' disabled' : '';
 
+    // Auto-expand bodies that need user action: incomplete required docs.
+    // Other rows stay collapsed to keep the metabox tidy.
+    $body_style = ($is_incomplete_required && !$is_template) ? '' : 'display:none;';
+    $block_class = 'owbn-document-block';
+    if ($is_incomplete_required && !$is_template) $block_class .= ' owbn-document-block--needs-action';
+
 ?>
-    <div class="owbn-document-block">
+    <div class="<?php echo esc_attr($block_class); ?>">
         <div class="owbn-document-header">
             <strong><?php echo esc_html($header); ?></strong>
             <button type="button" class="toggle-document button">Toggle</button>
         </div>
 
-        <div class="owbn-document-body" style="display:none;">
+        <div class="owbn-document-body" style="<?php echo esc_attr($body_style); ?>">
 
             <div class="owbn-document-row-wrap">
                 <div class="owbn-document-row">

@@ -2,7 +2,7 @@
 
 The organizational directory for One World by Night. Manages chronicle and coordinator records as structured WordPress content.
 
-Version: 2.14.0
+Version: 2.15.0
 Deployed to: council.owbn.net, chronicles.owbn.net (network-activated on both)
 
 ## What It Does
@@ -32,6 +32,16 @@ Staff role sync is bidirectional -- updating a chronicle's HST field grants that
 - Network-activated on WordPress multisite
 
 ## Changelog
+
+### 2.15.0
+
+- Per-field integrity validation: a single bad field no longer discards every other edit on the same save.
+- Required documents reclassified from save-time gate to persistent compliance signal. Enforced only at draft->publish transition.
+- New _owbn_{entity_key}_compliance_gaps post meta, admin list column, and dashboard widget surface non-compliant entities.
+- One-time upgrade backfill grades every existing chronicle; legacy validation_blocked transients are cleared.
+- Metabox shows persistent compliance banner, inline per-field errors, and re-renders errored fields with the user's submitted values.
+- Document Links: top-of-field summary of incomplete required docs, auto-expanded row bodies for rows that need action.
+- Fixed session_list phantom-row bug: JS clone template was leaking an __INDEX__ row and empty rows into every save. Sanitizer now skips both; template wrapped in <fieldset disabled> for defense in depth. Same fix applied to location_group and repeatable_group.
 
 ### 2.14.0
 

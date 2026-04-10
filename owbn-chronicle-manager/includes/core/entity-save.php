@@ -42,10 +42,20 @@ function owbn_save_entity_meta(int $post_id, WP_Post $post): void
         return;
     }
 
-    // If validation failed on a published post, skip all meta saves to preserve existing data
-    if (get_transient("owbn_{$entity_key}_validation_blocked_{$post_id}")) {
-        delete_transient("owbn_{$entity_key}_validation_blocked_{$post_id}");
-        return;
+    // Per-field integrity skip list. Fields in this list failed validation
+    // and must be preserved at their current DB value. Everything else saves
+    // normally — we NEVER silently drop the entire submission.
+    //
+    // The transient is NOT deleted here; the metabox render on the next page
+    // load will consume it to display inline error markers, and admin-notices
+    // will consume it for the error banner.
+    $integrity_errors = get_transient("owbn_{$entity_key}_errors_{$post_id}") ?: [];
+    $skip_field_keys = [];
+    foreach ($integrity_errors as $err) {
+        // Publication-gate errors are prefixed and do not map to a field skip
+        if (is_string($err) && strpos($err, 'publication_gate:') === 0) continue;
+        if (is_string($err) && strpos($err, 'document_links:') === 0) continue; // legacy, not a field key
+        if (is_string($err)) $skip_field_keys[$err] = true;
     }
 
     // Get field definitions by calling the config's callable
@@ -79,6 +89,14 @@ function owbn_save_entity_meta(int $post_id, WP_Post $post): void
     // Loop all field definitions
     foreach ($definitions as $fields) {
         foreach ($fields as $key => $meta) {
+
+            // PER-FIELD INTEGRITY SKIP: this field failed validation. Preserve
+            // its current DB value untouched. The metabox will re-render it
+            // with an inline error and the user's submitted value overlaid via
+            // the `_submitted_values_` transient so they can fix and resubmit.
+            if (isset($skip_field_keys[$key])) {
+                continue;
+            }
 
             // IMMUTABLE: Never change once set
             if (in_array($key, $immutable_fields, true)) {
@@ -169,6 +187,11 @@ function owbn_save_entity_meta(int $post_id, WP_Post $post): void
 
     // Send change notification for all saves (staff dirty or not)
     owbn_send_change_notification($post_id, $config, $old_values);
+
+    // Recompute compliance state from the post-save DB state. Compliance gaps
+    // are persistent post meta — not transients — so they survive across page
+    // loads and remain visible until the deficiency is actually resolved.
+    owbn_update_entity_compliance_meta($post_id, $config);
 }
 
 /**
@@ -472,7 +495,34 @@ if (!function_exists('owbn_sanitize_session_group')) {
         $cleaned = [];
         if (!is_array($group_data)) return $cleaned;
 
-        foreach ($group_data as $row) {
+        foreach ($group_data as $index => $row) {
+            // Skip the JS clone template row. Its inputs still submit because
+            // the template wrapper uses `display:none` (not a real <template>
+            // tag), so without this guard every save would append a phantom
+            // blank session row.
+            if ($index === '__INDEX__') continue;
+            if (!is_array($row)) continue;
+
+            // Skip completely empty rows so the list stays clean across
+            // repeated saves. A row is "empty" if every meaningful subfield
+            // is blank. We intentionally do NOT use the genres-only presence
+            // as a signal, because a user might have only set genres before
+            // filling in the time — but we still require at least one of the
+            // scheduling fields or notes to be non-empty.
+            $day        = trim((string) ($row['day'] ?? ''));
+            $start_time = trim((string) ($row['start_time'] ?? ''));
+            $session_type = trim((string) ($row['session_type'] ?? ''));
+            $notes      = trim((string) ($row['notes'] ?? ''));
+            $genres     = $row['genres'] ?? [];
+            $has_genres = is_array($genres) && !empty(array_filter($genres));
+            if (
+                $day === '' && $start_time === '' && $notes === ''
+                && !$has_genres
+                && ($session_type === '' || $session_type === 'Session')
+            ) {
+                continue;
+            }
+
             $row_cleaned = [];
             foreach ($meta_fields as $sub_key => $sub_meta) {
                 if (!isset($row[$sub_key])) continue;
@@ -537,7 +587,17 @@ if (!function_exists('owbn_sanitize_location_group')) {
         $cleaned = [];
         if (!is_array($group_data)) return $cleaned;
 
-        foreach ($group_data as $row) {
+        foreach ($group_data as $index => $row) {
+            if ($index === '__INDEX__') continue;
+            if (!is_array($row)) continue;
+            // Skip rows with no meaningful content at all
+            $has_content = false;
+            foreach ($row as $v) {
+                if (is_array($v)) { if (!empty(array_filter($v))) { $has_content = true; break; } }
+                elseif (trim((string) $v) !== '') { $has_content = true; break; }
+            }
+            if (!$has_content) continue;
+
             $row_cleaned = [];
             foreach ($meta_fields as $sub_key => $sub_meta) {
                 if (!isset($row[$sub_key])) continue;
@@ -579,7 +639,16 @@ if (!function_exists('owbn_sanitize_repeatable_group')) {
         $cleaned = [];
         if (!is_array($group_data)) return $cleaned;
 
-        foreach ($group_data as $row) {
+        foreach ($group_data as $index => $row) {
+            if ($index === '__INDEX__') continue;
+            if (!is_array($row)) continue;
+            $has_content = false;
+            foreach ($row as $v) {
+                if (is_array($v)) { if (!empty(array_filter($v))) { $has_content = true; break; } }
+                elseif (trim((string) $v) !== '') { $has_content = true; break; }
+            }
+            if (!$has_content) continue;
+
             $row_cleaned = [];
             foreach ($meta_fields as $sub_key => $sub_meta) {
                 if (!isset($row[$sub_key])) continue;

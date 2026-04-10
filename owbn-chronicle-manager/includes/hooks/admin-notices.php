@@ -21,27 +21,49 @@ function owbn_admin_notice_entity_errors()
     if (!is_callable($callable)) return;
     $definitions = call_user_func($callable);
 
-    $labels = [];
+    $field_labels         = [];
+    $publication_blockers = [];
     foreach ($errors as $error_key) {
-        // Handle required document errors (format: document_links:Title)
-        if (strpos($error_key, 'document_links:') === 0) {
-            $doc_title = substr($error_key, strlen('document_links:'));
-            $labels[] = sprintf(__('Required document: %s (URL or upload needed)', 'owbn-chronicle-manager'), $doc_title);
+        if (!is_string($error_key)) continue;
+
+        // Publication-gate errors surface the draft→publish block.
+        if (strpos($error_key, 'publication_gate:') === 0) {
+            $publication_blockers[] = substr($error_key, strlen('publication_gate:'));
             continue;
         }
-        foreach ($definitions as $section => $fields) {
+
+        // Legacy format (pre-refactor) — harmless to tolerate for transients
+        // persisted across the upgrade boundary.
+        if (strpos($error_key, 'document_links:') === 0) {
+            $publication_blockers[] = substr($error_key, strlen('document_links:'));
+            continue;
+        }
+
+        foreach ($definitions as $fields) {
             if (isset($fields[$error_key])) {
-                $labels[] = $fields[$error_key]['label'];
+                $field_labels[] = $fields[$error_key]['label'];
             }
         }
     }
 
-    if (!empty($labels)) {
+    if (!empty($field_labels)) {
         echo '<div class="notice notice-error owbn-error-notice">';
-        echo '<p><strong>' . esc_html__('Please fix the following required fields:', 'owbn-chronicle-manager') . '</strong></p>';
-        echo '<ul>';
-        foreach ($labels as $label) {
+        echo '<p><strong>';
+        echo esc_html__('Some fields could not be saved. All other edits WERE saved. Please fix these and resubmit:', 'owbn-chronicle-manager');
+        echo '</strong></p><ul style="list-style:disc;margin-left:20px;">';
+        foreach ($field_labels as $label) {
             echo '<li>' . esc_html($label) . '</li>';
+        }
+        echo '</ul></div>';
+    }
+
+    if (!empty($publication_blockers)) {
+        echo '<div class="notice notice-error owbn-error-notice">';
+        echo '<p><strong>';
+        echo esc_html__('This chronicle cannot be published until every required document has a URL or upload. It was reverted to draft. Add the missing URLs below and try again.', 'owbn-chronicle-manager');
+        echo '</strong></p><ul style="list-style:disc;margin-left:20px;">';
+        foreach ($publication_blockers as $title) {
+            echo '<li>' . esc_html($title) . '</li>';
         }
         echo '</ul></div>';
     }

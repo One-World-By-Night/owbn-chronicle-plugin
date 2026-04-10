@@ -669,3 +669,64 @@ button.remove-player {
 .owbn-subcoord-block .owbn-user-row:last-child {
     margin-bottom: 0;
 }
+
+/* === INLINE FIELD ERROR STATE ==================================== */
+/* Highlight fields that failed the last save. Neighboring fields saved
+   normally; only the ones wrapped in .owbn-error-field show this state. */
+.owbn-error-field {
+    background: #fef4f4;
+    border-left: 4px solid #b32d2e;
+    padding-left: 10px;
+}
+.owbn-error-field input[type="text"],
+.owbn-error-field input[type="url"],
+.owbn-error-field input[type="email"],
+.owbn-error-field input[type="date"],
+.owbn-error-field input[type="number"],
+.owbn-error-field textarea,
+.owbn-error-field select {
+    border-color: #b32d2e !important;
+    box-shadow: 0 0 0 1px #b32d2e;
+}
+.owbn-field-error-message {
+    color: #b32d2e;
+    font-weight: 600;
+    margin: 6px 0 0;
+    font-size: 12px;
+}
+
+/* === COMPLIANCE BANNER (metabox top) ============================= */
+.owbn-compliance-banner {
+    margin-bottom: 15px;
+    padding: 12px 14px;
+    background: #fffbea;
+    border-left: 4px solid #dba617;
+}
+.owbn-compliance-banner ul {
+    margin: 8px 0 0 20px;
+    list-style: disc;
+}
+
+/* === COMPLIANCE BADGES (list table + dashboard) ================== */
+.owbn-compliance-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.6;
+}
+.owbn-compliance-badge--ok   { background: #e5f5e0; color: #14521e; }
+.owbn-compliance-badge--warn { background: #fbecd0; color: #664400; }
+
+/* === DOCUMENT LINK BLOCK: needs-action emphasis ================== */
+.owbn-document-block--needs-action {
+    border: 1px solid #dba617;
+    background: #fffbea;
+    padding: 6px 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+.owbn-document-block--needs-action > .owbn-document-header strong {
+    color: #664400;
+}

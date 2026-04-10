@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OWBN Chronicle & Coordinator Manager
  * Description: Manage OWBN Chronicle & Coordinator information using structured custom post types, shortcodes, and approval workflows.
- * Version: 2.14.0
+ * Version: 2.15.0
  * Author: greghacke
  * Author URI: https://www.owbn.net
  * Text Domain: owbn-chronicle-manager
@@ -15,7 +15,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('OWBN_CM_VERSION', '2.14.0');
+define('OWBN_CM_VERSION', '2.15.0');
 
 require_once plugin_dir_path(__FILE__) . 'includes/core/entity-registry.php';
 require_once plugin_dir_path(__FILE__) . 'includes/core/entity-init.php';
@@ -34,6 +34,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/hooks/admin-init.php';
 require_once plugin_dir_path(__FILE__) . 'includes/hooks/helpers.php';
 require_once plugin_dir_path(__FILE__) . 'includes/hooks/admin-list-filters.php';
 require_once plugin_dir_path(__FILE__) . 'includes/hooks/admin-notices.php';
+require_once plugin_dir_path(__FILE__) . 'includes/hooks/compliance.php';
 require_once plugin_dir_path(__FILE__) . 'includes/hooks/admin-remove-add.php';
 require_once plugin_dir_path(__FILE__) . 'includes/hooks/entity-history.php';
 require_once plugin_dir_path(__FILE__) . 'includes/hooks/entity-revisions.php';
@@ -129,5 +130,24 @@ function owbn_run_upgrade(string $from): void
     if (version_compare($from, '2.8.1', '<')) {
         owbn_init_coordinator_snapshot();
         owbn_init_chronicle_staff_snapshot();
+    }
+
+    // v2.15.0: One-time compliance backfill. Grades every existing chronicle
+    // against its required_documents config and writes compliance meta so the
+    // new admin list column and dashboard widget are populated immediately.
+    // Also clears any leftover legacy `validation_blocked` transients from
+    // prior-version saves that might still be in flight.
+    if (version_compare($from, '2.15.0', '<')) {
+        if (function_exists('owbn_compliance_backfill_all')) {
+            owbn_compliance_backfill_all();
+        }
+        // Best-effort cleanup of the legacy kill-switch transient so nobody's
+        // next save after upgrade hits the old silent-drop code path.
+        global $wpdb;
+        $wpdb->query(
+            "DELETE FROM {$wpdb->options}
+             WHERE option_name LIKE '\\_transient\\_owbn\\_%\\_validation\\_blocked\\_%'
+                OR option_name LIKE '\\_transient\\_timeout\\_owbn\\_%\\_validation\\_blocked\\_%'"
+        );
     }
 }
