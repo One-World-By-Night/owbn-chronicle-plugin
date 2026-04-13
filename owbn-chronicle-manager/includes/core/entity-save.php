@@ -254,29 +254,7 @@ function owbn_save_entity_field(int $post_id, string $key, array $meta, $raw, bo
         case 'session_group':
             // phpcs:ignore WordPress.Security.NonceVerification.Missing
             $group_data = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : [];
-            // TEMP v2.15.2: log POST for session_list. Remove in v2.15.3.
-            if ($key === 'session_list') {
-                @file_put_contents(
-                    '/tmp/owbn-session-debug.log',
-                    sprintf(
-                        "[%s] post_id=%d slug=%s user=%d POST_RAW=%s\n",
-                        date('Y-m-d H:i:s'),
-                        $post_id,
-                        get_post_meta($post_id, 'chronicle_slug', true),
-                        get_current_user_id(),
-                        wp_json_encode($group_data)
-                    ),
-                    FILE_APPEND
-                );
-            }
             $cleaned = owbn_sanitize_session_group($group_data, $meta['fields']);
-            if ($key === 'session_list') {
-                @file_put_contents(
-                    '/tmp/owbn-session-debug.log',
-                    sprintf("                CLEANED=%s\n\n", wp_json_encode($cleaned)),
-                    FILE_APPEND
-                );
-            }
             update_post_meta($post_id, $key, $cleaned);
             break;
 
