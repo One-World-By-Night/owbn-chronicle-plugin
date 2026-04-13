@@ -258,6 +258,13 @@ function owbn_save_entity_field(int $post_id, string $key, array $meta, $raw, bo
             update_post_meta($post_id, $key, $cleaned);
             break;
 
+        case 'one_off_group':
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing
+            $group_data = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : [];
+            $cleaned = owbn_sanitize_one_off_group($group_data, $meta['fields']);
+            update_post_meta($post_id, $key, $cleaned);
+            break;
+
         case 'ooc_location':
             // phpcs:ignore WordPress.Security.NonceVerification.Missing
             $group_data = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : [];
@@ -535,6 +542,49 @@ if (!function_exists('owbn_sanitize_session_group')) {
             }
             $cleaned[] = $row_cleaned;
         }
+        return $cleaned;
+    }
+}
+
+if (!function_exists('owbn_sanitize_one_off_group')) {
+    function owbn_sanitize_one_off_group($group_data, $meta_fields)
+    {
+        $cleaned = [];
+        if (!is_array($group_data)) return $cleaned;
+
+        foreach ($group_data as $index => $row) {
+            if ($index === '__INDEX__') continue;
+            if (!is_array($row)) continue;
+
+            $event_date = trim((string) ($row['event_date'] ?? ''));
+            $start_time = trim((string) ($row['start_time'] ?? ''));
+            // A row is empty unless it has at least a date.
+            if ($event_date === '') continue;
+
+            $row_cleaned = [];
+            foreach ($meta_fields as $sub_key => $sub_meta) {
+                if (!isset($row[$sub_key])) continue;
+                $raw = $row[$sub_key];
+                switch ($sub_meta['type']) {
+                    case 'wysiwyg':
+                        $row_cleaned[$sub_key] = wp_kses_post($raw);
+                        break;
+                    case 'multi_select':
+                        $row_cleaned[$sub_key] = is_array($raw) ? array_map('sanitize_text_field', $raw) : [];
+                        break;
+                    default:
+                        $row_cleaned[$sub_key] = is_array($raw) ? array_map('sanitize_text_field', $raw) : sanitize_text_field($raw);
+                        break;
+                }
+            }
+            $cleaned[] = $row_cleaned;
+        }
+
+        // Sort by date ascending so the editor and frontend always show
+        // chronological order.
+        usort($cleaned, function ($a, $b) {
+            return strcmp($a['event_date'] ?? '', $b['event_date'] ?? '');
+        });
         return $cleaned;
     }
 }

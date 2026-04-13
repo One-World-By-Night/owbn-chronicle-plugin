@@ -85,6 +85,22 @@ function owbn_get_chronicle_field_definitions()
                         'type' => 'multi_select',
                         'source' => 'owbn_genre_list',
                     ],
+                    'anchor_date' => [
+                        'label' => __('Start Date (for "Every Other")', 'owbn-chronicle-manager'),
+                        'type' => 'date',
+                        'description' => __('Required when frequency is "Every Other". Anchors the bi-weekly schedule.', 'owbn-chronicle-manager'),
+                    ],
+                ],
+            ],
+            'session_one_offs' => [
+                'label' => __('One-Off Events', 'owbn-chronicle-manager'),
+                'type'  => 'one_off_group',
+                'fields' => [
+                    'event_date'  => ['label' => __('Date', 'owbn-chronicle-manager'), 'type' => 'date', 'required' => true],
+                    'start_time'  => ['label' => __('Start Time', 'owbn-chronicle-manager'), 'type' => 'time', 'required' => true],
+                    'event_title' => ['label' => __('Event Title', 'owbn-chronicle-manager'), 'type' => 'text'],
+                    'genres'      => ['label' => __('Genres', 'owbn-chronicle-manager'), 'type' => 'multi_select', 'source' => 'owbn_genre_list'],
+                    'notes'       => ['label' => __('Notes', 'owbn-chronicle-manager'), 'type' => 'wysiwyg'],
                 ],
             ],
             'web_url' => ['label' => __('Website URL', 'owbn-chronicle-manager'), 'type' => 'url'],

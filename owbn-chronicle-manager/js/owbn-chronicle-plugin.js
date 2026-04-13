@@ -99,6 +99,27 @@
         });
     });
 
+    // Show/hide anchor_date row when frequency = "Every Other"
+    function syncAnchorDateRow($block) {
+        const $freq = $block.find('select[name*="[frequency]"]');
+        const $row = $block.find('.owbn-anchor-date-row');
+        if (!$freq.length || !$row.length) return;
+        if ($freq.val() === 'Every Other') {
+            $row.show();
+        } else {
+            $row.hide();
+            $row.find('input[type="date"]').val('');
+        }
+    }
+    $(document).on('change', '.owbn-session-block select[name*="[frequency]"]', function () {
+        syncAnchorDateRow($(this).closest('.owbn-session-block'));
+    });
+    $(function () {
+        $('.owbn-session-block').not('.owbn-session-template').each(function () {
+            syncAnchorDateRow($(this));
+        });
+    });
+
     $(document).on('click', '.toggle-session', function () {
         const body = $(this).closest('.owbn-session-block').find('.owbn-session-body');
         body.slideToggle();
@@ -106,6 +127,45 @@
 
     $(document).on('click', '.remove-session', function () {
         $(this).closest('.owbn-session-block').remove();
+    });
+
+    // -----------------------------
+    // ONE-OFF EVENT BLOCKS
+    // -----------------------------
+    $(document).on('click', '.add-one-off', function () {
+        const container = $(this).closest('.owbn-repeatable-group');
+        const template = container.find('.owbn-one-off-template').clone().removeClass('owbn-one-off-template').show();
+        const lastIndex = container.find('.owbn-one-off-block').not('.owbn-one-off-template').length;
+        template.find(':input').prop('disabled', false).removeAttr('disabled');
+        template.find('[name], [id], [for]').each(function () {
+            ['name', 'id', 'for'].forEach(attr => {
+                const val = $(this).attr(attr);
+                if (val) $(this).attr(attr, val.replace(/__INDEX__/g, lastIndex));
+            });
+        });
+        template.find('textarea').each(function () {
+            const id = $(this).attr('id');
+            if (id && typeof tinymce !== 'undefined' && tinymce.get(id)) tinymce.get(id).remove();
+        });
+        container.find('.add-one-off').before(template);
+        template.find('.owbn-select2').select2({ width: '100%' });
+        template.find('textarea').each(function () {
+            const id = $(this).attr('id');
+            if (id) wp.editor.initialize(id, {
+                tinymce: { wpautop: true, plugins: 'link', toolbar1: 'bold italic link' },
+                quicktags: true, mediaButtons: false
+            });
+        });
+    });
+    $(document).on('click', '.toggle-one-off', function () {
+        $(this).closest('.owbn-one-off-block').find('.owbn-session-body').slideToggle();
+    });
+    $(document).on('click', '.remove-one-off', function () {
+        $(this).closest('.owbn-one-off-block').remove();
+    });
+    $(document).on('click', '.owbn-show-past-one-offs', function () {
+        $(this).closest('.owbn-repeatable-group').find('.owbn-one-off-past .owbn-session-body').show();
+        $(this).remove();
     });
 
     // -----------------------------

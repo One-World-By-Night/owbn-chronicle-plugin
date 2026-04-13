@@ -2,7 +2,7 @@
 if (!defined('ABSPATH')) exit;
 
 // Render the session group fields for the Chronicle custom post type
-function owbn_render_session_group($key, $value, $meta) {
+function owbn_render_session_group($key, $value, $meta, $post_id = 0) {
     $groups = is_array($value) ? $value : [];
     $subfields = $meta['fields'];
 
@@ -10,7 +10,13 @@ function owbn_render_session_group($key, $value, $meta) {
         $groups[] = []; // Start with one blank
     }
 
-    echo '<div class="owbn-repeatable-group" data-key="' . esc_attr($key) . '">' . "\n";
+    $tz_label = $post_id ? get_post_meta($post_id, 'timezone', true) : '';
+    $tz_hint = $tz_label
+        ? sprintf(__('Times below are in %s', 'owbn-chronicle-manager'), esc_html($tz_label))
+        : __('Set Chronicle Timezone above so session times can be labeled.', 'owbn-chronicle-manager');
+    echo '<p class="description owbn-session-tz-hint">' . $tz_hint . '</p>' . "\n";
+
+    echo '<div class="owbn-repeatable-group" data-key="' . esc_attr($key) . '" data-tz="' . esc_attr($tz_label) . '">' . "\n";
 
     foreach ($groups as $i => $group) {
         echo '<div class="owbn-session-block">' . "\n";
@@ -73,6 +79,12 @@ function owbn_render_session_group($key, $value, $meta) {
         render_session_field($key, $i, 'start_time', $subfields['start_time'], $group['start_time'] ?? '');
         echo '</div>' . "\n";
 
+        // Row 2b: Anchor Date (only meaningful for "Every Other"; JS shows/hides)
+        $anchor_visible = (($group['frequency'] ?? '') === 'Every Other') ? '' : ' style="display:none;"';
+        echo '<div class="owbn-session-row owbn-anchor-date-row"' . $anchor_visible . '>' . "\n";
+        render_session_field($key, $i, 'anchor_date', $subfields['anchor_date'], $group['anchor_date'] ?? '');
+        echo '</div>' . "\n";
+
         // Row 3: Game Date Notes (full width)
         echo '<div class="owbn-session-row-full">' . "\n";
         render_session_field($key, $i, 'notes', $subfields['notes'], $group['notes'] ?? '');
@@ -107,6 +119,10 @@ function owbn_render_session_group($key, $value, $meta) {
     render_session_template_field($key, '__INDEX__', 'start_time', $subfields['start_time']);
     echo '</div>' . "\n";
 
+    echo '<div class="owbn-session-row owbn-anchor-date-row" style="display:none;">' . "\n";
+    render_session_template_field($key, '__INDEX__', 'anchor_date', $subfields['anchor_date']);
+    echo '</div>' . "\n";
+
     echo '<div class="owbn-session-row-full">' . "\n";
     render_session_template_field($key, '__INDEX__', 'notes', $subfields['notes']);
     echo '</div>' . "\n";
@@ -139,6 +155,10 @@ function render_session_template_field($key, $index, $subkey, $meta) {
 
         case 'time':
             echo '<input type="time" name="' . esc_attr($field_name) . '" value="">' . "\n";
+            break;
+
+        case 'date':
+            echo '<input type="date" name="' . esc_attr($field_name) . '" value="">' . "\n";
             break;
 
         case 'wysiwyg':
@@ -181,6 +201,10 @@ function render_session_field($key, $index, $subkey, $meta, $value) {
 
         case 'time':
             echo '<input type="time" name="' . esc_attr($field_name) . '" value="' . esc_attr($value) . '">' . "\n";
+            break;
+
+        case 'date':
+            echo '<input type="date" name="' . esc_attr($field_name) . '" value="' . esc_attr($value) . '">' . "\n";
             break;
 
         case 'wysiwyg':

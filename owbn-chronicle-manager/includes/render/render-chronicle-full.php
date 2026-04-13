@@ -134,6 +134,15 @@ function owbn_render_chronicle_full($post_id)
                         echo wp_kses_post(owbn_render_group_field($value, $field_def));
                         break;
 
+                    case 'one_off_group':
+                        // Filter out past events for frontend display.
+                        $today_str = current_time('Y-m-d');
+                        $upcoming = is_array($value) ? array_filter($value, function ($e) use ($today_str) {
+                            return ($e['event_date'] ?? '') >= $today_str;
+                        }) : [];
+                        echo wp_kses_post(owbn_render_group_field(array_values($upcoming), $field_def));
+                        break;
+
                     default:
                         echo '[Unhandled field type: ' . esc_html($field_def['type']) . ']';
                         break;

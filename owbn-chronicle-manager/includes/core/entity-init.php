@@ -125,6 +125,7 @@ function owbn_register_entity_meta(array $config): void
         'ooc_location',
         'location_group',
         'session_group',
+        'one_off_group',
         'ast_group',
         'repeatable_group',
         'readonly_history',
@@ -362,7 +363,11 @@ function owbn_render_entity_metabox($post)
                     break;
 
                 case 'session_group':
-                    owbn_render_session_group($key, $value, $meta);
+                    owbn_render_session_group($key, $value, $meta, $post->ID);
+                    break;
+
+                case 'one_off_group':
+                    owbn_render_one_off_group($key, $value, $meta, $post->ID);
                     break;
 
                 case 'repeatable_group':

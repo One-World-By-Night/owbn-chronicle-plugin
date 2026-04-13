@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OWBN Chronicle & Coordinator Manager
  * Description: Manage OWBN Chronicle & Coordinator information using structured custom post types, shortcodes, and approval workflows.
- * Version: 2.15.3
+ * Version: 2.15.4
  * Author: greghacke
  * Author URI: https://www.owbn.net
  * Text Domain: owbn-chronicle-manager
@@ -15,7 +15,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('OWBN_CM_VERSION', '2.15.3');
+define('OWBN_CM_VERSION', '2.15.4');
 
 require_once plugin_dir_path(__FILE__) . 'includes/core/entity-registry.php';
 require_once plugin_dir_path(__FILE__) . 'includes/core/entity-init.php';
@@ -42,6 +42,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/hooks/entity-revisions.php';
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-metabox-fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-location-fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-session-fields.php';
+require_once plugin_dir_path(__FILE__) . 'includes/render/render-one-off-fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-user-fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-links-uploads-fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-chronicle-box.php';

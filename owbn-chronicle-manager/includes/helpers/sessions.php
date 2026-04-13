@@ -68,8 +68,22 @@ function owbn_chronicle_expand_session_dates( array $session, $tz_name, $from, $
 				break;
 
 			case 'Every Other':
-				$global_week = (int) floor( $cursor->getTimestamp() / ( 7 * DAY_IN_SECONDS ) );
-				$include     = ( 0 === $global_week % 2 );
+				// Prefer staff-supplied anchor_date so parity matches their calendar.
+				// Falls back to epoch parity if anchor is missing or invalid.
+				$anchor = $session['anchor_date'] ?? '';
+				if ( $anchor && preg_match( '/^\d{4}-\d{2}-\d{2}$/', $anchor ) ) {
+					try {
+						$anchor_dt = new DateTime( $anchor, $tz );
+						$diff_days = (int) floor( ( $cursor->getTimestamp() - $anchor_dt->getTimestamp() ) / DAY_IN_SECONDS );
+						$include   = ( 0 === ( ( $diff_days / 7 ) % 2 ) );
+					} catch ( Exception $e ) {
+						$global_week = (int) floor( $cursor->getTimestamp() / ( 7 * DAY_IN_SECONDS ) );
+						$include     = ( 0 === $global_week % 2 );
+					}
+				} else {
+					$global_week = (int) floor( $cursor->getTimestamp() / ( 7 * DAY_IN_SECONDS ) );
+					$include     = ( 0 === $global_week % 2 );
+				}
 				break;
 
 			case '1st':

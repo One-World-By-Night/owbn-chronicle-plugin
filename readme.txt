@@ -2,7 +2,7 @@
 
 The organizational directory for One World by Night. Manages chronicle and coordinator records as structured WordPress content.
 
-Version: 2.15.3
+Version: 2.15.4
 Deployed to: council.owbn.net, chronicles.owbn.net (network-activated on both)
 
 ## What It Does
@@ -32,6 +32,13 @@ Staff role sync is bidirectional -- updating a chronicle's HST field grants that
 - Network-activated on WordPress multisite
 
 ## Changelog
+
+### 2.15.4
+
+- Sessions: anchor_date sub-field for "Every Other" frequency. Helper uses staff-supplied anchor for parity, falls back to epoch.
+- Sessions: Chronicle Timezone label shown above session times in editor.
+- New: One-Off Events field (event_date, start_time, title, genres, notes). Sorted by date.
+- One-Offs: past events collapsed in editor with "Show Past Events" toggle; filtered from frontend output.
 
 ### 2.15.3
 
