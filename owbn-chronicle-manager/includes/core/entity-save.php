@@ -254,7 +254,29 @@ function owbn_save_entity_field(int $post_id, string $key, array $meta, $raw, bo
         case 'session_group':
             // phpcs:ignore WordPress.Security.NonceVerification.Missing
             $group_data = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : [];
+            // TEMP v2.15.2: log POST for session_list. Remove in v2.15.3.
+            if ($key === 'session_list') {
+                @file_put_contents(
+                    '/tmp/owbn-session-debug.log',
+                    sprintf(
+                        "[%s] post_id=%d slug=%s user=%d POST_RAW=%s\n",
+                        date('Y-m-d H:i:s'),
+                        $post_id,
+                        get_post_meta($post_id, 'chronicle_slug', true),
+                        get_current_user_id(),
+                        wp_json_encode($group_data)
+                    ),
+                    FILE_APPEND
+                );
+            }
             $cleaned = owbn_sanitize_session_group($group_data, $meta['fields']);
+            if ($key === 'session_list') {
+                @file_put_contents(
+                    '/tmp/owbn-session-debug.log',
+                    sprintf("                CLEANED=%s\n\n", wp_json_encode($cleaned)),
+                    FILE_APPEND
+                );
+            }
             update_post_meta($post_id, $key, $cleaned);
             break;
 
@@ -503,23 +525,13 @@ if (!function_exists('owbn_sanitize_session_group')) {
             if ($index === '__INDEX__') continue;
             if (!is_array($row)) continue;
 
-            // Skip completely empty rows so the list stays clean across
-            // repeated saves. A row is "empty" if every meaningful subfield
-            // is blank. We intentionally do NOT use the genres-only presence
-            // as a signal, because a user might have only set genres before
-            // filling in the time — but we still require at least one of the
-            // scheduling fields or notes to be non-empty.
-            $day        = trim((string) ($row['day'] ?? ''));
+            // SELECT subfields always submit (browser default-first), so only
+            // start_time/notes/genres are reliable emptiness signals.
             $start_time = trim((string) ($row['start_time'] ?? ''));
-            $session_type = trim((string) ($row['session_type'] ?? ''));
             $notes      = trim((string) ($row['notes'] ?? ''));
             $genres     = $row['genres'] ?? [];
             $has_genres = is_array($genres) && !empty(array_filter($genres));
-            if (
-                $day === '' && $start_time === '' && $notes === ''
-                && !$has_genres
-                && ($session_type === '' || $session_type === 'Session')
-            ) {
+            if ($start_time === '' && $notes === '' && !$has_genres) {
                 continue;
             }
 
