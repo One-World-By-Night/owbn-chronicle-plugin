@@ -53,6 +53,7 @@ owbn_register_entity_type([
     'access_patterns' => [
         'chronicle/{slug}/cm',
         'chronicle/{slug}/hst',
+        'chronicle/{slug}/staff',
     ],
 
     // Staff field → role path mapping for auto grant/revoke

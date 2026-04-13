@@ -65,6 +65,7 @@ owbn_register_entity_type([
         'coordinator/{slug}/coordinator',
         'coordinator/{slug}/sub-coordinator',
         'exec/{slug}/coordinator',
+        'exec/{slug}/staff',
     ],
 
     // Staff field → role path mapping for auto grant/revoke
