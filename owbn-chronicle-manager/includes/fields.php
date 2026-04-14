@@ -115,7 +115,7 @@ function owbn_get_chronicle_field_definitions()
                 'conditional_required' => 'chronicle_satellite=0', // custom logic
             ],
             'ast_list' => [
-                'label' => __('AST List', 'owbn-chronicle-manager'),
+                'label' => __('AST Info', 'owbn-chronicle-manager'),
                 'type' => 'ast_group',
                 'fields' => [
                     'user' => [
@@ -220,14 +220,15 @@ function owbn_get_chronicle_field_definitions()
                     'platform' => [
                         'label'   => __('Platform', 'owbn-chronicle-manager'),
                         'type'    => 'select',
+                        // Discord first — many chronicles run everything on Discord.
                         'options' => [
+                            'discord'    => 'Discord',
                             'facebook'   => 'Facebook',
                             'twitter'    => 'Twitter (X)',
                             'instagram'  => 'Instagram',
                             'linkedin'   => 'LinkedIn',
                             'youtube'    => 'YouTube',
                             'tiktok'     => 'TikTok',
-                            'discord'    => 'Discord',
                             'twitch'     => 'Twitch',
                             'reddit'     => 'Reddit',
                             'threads'    => 'Threads',
@@ -248,8 +249,6 @@ function owbn_get_chronicle_field_definitions()
         // ── Tab Three ──────────────────────────────────────────────────
         'Premise, Travel & Lists' => [
             'premise' => ['label' => __('Premise', 'owbn-chronicle-manager'), 'type' => 'wysiwyg'],
-            'game_theme' => ['label' => __('Game Theme', 'owbn-chronicle-manager'), 'type' => 'wysiwyg'],
-            'game_mood' => ['label' => __('Game Mood', 'owbn-chronicle-manager'), 'type' => 'wysiwyg'],
             'traveler_info' => ['label' => __('Information for Travellers', 'owbn-chronicle-manager'), 'type' => 'wysiwyg'],
             'email_lists' => [
                 'label' => __('Staff Lists', 'owbn-chronicle-manager'),
@@ -320,39 +319,11 @@ function owbn_get_chronicle_field_definitions()
                 'type' => 'select',
                 'options' => ['--Select Option--', 'Player Vote', 'HST Appointed', 'Vote/Consensus of Staff', 'Other']
             ],
-            'admin_contact' => [
-                'label' => __('Admin Contact', 'owbn-chronicle-manager'),
-                'type' => 'user_info',
-            ],
             'chronicle_start_date' => ['label' => __('Start Date', 'owbn-chronicle-manager'), 'type' => 'date'],
             'chronicle_region' => [
                 'label'   => __('Region', 'owbn-chronicle-manager'),
                 'type'    => 'select',
                 'options' => get_option('owbn_region_list', []),
-            ],
-            'ooc_locations' => [
-                'label' => __('OOC Locations', 'owbn-chronicle-manager'),
-                'type'  => 'ooc_location',
-                'fields' => [
-                    'country' => [
-                        'label' => __('Country', 'owbn-chronicle-manager'),
-                        'type'  => 'select',
-                        'options' => owbn_get_country_list(),
-                        'search'  => true, // enable Select2 search
-                    ],
-                    'region' => [
-                        'label' => __('State / Province / Region', 'owbn-chronicle-manager'),
-                        'type'  => 'text',
-                    ],
-                    'city' => [
-                        'label' => __('City / Municipality', 'owbn-chronicle-manager'),
-                        'type'  => 'text',
-                    ],
-                    'notes' => [
-                        'label' => __('Location Notes', 'owbn-chronicle-manager'),
-                        'type'  => 'wysiwyg',
-                    ],
-                ]
             ],
             'staff_history' => [
                 'label' => __('Previous Staff', 'owbn-chronicle-manager'),

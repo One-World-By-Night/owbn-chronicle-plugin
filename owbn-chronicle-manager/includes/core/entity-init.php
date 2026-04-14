@@ -434,6 +434,22 @@ function owbn_render_entity_metabox($post)
         }
         echo '</tbody></table>';
         echo '</div>';
+
+        // Live-toggle: chronicle_parent is only relevant for satellite chronicles.
+        // Hide its row when the satellite switch is off; show when flipped on.
+        // The exclusive_fields config already clears the parent value on save
+        // when satellite=0, so hiding the UI is purely cosmetic.
+        echo '<script>
+        (function(){
+            var sat = document.getElementById("chronicle_satellite");
+            var parentLabel = document.querySelector(".owbn-header-block label[for=\"chronicle_parent\"]");
+            var parentRow = parentLabel ? parentLabel.closest("tr") : null;
+            if (!sat || !parentRow) return;
+            function sync() { parentRow.style.display = sat.checked ? "" : "none"; }
+            sync();
+            sat.addEventListener("change", sync);
+        })();
+        </script>' . "\n";
     }
 
     // Tabbed groups: everything except __header__.
