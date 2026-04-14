@@ -4,8 +4,10 @@ if (!defined('ABSPATH')) exit;
 function owbn_get_chronicle_field_definitions()
 {
     return [
-        // ── Tab Zero: Above It All ─────────────────────────────────────
-        'Above It All' => [
+        // ── Header (rendered ABOVE the tab nav, not as a tab) ──────────
+        // The renderer detects the `__header__` group key and renders its
+        // fields in a dedicated block above the tab navigation.
+        '__header__' => [
             'chronicle_slug' => [
                 'label' => __('Chronicle Slug', 'owbn-chronicle-manager'),
                 'type' => 'slug',
@@ -21,7 +23,11 @@ function owbn_get_chronicle_field_definitions()
                 'source' => 'owbn_chronicle_list',
             ],
         ],
-        // ── Tab One ────────────────────────────────────────────────────
+        // ── Tab 1: Description ─────────────────────────────────────────
+        // Intentionally empty. The renderer detects empty groups and renders
+        // WP's post_content editor inside that tab panel via wp_editor().
+        'Description' => [],
+        // ── Tab 2 ──────────────────────────────────────────────────────
         'Game, Schedule & Staff' => [
             'genres' => [
                 'label' => __('Genres', 'owbn-chronicle-manager'),
@@ -297,8 +303,8 @@ function owbn_get_chronicle_field_definitions()
                 ],
             ],
         ],
-        // ── Tab Four (who gives a fuck) ────────────────────────────────
-        'Who Gives A Fuck' => [
+        // ── Tab 5: Administrative ──────────────────────────────────────
+        'Administrative' => [
             'hst_selection' => [
                 'label' => __('HST Selection Method', 'owbn-chronicle-manager'),
                 'type' => 'select',

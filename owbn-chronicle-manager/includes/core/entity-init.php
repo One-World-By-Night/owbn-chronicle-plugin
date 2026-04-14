@@ -317,16 +317,139 @@ function owbn_render_entity_metabox($post)
         }
     }
 
-    // ── Metabox tabs (phase 1) ──────────────────────────────────────────
-    // Determine which tab should be active on load. Default = first tab.
-    // If there are integrity errors on any tab, auto-activate the first tab
-    // containing an errored field so the user can see what needs fixing.
-    $section_labels = array_keys($field_groups);
+    // ── Header / Tabs / Content editor layout ──────────────────────────
+    // Group keys determine layout:
+    //   `__header__`  → rendered above the tab nav, not as a tab
+    //   empty groups  → tab panel hosts wp_editor() for post_content
+    //   everything else → normal tab with form-table field list
+
+    // Factor field-row rendering into a closure so header and tab panels share
+    // exactly the same dispatcher without copy-paste drift.
+    $render_field_row = function ($key, $meta) use ($post, $submitted_values, $error_field_keys, $immutable_fields, $restricted_fields, $can_edit_metadata) {
+        $value       = get_post_meta($post->ID, $key, true);
+        if (isset($submitted_values[$key])) {
+            $value = $submitted_values[$key];
+        }
+        $label       = $meta['label'] ?? $key;
+        $type        = $meta['type'] ?? 'text';
+        $is_errored  = in_array($key, $error_field_keys, true);
+        $error_class = $is_errored ? ' owbn-error-field' : '';
+
+        $is_immutable  = in_array($key, $immutable_fields, true) && !empty($value);
+        $is_restricted = in_array($key, $restricted_fields, true) && !$can_edit_metadata;
+        $disabled_attr = ($is_immutable || $is_restricted) ? ' disabled' : '';
+
+        echo '<tr>';
+        echo '<th><label for="' . esc_attr($key) . '">' . esc_html($label) . '</label></th>';
+        echo '<td class="' . esc_attr(trim($error_class)) . '">';
+
+        switch ($type) {
+            case 'wysiwyg':
+                owbn_render_wysiwyg_editor($key, $value);
+                break;
+            case 'select':
+                owbn_render_select_field($key, $value, $meta, $disabled_attr);
+                break;
+            case 'chronicle_select':
+                owbn_render_entity_select_field($key, $value, $meta, $label, $error_class, $disabled_attr);
+                break;
+            case 'multi_select':
+                owbn_render_multi_select_field($key, $value, $meta, $disabled_attr);
+                break;
+            case 'session_group':
+                owbn_render_session_group($key, $value, $meta, $post->ID);
+                break;
+            case 'one_off_group':
+                owbn_render_one_off_group($key, $value, $meta, $post->ID);
+                break;
+            case 'repeatable_group':
+                owbn_render_repeatable_group($key, $value, $meta);
+                break;
+            case 'document_links_group':
+                owbn_render_document_links_field($key, $value, $meta);
+                break;
+            case 'social_links_group':
+                owbn_render_social_links_field($key, $value, $meta);
+                break;
+            case 'email_lists_group':
+                owbn_render_email_lists_field($key, $value, $meta);
+                break;
+            case 'player_lists_group':
+                owbn_render_player_lists_field($key, $value, $meta);
+                break;
+            case 'user_info':
+                owbn_render_user_info($key, $value, $meta);
+                break;
+            case 'ast_group':
+                owbn_render_ast_group($key, $value, $meta, $key);
+                break;
+            case 'boolean':
+                owbn_render_boolean_field($key, $value, $disabled_attr);
+                break;
+            case 'ooc_location':
+                owbn_render_ooc_location($key, $value, $meta);
+                break;
+            case 'location_group':
+                owbn_render_location_group($key, $value, $meta);
+                break;
+            case 'readonly_history':
+                owbn_render_readonly_history($key, $value, $meta);
+                break;
+            case 'date':
+                echo '<input type="date" name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" value="' . esc_attr($value) . '" class="regular-text"' . esc_attr($disabled_attr) . '>';
+                break;
+            case 'number':
+                echo '<input type="number" name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" value="' . esc_attr($value) . '"' . esc_attr($disabled_attr) . '>';
+                break;
+            case 'json':
+                echo '<textarea class="large-text code" rows="4" name="' . esc_attr($key) . '"' . esc_attr($disabled_attr) . '>' .
+                    esc_textarea(is_scalar($value) ? $value : wp_json_encode($value)) .
+                    '</textarea>';
+                break;
+            case 'slug':
+                $slug_disabled = !empty($value) ? ' disabled' : $disabled_attr;
+                owbn_render_slug_field($key, $value, $slug_disabled);
+                break;
+            default:
+                echo '<input type="text" class="regular-text" name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" value="' . esc_attr($value) . '"' . esc_attr($disabled_attr) . '>';
+                break;
+        }
+
+        if ($is_errored) {
+            echo '<p class="owbn-field-error-message" style="color:#b32d2e;margin:6px 0 0;font-weight:600;">';
+            echo esc_html(owbn_format_field_error_message($meta));
+            echo '</p>';
+        }
+
+        echo '</td></tr>';
+    };
+
+    // Header fields (above the tabs). Emits a single table in .owbn-header-block.
+    if (!empty($field_groups['__header__']) && is_array($field_groups['__header__'])) {
+        echo '<div class="owbn-header-block">';
+        echo '<table class="form-table"><tbody>';
+        foreach ($field_groups['__header__'] as $key => $meta) {
+            if (strpos((string) $key, '__') === 0) continue;
+            $render_field_row($key, $meta);
+        }
+        echo '</tbody></table>';
+        echo '</div>';
+    }
+
+    // Tabbed groups: everything except __header__.
+    $tab_groups = array_filter(
+        $field_groups,
+        function ($key) { return $key !== '__header__'; },
+        ARRAY_FILTER_USE_KEY
+    );
+
+    // Determine active tab (first by default, or first one containing an error).
     $active_tab_index = 0;
     if (!empty($error_field_keys)) {
         $idx = 0;
-        foreach ($field_groups as $section_label => $fields) {
+        foreach ($tab_groups as $section_label => $fields) {
             foreach (array_keys($fields) as $fkey) {
+                if (strpos((string) $fkey, '__') === 0) continue;
                 if (in_array($fkey, $error_field_keys, true)) {
                     $active_tab_index = $idx;
                     break 2;
@@ -337,6 +460,8 @@ function owbn_render_entity_metabox($post)
     }
 
     echo '<style>
+        .owbn-header-block { margin-bottom:14px; padding:10px 0; border-bottom:1px solid #e0e0e0; }
+        .owbn-header-block .form-table { margin-top:0; }
         .owbn-metabox-tabs { display:flex; flex-wrap:wrap; gap:2px; margin:0 0 12px; padding:0; border-bottom:1px solid #c3c4c7; list-style:none; }
         .owbn-metabox-tabs button { background:#f0f0f1; border:1px solid #c3c4c7; border-bottom:none; border-radius:4px 4px 0 0; padding:8px 14px; margin:0 2px -1px 0; cursor:pointer; font-size:13px; font-weight:500; color:#2c3338; }
         .owbn-metabox-tabs button:hover { background:#fff; }
@@ -350,10 +475,10 @@ function owbn_render_entity_metabox($post)
 
     echo '<ul class="owbn-metabox-tabs" role="tablist">' . "\n";
     $i_tab = 0;
-    foreach ($section_labels as $label) {
-        // Mark tab as errored if any of its fields are in the error list.
+    foreach ($tab_groups as $label => $fields) {
         $tab_has_error = false;
-        foreach (array_keys($field_groups[$label]) as $fkey) {
+        foreach (array_keys($fields) as $fkey) {
+            if (strpos((string) $fkey, '__') === 0) continue;
             if (in_array($fkey, $error_field_keys, true)) {
                 $tab_has_error = true;
                 break;
@@ -369,138 +494,43 @@ function owbn_render_entity_metabox($post)
     echo '</ul>' . "\n";
 
     $i_tab = 0;
-    foreach ($field_groups as $section_label => $fields) {
+    foreach ($tab_groups as $section_label => $fields) {
         $is_active = ($i_tab === $active_tab_index) ? ' is-active' : '';
         echo '<div class="owbn-field-group' . esc_attr($is_active) . '" data-owbn-panel="' . esc_attr($i_tab) . '">';
         echo '<h3>' . esc_html($section_label) . '</h3>';
-        echo '<table class="form-table"><tbody>';
 
-        foreach ($fields as $key => $meta) {
-            $value       = get_post_meta($post->ID, $key, true);
-            // If this field errored on the last save, the user's submitted
-            // value was stashed — use it so they can fix without retyping.
-            if (isset($submitted_values[$key])) {
-                $value = $submitted_values[$key];
+        $has_renderable_fields = false;
+        foreach (array_keys($fields) as $fkey) {
+            if (strpos((string) $fkey, '__') !== 0) {
+                $has_renderable_fields = true;
+                break;
             }
-            $label       = $meta['label'] ?? $key;
-            $type        = $meta['type'] ?? 'text';
-            $is_errored  = in_array($key, $error_field_keys, true);
-            $error_class = $is_errored ? ' owbn-error-field' : '';
-
-            // Immutable fields are disabled once a value is set.
-            $is_immutable = in_array($key, $immutable_fields, true) && !empty($value);
-            // Restricted fields are disabled for non-admin users.
-            $is_restricted = in_array($key, $restricted_fields, true) && !$can_edit_metadata;
-
-            $disabled_attr = ($is_immutable || $is_restricted) ? ' disabled' : '';
-
-            echo '<tr>';
-            echo '<th><label for="' . esc_attr($key) . '">' . esc_html($label) . '</label></th>';
-            echo '<td class="' . esc_attr(trim($error_class)) . '">';
-
-            switch ($type) {
-                case 'wysiwyg':
-                    owbn_render_wysiwyg_editor($key, $value);
-                    break;
-
-                case 'select':
-                    owbn_render_select_field($key, $value, $meta, $disabled_attr);
-                    break;
-
-                case 'chronicle_select':
-                    owbn_render_entity_select_field($key, $value, $meta, $label, $error_class, $disabled_attr);
-                    break;
-
-                case 'multi_select':
-                    owbn_render_multi_select_field($key, $value, $meta, $disabled_attr);
-                    break;
-
-                case 'session_group':
-                    owbn_render_session_group($key, $value, $meta, $post->ID);
-                    break;
-
-                case 'one_off_group':
-                    owbn_render_one_off_group($key, $value, $meta, $post->ID);
-                    break;
-
-                case 'repeatable_group':
-                    owbn_render_repeatable_group($key, $value, $meta);
-                    break;
-
-                case 'document_links_group':
-                    owbn_render_document_links_field($key, $value, $meta);
-                    break;
-
-                case 'social_links_group':
-                    owbn_render_social_links_field($key, $value, $meta);
-                    break;
-
-                case 'email_lists_group':
-                    owbn_render_email_lists_field($key, $value, $meta);
-                    break;
-
-                case 'player_lists_group':
-                    owbn_render_player_lists_field($key, $value, $meta);
-                    break;
-
-                case 'user_info':
-                    owbn_render_user_info($key, $value, $meta);
-                    break;
-
-                case 'ast_group':
-                    owbn_render_ast_group($key, $value, $meta, $key);
-                    break;
-
-                case 'boolean':
-                    owbn_render_boolean_field($key, $value, $disabled_attr);
-                    break;
-
-                case 'ooc_location':
-                    owbn_render_ooc_location($key, $value, $meta);
-                    break;
-
-                case 'location_group':
-                    owbn_render_location_group($key, $value, $meta);
-                    break;
-
-                case 'readonly_history':
-                    owbn_render_readonly_history($key, $value, $meta);
-                    break;
-
-                case 'date':
-                    echo '<input type="date" name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" value="' . esc_attr($value) . '" class="regular-text"' . esc_attr($disabled_attr) . '>';
-                    break;
-
-                case 'number':
-                    echo '<input type="number" name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" value="' . esc_attr($value) . '"' . esc_attr($disabled_attr) . '>';
-                    break;
-
-                case 'json':
-                    echo '<textarea class="large-text code" rows="4" name="' . esc_attr($key) . '"' . esc_attr($disabled_attr) . '>' .
-                        esc_textarea(is_scalar($value) ? $value : wp_json_encode($value)) .
-                        '</textarea>';
-                    break;
-
-                case 'slug':
-                    $slug_disabled = !empty($value) ? ' disabled' : $disabled_attr;
-                    owbn_render_slug_field($key, $value, $slug_disabled);
-                    break;
-
-                default:
-                    echo '<input type="text" class="regular-text" name="' . esc_attr($key) . '" id="' . esc_attr($key) . '" value="' . esc_attr($value) . '"' . esc_attr($disabled_attr) . '>';
-                    break;
-            }
-
-            if ($is_errored) {
-                echo '<p class="owbn-field-error-message" style="color:#b32d2e;margin:6px 0 0;font-weight:600;">';
-                echo esc_html(owbn_format_field_error_message($meta));
-                echo '</p>';
-            }
-
-            echo '</td></tr>';
         }
 
-        echo '</tbody></table>';
+        if (!$has_renderable_fields) {
+            // Empty group → host wp_editor() for post_content here. The user's
+            // typed content submits via the standard `post_content` POST key
+            // that WP's own save_post handler picks up. We removed native editor
+            // support for this CPT elsewhere so this is the only editor on the
+            // page.
+            wp_editor(
+                $post->post_content,
+                'content', // matches the standard #wp-content-wrap id WP expects
+                array(
+                    'textarea_name' => 'content',
+                    'textarea_rows' => 15,
+                    'media_buttons' => true,
+                )
+            );
+        } else {
+            echo '<table class="form-table"><tbody>';
+            foreach ($fields as $key => $meta) {
+                if (strpos((string) $key, '__') === 0) continue;
+                $render_field_row($key, $meta);
+            }
+            echo '</tbody></table>';
+        }
+
         echo '</div>';
         $i_tab++;
     }
@@ -810,3 +840,66 @@ add_filter('post_type_link', 'owbn_custom_entity_permalink', 10, 2);
 add_action('init', 'owbn_custom_entity_rewrite_rules');
 add_filter('template_include', 'owbn_entity_template_include');
 add_action('post_edit_form_tag', 'owbn_add_entity_enctype');
+
+// ── Chronicle-specific admin UI tweaks ──────────────────────────────────
+// Kill the native editor box + Author metabox so our custom tabbed metabox
+// (which hosts a wp_editor() for post_content inside the Description tab)
+// is the only content-editing surface on the chronicle edit page.
+add_action('init', function () {
+    remove_post_type_support('owbn_chronicle', 'editor');
+    remove_post_type_support('owbn_chronicle', 'author');
+}, 20);
+
+add_action('admin_menu', function () {
+    remove_meta_box('authordiv', 'owbn_chronicle', 'normal');
+    remove_meta_box('authordiv', 'owbn_chronicle', 'side');
+    remove_meta_box('authordiv', 'owbn_chronicle', 'advanced');
+});
+
+// Chronicle Name lock: only site admins can rename a chronicle once it has
+// been saved. Defence in depth — server-side filter reverts any unauthorized
+// title change, client-side JS makes the input visually read-only.
+add_filter('wp_insert_post_data', function ($data, $postarr) {
+    if (($data['post_type'] ?? '') !== 'owbn_chronicle') {
+        return $data;
+    }
+    if (current_user_can('manage_options')) {
+        return $data;
+    }
+    // Allow new-post creation to set an initial title.
+    if (empty($postarr['ID'])) {
+        return $data;
+    }
+    $existing = get_post((int) $postarr['ID']);
+    if ($existing && isset($data['post_title']) && $existing->post_title !== $data['post_title']) {
+        $data['post_title'] = $existing->post_title;
+    }
+    return $data;
+}, 9, 2);
+
+$owbn_chronicle_title_lock_js = function () {
+    $screen = get_current_screen();
+    if (!$screen || $screen->post_type !== 'owbn_chronicle') {
+        return;
+    }
+    if (current_user_can('manage_options')) {
+        return;
+    }
+    global $post;
+    if (!$post || empty($post->post_title)) {
+        return; // new / blank — user must be able to type the initial name
+    }
+    ?>
+    <script>
+    (function(){
+        var t = document.getElementById('title');
+        if (!t) return;
+        t.readOnly = true;
+        t.style.background = '#f6f7f7';
+        t.title = 'Chronicle name can only be changed by a site administrator.';
+    })();
+    </script>
+    <?php
+};
+add_action('admin_footer-post.php', $owbn_chronicle_title_lock_js);
+add_action('admin_footer-post-new.php', $owbn_chronicle_title_lock_js);
