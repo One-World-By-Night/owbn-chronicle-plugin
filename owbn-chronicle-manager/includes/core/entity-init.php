@@ -317,8 +317,61 @@ function owbn_render_entity_metabox($post)
         }
     }
 
+    // ── Metabox tabs (phase 1) ──────────────────────────────────────────
+    // Determine which tab should be active on load. Default = first tab.
+    // If there are integrity errors on any tab, auto-activate the first tab
+    // containing an errored field so the user can see what needs fixing.
+    $section_labels = array_keys($field_groups);
+    $active_tab_index = 0;
+    if (!empty($error_field_keys)) {
+        $idx = 0;
+        foreach ($field_groups as $section_label => $fields) {
+            foreach (array_keys($fields) as $fkey) {
+                if (in_array($fkey, $error_field_keys, true)) {
+                    $active_tab_index = $idx;
+                    break 2;
+                }
+            }
+            $idx++;
+        }
+    }
+
+    echo '<style>
+        .owbn-metabox-tabs { display:flex; flex-wrap:wrap; gap:2px; margin:0 0 12px; padding:0; border-bottom:1px solid #c3c4c7; list-style:none; }
+        .owbn-metabox-tabs button { background:#f0f0f1; border:1px solid #c3c4c7; border-bottom:none; border-radius:4px 4px 0 0; padding:8px 14px; margin:0 2px -1px 0; cursor:pointer; font-size:13px; font-weight:500; color:#2c3338; }
+        .owbn-metabox-tabs button:hover { background:#fff; }
+        .owbn-metabox-tabs button.is-active { background:#fff; border-bottom:1px solid #fff; color:#2271b1; font-weight:600; }
+        .owbn-metabox-tabs button.has-error { color:#b32d2e; }
+        .owbn-metabox-tabs button.has-error::after { content:" \26A0"; }
+        .owbn-field-group { display:none; }
+        .owbn-field-group.is-active { display:block; }
+        .owbn-field-group > h3 { display:none; }
+    </style>' . "\n";
+
+    echo '<ul class="owbn-metabox-tabs" role="tablist">' . "\n";
+    $i_tab = 0;
+    foreach ($section_labels as $label) {
+        // Mark tab as errored if any of its fields are in the error list.
+        $tab_has_error = false;
+        foreach (array_keys($field_groups[$label]) as $fkey) {
+            if (in_array($fkey, $error_field_keys, true)) {
+                $tab_has_error = true;
+                break;
+            }
+        }
+        $btn_classes = array();
+        if ($i_tab === $active_tab_index) $btn_classes[] = 'is-active';
+        if ($tab_has_error) $btn_classes[] = 'has-error';
+        $class_attr = !empty($btn_classes) ? ' class="' . esc_attr(implode(' ', $btn_classes)) . '"' : '';
+        echo '<li><button type="button"' . $class_attr . ' data-owbn-tab="' . esc_attr($i_tab) . '">' . esc_html($label) . '</button></li>' . "\n";
+        $i_tab++;
+    }
+    echo '</ul>' . "\n";
+
+    $i_tab = 0;
     foreach ($field_groups as $section_label => $fields) {
-        echo '<div class="owbn-field-group">';
+        $is_active = ($i_tab === $active_tab_index) ? ' is-active' : '';
+        echo '<div class="owbn-field-group' . esc_attr($is_active) . '" data-owbn-panel="' . esc_attr($i_tab) . '">';
         echo '<h3>' . esc_html($section_label) . '</h3>';
         echo '<table class="form-table"><tbody>';
 
@@ -449,7 +502,33 @@ function owbn_render_entity_metabox($post)
 
         echo '</tbody></table>';
         echo '</div>';
+        $i_tab++;
     }
+
+    // Tab switching JS — kept inline to avoid a separate enqueue for a single
+    // metabox feature. Uses event delegation on the tab list.
+    echo '<script>
+    (function(){
+        var metabox = document.querySelector(".owbn-meta-view");
+        if (!metabox) return;
+        var tabs = metabox.querySelector(".owbn-metabox-tabs");
+        if (!tabs) return;
+        tabs.addEventListener("click", function(e){
+            var btn = e.target.closest("button[data-owbn-tab]");
+            if (!btn) return;
+            e.preventDefault();
+            var target = btn.getAttribute("data-owbn-tab");
+            Array.prototype.forEach.call(
+                tabs.querySelectorAll("button[data-owbn-tab]"),
+                function(b){ b.classList.toggle("is-active", b === btn); }
+            );
+            Array.prototype.forEach.call(
+                metabox.querySelectorAll(".owbn-field-group[data-owbn-panel]"),
+                function(p){ p.classList.toggle("is-active", p.getAttribute("data-owbn-panel") === target); }
+            );
+        });
+    })();
+    </script>' . "\n";
 
     echo '</div>';
 
