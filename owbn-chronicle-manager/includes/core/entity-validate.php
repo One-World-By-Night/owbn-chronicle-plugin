@@ -279,6 +279,12 @@ function owbn_force_draft_on_entity_error(array $data, array $postarr): array
     // Publication gate — compliance check on draft→publish transitions.
     // If a user is trying to move a non-compliant post to 'publish', bounce it
     // back to 'draft' and record an error so they see why.
+    //
+    // Exemptions (gate does NOT fire):
+    //   - current user has manage_options (site admin override)
+    //   - for chronicles, target game_status is Probationary or Satellite
+    //     (docs only required once promoted to Full)
+    // Compliance gaps are still recorded in post meta either way.
     $publication_gate_errors = [];
     $is_publish_transition = false;
     $original_status = '';
@@ -286,11 +292,20 @@ function owbn_force_draft_on_entity_error(array $data, array $postarr): array
         $original_post = get_post($postarr['ID']);
         $original_status = $original_post ? $original_post->post_status : '';
     }
-    if (
+    $gate_applies =
         ($data['post_status'] ?? '') === 'publish'
         && $original_status !== 'publish'
         && !empty($config['required_documents'])
-    ) {
+        && !current_user_can('manage_options');
+
+    if ($gate_applies && ($config['entity_key'] ?? '') === 'chronicle') {
+        $target_is_full = empty($postarr['chronicle_probationary']) && empty($postarr['chronicle_satellite']);
+        if (!$target_is_full) {
+            $gate_applies = false;
+        }
+    }
+
+    if ($gate_applies) {
         $is_publish_transition = true;
         $doc_links_submitted = owbn_safe_post_value('document_links', $postarr);
         $doc_links_submitted = is_array($doc_links_submitted) ? $doc_links_submitted : null;
