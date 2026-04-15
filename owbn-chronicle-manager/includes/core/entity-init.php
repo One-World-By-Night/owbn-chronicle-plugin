@@ -478,6 +478,10 @@ function owbn_render_entity_metabox($post)
     echo '<style>
         .owbn-header-block { margin-bottom:14px; padding:10px 0; border-bottom:1px solid #e0e0e0; }
         .owbn-header-block .form-table { margin-top:0; }
+        .owbn-header-block .form-table th,
+        .owbn-header-block .form-table td { padding:4px 10px; vertical-align:middle; }
+        .owbn-header-block .form-table .description { margin:2px 0 0; }
+        .owbn-header-block .owbn-boolean-switch { margin:0; }
         .owbn-metabox-tabs { display:flex; flex-wrap:wrap; gap:2px; margin:0 0 12px; padding:0; border-bottom:1px solid #c3c4c7; list-style:none; }
         .owbn-metabox-tabs button { background:#f0f0f1; border:1px solid #c3c4c7; border-bottom:none; border-radius:4px 4px 0 0; padding:8px 14px; margin:0 2px -1px 0; cursor:pointer; font-size:13px; font-weight:500; color:#2c3338; }
         .owbn-metabox-tabs button:hover { background:#fff; }
