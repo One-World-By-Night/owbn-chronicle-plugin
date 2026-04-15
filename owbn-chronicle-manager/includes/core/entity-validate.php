@@ -305,6 +305,31 @@ function owbn_force_draft_on_entity_error(array $data, array $postarr): array
         }
     }
 
+    // Promotion gate: exec flips both booleans 1→0 on a published chronicle.
+    $is_promotion_gate = false;
+    if (
+        ! $gate_applies
+        && ($config['entity_key'] ?? '') === 'chronicle'
+        && ($data['post_status'] ?? '') === 'publish'
+        && $original_status === 'publish'
+        && ! empty($config['required_documents'])
+        && function_exists('owbn_is_admin_user') && owbn_is_admin_user()
+        && ! current_user_can('manage_options')
+        && ! empty($postarr['ID'])
+        && isset($_POST['owbn_chronicle_nonce'])
+    ) {
+        $old_prob = (string) get_post_meta((int) $postarr['ID'], 'chronicle_probationary', true);
+        $old_sat  = (string) get_post_meta((int) $postarr['ID'], 'chronicle_satellite', true);
+        $new_prob = (string) ($postarr['chronicle_probationary'] ?? '');
+        $new_sat  = (string) ($postarr['chronicle_satellite'] ?? '');
+        $was_non_full = ($old_prob === '1' || $old_sat === '1');
+        $now_full     = ($new_prob !== '1' && $new_sat !== '1');
+        if ($was_non_full && $now_full) {
+            $gate_applies = true;
+            $is_promotion_gate = true;
+        }
+    }
+
     if ($gate_applies) {
         $is_publish_transition = true;
         $doc_links_submitted = owbn_safe_post_value('document_links', $postarr);
@@ -320,6 +345,11 @@ function owbn_force_draft_on_entity_error(array $data, array $postarr): array
         if (!empty($gaps)) {
             foreach ($gaps as $title) {
                 $publication_gate_errors[] = 'publication_gate:' . $title;
+            }
+            // Skip list reverts the boolean flip; status stays publish.
+            if ($is_promotion_gate) {
+                $publication_gate_errors[] = 'chronicle_probationary';
+                $publication_gate_errors[] = 'chronicle_satellite';
             }
         }
     }
@@ -342,10 +372,8 @@ function owbn_force_draft_on_entity_error(array $data, array $postarr): array
         }
     }
 
-    // Downgrade status only in two cases:
-    //   (a) non-published post with integrity errors — preserve prior behavior
-    //   (b) publication gate failed on a draft→publish attempt — bounce to draft
-    if ($is_publish_transition && !empty($publication_gate_errors)) {
+    // Bounce to draft on draft→publish gate failure; promotion failures stay published.
+    if ($is_publish_transition && !empty($publication_gate_errors) && !$is_promotion_gate) {
         $data['post_status'] = 'draft';
     } elseif (!empty($errors) && $original_status !== 'publish') {
         $data['post_status'] = 'draft';
