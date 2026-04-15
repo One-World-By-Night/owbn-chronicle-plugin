@@ -71,7 +71,7 @@ owbn_register_entity_type([
         'chronicle_parent', 'hst_info', 'cm_info', 'ooc_locations',
     ],
     'detail_fields'     => 'all',
-    'personnel_fields'  => ['hst_info', 'cm_info', 'ast_list', 'admin_contact'],
+    'personnel_fields'  => ['hst_info', 'cm_info', 'ast_list'],
 
     // Capabilities
     'capabilities' => [
