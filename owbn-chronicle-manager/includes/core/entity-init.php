@@ -139,6 +139,8 @@ function owbn_register_entity_meta(array $config): void
 
     foreach ($field_groups as $fields) {
         foreach ($fields as $key => $meta) {
+            // Skip render-only hints (e.g. `__description__` tab hint).
+            if (!is_array($meta)) continue;
             $type = $meta['type'] ?? 'text';
             $is_complex = in_array($type, $complex_types, true);
 
@@ -343,6 +345,12 @@ function owbn_render_entity_metabox($post)
         echo '<th><label for="' . esc_attr($key) . '">' . esc_html($label) . '</label></th>';
         echo '<td class="' . esc_attr(trim($error_class)) . '">';
 
+        if (!empty($meta['description'])) {
+            echo '<p class="description owbn-field-description" style="margin:0 0 6px;color:#646970;font-style:italic;">'
+                . wp_kses_post($meta['description'])
+                . '</p>';
+        }
+
         switch ($type) {
             case 'wysiwyg':
                 owbn_render_wysiwyg_editor($key, $value);
@@ -533,6 +541,11 @@ function owbn_render_entity_metabox($post)
             // that WP's own save_post handler picks up. We removed native editor
             // support for this CPT elsewhere so this is the only editor on the
             // page.
+            if (!empty($fields['__description__'])) {
+                echo '<p class="description owbn-tab-description" style="margin:0 0 8px;color:#646970;font-style:italic;">'
+                    . wp_kses_post($fields['__description__'])
+                    . '</p>';
+            }
             wp_editor(
                 $post->post_content,
                 'content', // matches the standard #wp-content-wrap id WP expects
@@ -861,19 +874,23 @@ add_action('init', 'owbn_custom_entity_rewrite_rules');
 add_filter('template_include', 'owbn_entity_template_include');
 add_action('post_edit_form_tag', 'owbn_add_entity_enctype');
 
-// ── Chronicle-specific admin UI tweaks ──────────────────────────────────
+// ── Chronicle / Coordinator admin UI tweaks ─────────────────────────────
 // Kill the native editor box + Author metabox so our custom tabbed metabox
 // (which hosts a wp_editor() for post_content inside the Description tab)
-// is the only content-editing surface on the chronicle edit page.
+// is the only content-editing surface on the edit page.
 add_action('init', function () {
-    remove_post_type_support('owbn_chronicle', 'editor');
-    remove_post_type_support('owbn_chronicle', 'author');
+    foreach (['owbn_chronicle', 'owbn_coordinator'] as $pt) {
+        remove_post_type_support($pt, 'editor');
+        remove_post_type_support($pt, 'author');
+    }
 }, 20);
 
 add_action('admin_menu', function () {
-    remove_meta_box('authordiv', 'owbn_chronicle', 'normal');
-    remove_meta_box('authordiv', 'owbn_chronicle', 'side');
-    remove_meta_box('authordiv', 'owbn_chronicle', 'advanced');
+    foreach (['owbn_chronicle', 'owbn_coordinator'] as $pt) {
+        remove_meta_box('authordiv', $pt, 'normal');
+        remove_meta_box('authordiv', $pt, 'side');
+        remove_meta_box('authordiv', $pt, 'advanced');
+    }
 });
 
 // Chronicle Name lock: only site admins can rename a chronicle once it has

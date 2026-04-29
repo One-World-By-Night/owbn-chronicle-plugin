@@ -33,6 +33,7 @@ function owbn_render_chronicle_full($post_id)
             echo '<div class="owbn-chronicle-group">';
 
             foreach ($fields as $field_key => $field_def) {
+                if (!is_array($field_def)) continue; // skip render-only hints
                 $value = get_post_meta($post_id, $field_key, true);
                 if (empty($value)) continue;
 

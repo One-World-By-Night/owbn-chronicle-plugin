@@ -40,7 +40,7 @@ function owbn_admin_notice_entity_errors()
         }
 
         foreach ($definitions as $fields) {
-            if (isset($fields[$error_key])) {
+            if (isset($fields[$error_key]) && is_array($fields[$error_key])) {
                 $field_labels[] = $fields[$error_key]['label'];
             }
         }
@@ -168,7 +168,7 @@ function owbn_admin_notice_entity_pending_exists()
     $field_labels = [];
     foreach ($pending['fields'] as $field_key => $value) {
         foreach ($definitions as $section => $fields) {
-            if (isset($fields[$field_key])) {
+            if (isset($fields[$field_key]) && is_array($fields[$field_key])) {
                 $field_labels[$field_key] = $fields[$field_key]['label'];
             }
         }

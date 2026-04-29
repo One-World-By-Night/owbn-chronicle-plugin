@@ -51,6 +51,7 @@ function owbn_validate_entity_submission(string $post_type, array $postarr): arr
     // Normalize all boolean checkbox fields: if type=boolean and not in $postarr, set to '0'
     foreach ($definitions as $fields) {
         foreach ($fields as $key => $meta) {
+            if (!is_array($meta)) continue; // skip render-only hints
             if (($meta['type'] ?? '') === 'boolean' && !isset($postarr[$key])) {
                 $postarr[$key] = '0';
             }
@@ -61,6 +62,7 @@ function owbn_validate_entity_submission(string $post_type, array $postarr): arr
 
     foreach ($definitions as $fields) {
         foreach ($fields as $key => $meta) {
+            if (!is_array($meta)) continue; // skip render-only hints
             $field_type = $meta['type'] ?? '';
 
             // For immutable fields with an existing DB value, skip validation entirely

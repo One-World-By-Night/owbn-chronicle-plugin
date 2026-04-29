@@ -35,6 +35,7 @@ function owbn_save_entity_revision_meta(int $revision_id): void
     $field_groups = call_user_func($callable);
     foreach ($field_groups as $fields) {
         foreach ($fields as $key => $meta) {
+            if (!is_array($meta)) continue; // skip render-only hints
             $type = $meta['type'] ?? 'text';
             if ($type === 'readonly_history') continue;
 
@@ -67,6 +68,7 @@ function owbn_restore_entity_revision_meta(int $post_id, int $revision_id): void
     $field_groups = call_user_func($callable);
     foreach ($field_groups as $fields) {
         foreach ($fields as $key => $meta) {
+            if (!is_array($meta)) continue; // skip render-only hints
             $type = $meta['type'] ?? 'text';
             if ($type === 'readonly_history') continue;
 

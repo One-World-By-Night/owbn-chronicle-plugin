@@ -68,6 +68,7 @@ function owbn_save_entity_meta(int $post_id, WP_Post $post): void
     $old_values = [];
     foreach ($definitions as $fields) {
         foreach ($fields as $key => $meta) {
+            if (!is_array($meta)) continue; // skip render-only hints
             $old_values[$key] = get_post_meta($post_id, $key, true);
         }
     }
@@ -89,6 +90,7 @@ function owbn_save_entity_meta(int $post_id, WP_Post $post): void
     // Loop all field definitions
     foreach ($definitions as $fields) {
         foreach ($fields as $key => $meta) {
+            if (!is_array($meta)) continue; // skip render-only hints
 
             // PER-FIELD INTEGRITY SKIP: this field failed validation. Preserve
             // its current DB value untouched. The metabox will re-render it
@@ -726,7 +728,8 @@ function owbn_sync_entity_slug_with_post_name($data, $postarr)
 
     foreach ($definitions as $fields) {
         foreach ($fields as $key => $meta) {
-            if ($meta['type'] === 'slug' && !empty($postarr[$key])) {
+            if (!is_array($meta)) continue; // skip render-only hints
+            if (($meta['type'] ?? '') === 'slug' && !empty($postarr[$key])) {
                 // Only sync if slug doesn't already exist
                 $post_id = $postarr['ID'] ?? 0;
                 $existing = $post_id ? get_post_meta($post_id, $key, true) : '';
@@ -772,6 +775,7 @@ function owbn_send_change_notification( int $post_id, array $config, array $old_
     $labels = [];
     foreach ( $definitions as $fields ) {
         foreach ( $fields as $key => $meta ) {
+            if ( ! is_array( $meta ) ) continue; // skip render-only hints
             $labels[ $key ] = $meta['label'] ?? $key;
         }
     }
