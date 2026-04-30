@@ -2,7 +2,7 @@
 
 The organizational directory for One World by Night. Manages chronicle and coordinator records as structured WordPress content.
 
-Version: 2.16.1
+Version: 2.16.2
 Deployed to: council.owbn.net, chronicles.owbn.net (network-activated on both)
 
 ## What It Does
@@ -32,6 +32,10 @@ Staff role sync is bidirectional -- updating a chronicle's HST field grants that
 - Network-activated on WordPress multisite
 
 ## Changelog
+
+### 2.16.2
+
+- Description tab: intro text now renders adjacent to the wp_editor (between fields and editor) when a tab has both fields and an editor. Fields-only tabs and editor-only tabs unchanged.
 
 ### 2.16.1
 

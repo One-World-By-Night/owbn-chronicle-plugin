@@ -548,8 +548,18 @@ function owbn_render_entity_metabox($post)
             }
         }
 
-        // Tab intro text — render at top of any tab (with or without fields).
-        if (!empty($fields['__description__'])) {
+        // Render wp_editor for post_content when:
+        //   - the group has no fields (legacy convention), OR
+        //   - the group explicitly opts in via `__editor__` => true
+        $needs_editor = !$has_renderable_fields || !empty($fields['__editor__']);
+
+        // __description__ position: if the tab has BOTH fields and an editor,
+        // the intro text belongs adjacent to the editor (rendered between
+        // fields and editor). Otherwise it goes at the top of the tab.
+        $desc_above_editor = $has_renderable_fields && $needs_editor;
+        $has_description = !empty($fields['__description__']);
+
+        if ($has_description && !$desc_above_editor) {
             echo '<p class="description owbn-tab-description" style="margin:0 0 8px;color:#646970;font-style:italic;">'
                 . wp_kses_post($fields['__description__'])
                 . '</p>';
@@ -564,11 +574,12 @@ function owbn_render_entity_metabox($post)
             echo '</tbody></table>';
         }
 
-        // Render wp_editor for post_content when:
-        //   - the group has no fields (legacy convention), OR
-        //   - the group explicitly opts in via `__editor__` => true
-        $needs_editor = !$has_renderable_fields || !empty($fields['__editor__']);
         if ($needs_editor) {
+            if ($has_description && $desc_above_editor) {
+                echo '<p class="description owbn-tab-description" style="margin:14px 0 8px;color:#646970;font-style:italic;">'
+                    . wp_kses_post($fields['__description__'])
+                    . '</p>';
+            }
             wp_editor(
                 $post->post_content,
                 'content',
