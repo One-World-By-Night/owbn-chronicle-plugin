@@ -382,6 +382,9 @@ function owbn_render_entity_metabox($post)
             case 'email_lists_group':
                 owbn_render_email_lists_field($key, $value, $meta);
                 break;
+            case 'discord_lists_group':
+                owbn_render_discord_lists_field($key, $value, $meta);
+                break;
             case 'player_lists_group':
                 owbn_render_player_lists_field($key, $value, $meta);
                 break;
@@ -467,6 +470,16 @@ function owbn_render_entity_metabox($post)
         ARRAY_FILTER_USE_KEY
     );
 
+    // Hide tabs marked `__admin_only__` from users who can't edit metadata.
+    if (!$can_edit_metadata) {
+        $tab_groups = array_filter(
+            $tab_groups,
+            function ($fields) {
+                return empty($fields['__admin_only__']);
+            }
+        );
+    }
+
     // Determine active tab (first by default, or first one containing an error).
     $active_tab_index = 0;
     if (!empty($error_field_keys)) {
@@ -535,33 +548,36 @@ function owbn_render_entity_metabox($post)
             }
         }
 
-        if (!$has_renderable_fields) {
-            // Empty group → host wp_editor() for post_content here. The user's
-            // typed content submits via the standard `post_content` POST key
-            // that WP's own save_post handler picks up. We removed native editor
-            // support for this CPT elsewhere so this is the only editor on the
-            // page.
-            if (!empty($fields['__description__'])) {
-                echo '<p class="description owbn-tab-description" style="margin:0 0 8px;color:#646970;font-style:italic;">'
-                    . wp_kses_post($fields['__description__'])
-                    . '</p>';
-            }
-            wp_editor(
-                $post->post_content,
-                'content', // matches the standard #wp-content-wrap id WP expects
-                array(
-                    'textarea_name' => 'content',
-                    'textarea_rows' => 15,
-                    'media_buttons' => true,
-                )
-            );
-        } else {
+        // Tab intro text — render at top of any tab (with or without fields).
+        if (!empty($fields['__description__'])) {
+            echo '<p class="description owbn-tab-description" style="margin:0 0 8px;color:#646970;font-style:italic;">'
+                . wp_kses_post($fields['__description__'])
+                . '</p>';
+        }
+
+        if ($has_renderable_fields) {
             echo '<table class="form-table"><tbody>';
             foreach ($fields as $key => $meta) {
                 if (strpos((string) $key, '__') === 0) continue;
                 $render_field_row($key, $meta);
             }
             echo '</tbody></table>';
+        }
+
+        // Render wp_editor for post_content when:
+        //   - the group has no fields (legacy convention), OR
+        //   - the group explicitly opts in via `__editor__` => true
+        $needs_editor = !$has_renderable_fields || !empty($fields['__editor__']);
+        if ($needs_editor) {
+            wp_editor(
+                $post->post_content,
+                'content',
+                array(
+                    'textarea_name' => 'content',
+                    'textarea_rows' => 15,
+                    'media_buttons' => true,
+                )
+            );
         }
 
         echo '</div>';

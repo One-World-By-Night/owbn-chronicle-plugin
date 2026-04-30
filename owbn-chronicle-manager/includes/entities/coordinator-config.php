@@ -51,7 +51,13 @@ owbn_register_entity_type([
 
     // Save behavior
     'immutable_fields'  => [],
-    'restricted_fields' => ['coordinator_slug'],
+    'restricted_fields' => [
+        'coordinator_slug',
+        'coordinator_title',
+        'coordinator_appointment',
+        'coordinator_type',
+        'coord_info',
+    ],
     'staff_fields'      => ['coord_info', 'subcoord_list'],
 
     // Slug pattern for validation

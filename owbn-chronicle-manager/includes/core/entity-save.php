@@ -310,6 +310,13 @@ function owbn_save_entity_field(int $post_id, string $key, array $meta, $raw, bo
             update_post_meta($post_id, $key, $cleaned);
             break;
 
+        case 'discord_lists_group':
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing
+            $group_data = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : [];
+            $cleaned = owbn_sanitize_discord_lists($group_data);
+            update_post_meta($post_id, $key, $cleaned);
+            break;
+
         case 'player_lists_group':
             // phpcs:ignore WordPress.Security.NonceVerification.Missing
             $group_data = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : [];

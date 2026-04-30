@@ -152,6 +152,31 @@ if (!function_exists('owbn_sanitize_email_lists')) {
     }
 }
 
+if (!function_exists('owbn_sanitize_discord_lists')) {
+    function owbn_sanitize_discord_lists($group_data)
+    {
+        $cleaned = [];
+
+        if (!is_array($group_data)) return $cleaned;
+
+        foreach ($group_data as $index => $row) {
+            if ($index === '__INDEX__') continue;
+
+            $row_cleaned = [
+                'channel_name' => isset($row['channel_name']) ? sanitize_text_field($row['channel_name']) : '',
+                'channel_url'  => isset($row['channel_url']) ? esc_url_raw($row['channel_url']) : '',
+                'description'  => isset($row['description']) ? wp_kses_post($row['description']) : '',
+            ];
+
+            if ($row_cleaned['channel_name'] || $row_cleaned['channel_url'] || $row_cleaned['description']) {
+                $cleaned[] = $row_cleaned;
+            }
+        }
+
+        return $cleaned;
+    }
+}
+
 if (!function_exists('owbn_sanitize_player_lists')) {
     function owbn_sanitize_player_lists($group_data)
     {

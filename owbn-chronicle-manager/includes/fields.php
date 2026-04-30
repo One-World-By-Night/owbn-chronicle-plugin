@@ -390,7 +390,11 @@ function owbn_get_chronicle_field_definitions()
 function owbn_get_coordinator_field_definitions()
 {
     return [
+        // ── Basic Info (admin-only) ────────────────────────────────────
+        // Hidden from coords via __admin_only__. Fields here are also listed
+        // in restricted_fields so save can't be tricked into changing them.
         'Basic Info' => [
+            '__admin_only__' => true,
             'coordinator_slug' => [
                 'label' => __('Coordinator Slug', 'owbn-chronicle-manager'),
                 'type'  => 'text',
@@ -400,21 +404,6 @@ function owbn_get_coordinator_field_definitions()
                 'label' => __('Office Title', 'owbn-chronicle-manager'),
                 'type'  => 'text',
                 'description' => __('Display name of the office, e.g. "Sabbat Coordinator" or "Coordinator of Operations".', 'owbn-chronicle-manager'),
-            ],
-            'term_start_date' => [
-                'label' => __('Term Start Date', 'owbn-chronicle-manager'),
-                'type'  => 'date',
-                'description' => __('When the current coordinator\'s term started.', 'owbn-chronicle-manager'),
-            ],
-            'term_end_date' => [
-                'label' => __('Term End Date', 'owbn-chronicle-manager'),
-                'type'  => 'date',
-                'description' => __('When the current term ends. Update on re-election or appointment.', 'owbn-chronicle-manager'),
-            ],
-            'web_url' => [
-                'label' => __('Website URL', 'owbn-chronicle-manager'),
-                'type'  => 'text',
-                'description' => __('Office website, if any.', 'owbn-chronicle-manager'),
             ],
             'coordinator_appointment' => [
                 'label'   => __('Appointment', 'owbn-chronicle-manager'),
@@ -428,20 +417,37 @@ function owbn_get_coordinator_field_definitions()
                 'options' => ['' => '-- Select --', 'Administrative' => 'Administrative', 'Genre' => 'Genre', 'Clan' => 'Clan'],
                 'description' => __('Set by admin or the Web Coord. Determines how the office is categorized.', 'owbn-chronicle-manager'),
             ],
+        ],
+        // ── Description tab ────────────────────────────────────────────
+        // Tab hosts coord-editable public-facing fields plus wp_editor() for
+        // post_content (enabled via __editor__ marker).
+        'Description' => [
+            '__description__' => __('This section is public facing. Please use this space to communicate office hours, R&U approval procedure, and any other details you wish about your Office.', 'owbn-chronicle-manager'),
+            '__editor__'      => true,
             'hosting_chronicle' => [
                 'label' => __('Hosting Chronicle', 'owbn-chronicle-manager'),
                 'type'  => 'chronicle_select',
                 'description' => __('Required for Genre and Clan coordinators — the chronicle hosting this office. Leave blank for Administrative coordinators.', 'owbn-chronicle-manager'),
             ],
+            'web_url' => [
+                'label' => __('Website URL', 'owbn-chronicle-manager'),
+                'type'  => 'text',
+                'description' => __('Office website, if any.', 'owbn-chronicle-manager'),
+            ],
+            'term_start_date' => [
+                'label' => __('Term Start Date', 'owbn-chronicle-manager'),
+                'type'  => 'date',
+                'description' => __('When the current coordinator\'s term started.', 'owbn-chronicle-manager'),
+            ],
+            'term_end_date' => [
+                'label' => __('Term End Date', 'owbn-chronicle-manager'),
+                'type'  => 'date',
+                'description' => __('When the current term ends. Update on re-election or appointment.', 'owbn-chronicle-manager'),
+            ],
         ],
-        // ── Description tab ────────────────────────────────────────────
-        // Empty group → renderer hosts wp_editor() for post_content here.
-        // Replaces the former office_description WYSIWYG; clients that read
-        // `office_description` keep working via the save_post mirror hook.
-        'Description' => [
-            '__description__' => __('Describe the office — what it does, scope, current focus. Shown on the public coordinator page.', 'owbn-chronicle-manager'),
-        ],
+        // ── Coordinator tab (admin-only) ───────────────────────────────
         'Coordinator' => [
+            '__admin_only__' => true,
             'coord_info' => [
                 'label' => __('Coordinator', 'owbn-chronicle-manager'),
                 'type'  => 'user_info',
@@ -449,10 +455,16 @@ function owbn_get_coordinator_field_definitions()
             ],
         ],
         'Staff' => [
+            '__description__' => __(
+                'Sub-Coordinator or Office Staff. Add one row per person. If the person does not have an account, please leave the User Section blank and advise the person to create an account on the website. The Account and the Sub-coord role can be connected later, once the account has been made.<br><br>'
+                . 'Actual Email is private and only seen by the Coordinator and Coordinator Staff.<br><br>'
+                . 'Display Name and Display Email are public facing — please talk to your staff about what they prefer to be public facing.<br><br>'
+                . 'Role is an optional space to describe the person\'s job in your Office. This can be left blank if you do not assign specific jobs.',
+                'owbn-chronicle-manager'
+            ),
             'subcoord_list' => [
                 'label' => __('Sub-Coordinators', 'owbn-chronicle-manager'),
                 'type'  => 'ast_group',
-                'description' => __('Sub-coordinators or office staff. Add one row per person. Granting roles here also grants them in the system.', 'owbn-chronicle-manager'),
                 'fields' => [
                     'user' => [
                         'label' => __('User', 'owbn-chronicle-manager'),
@@ -513,7 +525,7 @@ function owbn_get_coordinator_field_definitions()
                 ],
             ],
             'email_lists' => [
-                'label' => __('Staff Lists', 'owbn-chronicle-manager'),
+                'label' => __('Email Lists', 'owbn-chronicle-manager'),
                 'type'  => 'email_lists_group',
                 'fields' => [
                     'list_name' => [
@@ -523,6 +535,24 @@ function owbn_get_coordinator_field_definitions()
                     'email_address' => [
                         'label' => __('Email Address', 'owbn-chronicle-manager'),
                         'type'  => 'email',
+                    ],
+                    'description' => [
+                        'label' => __('Description', 'owbn-chronicle-manager'),
+                        'type'  => 'textarea',
+                    ],
+                ],
+            ],
+            'discord_lists' => [
+                'label' => __('Discord Lists', 'owbn-chronicle-manager'),
+                'type'  => 'discord_lists_group',
+                'fields' => [
+                    'channel_name' => [
+                        'label' => __('Discord Channel Name', 'owbn-chronicle-manager'),
+                        'type'  => 'text',
+                    ],
+                    'channel_url' => [
+                        'label' => __('Discord Channel URL', 'owbn-chronicle-manager'),
+                        'type'  => 'url',
                     ],
                     'description' => [
                         'label' => __('Description', 'owbn-chronicle-manager'),

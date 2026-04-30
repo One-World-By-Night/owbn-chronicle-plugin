@@ -319,6 +319,89 @@ function render_email_list_block($key, $index, $group, $subfields)
     return ob_get_clean();
 }
 
+function owbn_render_discord_lists_field($key, $value, $meta)
+{
+    $groups = is_array($value) ? $value : [];
+    if (empty($groups)) $groups[] = [];
+
+    $subfields = $meta['fields'];
+
+    echo '<div class="owbn-repeatable-group" data-key="' . esc_attr($key) . '">' . "\n";
+
+    foreach ($groups as $i => $group) {
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        echo render_discord_list_block($key, $i, $group, $subfields);
+    }
+
+    echo '<div class="owbn-email-template" style="display:none;">';
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    echo render_discord_list_block($key, '__INDEX__', [], $subfields);
+    echo '</div>';
+
+    echo '<button type="button" class="button add-email-list" data-field="' . esc_attr($key) . '">Add</button>' . "\n";
+    echo '</div>' . "\n";
+}
+
+function render_discord_list_block($key, $index, $group, $subfields)
+{
+    ob_start();
+
+    $channel_name = $group['channel_name'] ?? '';
+    $channel_url  = $group['channel_url'] ?? '';
+    $desc         = $group['description'] ?? '';
+    $header       = $channel_name ?: ($channel_url ?: 'Discord Channel');
+
+    $is_template   = ($index === '__INDEX__');
+    $disabled_attr = $is_template ? ' disabled' : '';
+?>
+    <div class="owbn-email-block">
+        <div class="owbn-email-header">
+            <strong><?php echo esc_html($header); ?></strong>
+            <button type="button" class="toggle-email button">Toggle</button>
+        </div>
+
+        <div class="owbn-email-body" style="display:none;">
+            <div class="owbn-email-row">
+                <div class="owbn-email-field">
+                    <label><?php echo esc_html($subfields['channel_name']['label']); ?></label><br>
+                    <input type="text"
+                        name="<?php echo esc_attr("{$key}[{$index}][channel_name]"); ?>"
+                        value="<?php echo esc_attr($channel_name); ?>"
+                        class="regular-text"
+                        <?php echo esc_attr($disabled_attr); ?>>
+                </div>
+
+                <div class="owbn-email-field">
+                    <label><?php echo esc_html($subfields['channel_url']['label']); ?></label><br>
+                    <input type="url"
+                        name="<?php echo esc_attr("{$key}[{$index}][channel_url]"); ?>"
+                        value="<?php echo esc_attr($channel_url); ?>"
+                        class="regular-text"
+                        <?php echo esc_attr($disabled_attr); ?>>
+                </div>
+            </div>
+
+            <div class="owbn-email-row-full">
+                <div class="owbn-email-field">
+                    <label><?php echo esc_html($subfields['description']['label']); ?></label><br>
+                    <?php
+                    $editor_id = "{$key}_{$index}_description";
+                    wp_editor($desc, $editor_id, [
+                        'textarea_name' => "{$key}[{$index}][description]",
+                        'textarea_rows' => 4,
+                        'media_buttons' => false,
+                    ]);
+                    ?>
+                </div>
+            </div>
+
+            <button type="button" class="button remove-email-list">Remove</button>
+        </div>
+    </div>
+<?php
+    return ob_get_clean();
+}
+
 function owbn_render_player_lists_field($key, $groups, $meta)
 {
     $subfields = $meta['fields'] ?? [];
