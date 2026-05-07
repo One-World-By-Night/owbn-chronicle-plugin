@@ -329,6 +329,15 @@ function owbn_save_entity_field(int $post_id, string $key, array $meta, $raw, bo
             $info = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : [];
             $cleaned = owbn_sanitize_user_info($info);
 
+            // Lock cm_info display_email to {slug}-cm@owbn.net (parent slug for satellites).
+            // actual_email stays free-text. Submitted display_email is ignored.
+            if ($key === 'cm_info' && get_post_type($post_id) === 'owbn_chronicle' && function_exists('owbn_chronicle_cm_email')) {
+                $computed = owbn_chronicle_cm_email($post_id);
+                if ($computed !== '') {
+                    $cleaned['display_email'] = $computed;
+                }
+            }
+
             $previous = get_post_meta($post_id, $key, true);
             $previous_user = $previous['user'] ?? '';
 

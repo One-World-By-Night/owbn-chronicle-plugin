@@ -30,6 +30,16 @@ function owbn_render_user_info($key, $value, $meta)
     $actual_email = $value['actual_email'] ?? '';
     $display_email = $value['display_email'] ?? $actual_email;
 
+    // CM display_email is locked to {slug}-cm@owbn.net (parent slug for satellites).
+    // actual_email stays free-text. The save handler enforces the display_email value.
+    $cm_email_locked = ($key === 'cm_info' && $post_type === 'owbn_chronicle');
+    if ($cm_email_locked && function_exists('owbn_chronicle_cm_email')) {
+        $computed_cm_email = owbn_chronicle_cm_email(get_the_ID());
+        if ($computed_cm_email !== '') {
+            $display_email = $computed_cm_email;
+        }
+    }
+
     $users = get_users(['orderby' => 'display_name', 'order' => 'ASC', 'fields' => ['ID', 'display_name', 'user_email']]);
 
     // Check if stored user_id matches any user or special value
@@ -82,6 +92,11 @@ function owbn_render_user_info($key, $value, $meta)
     // Row 2: Emails
     echo "<div class=\"owbn-user-info-row\">\n";
 
+    $display_email_attrs = $cm_email_locked ? ' readonly disabled' : '';
+    $display_email_note  = $cm_email_locked
+        ? '<p class="description">' . esc_html__('Locked to {slug}-cm@owbn.net (parent slug for satellites). Computed automatically.', 'owbn-chronicle-manager') . '</p>'
+        : '';
+
     // Actual Email
     echo "<div class=\"owbn-user-info-field\">\n";
     echo "<label>" . esc_html__('Actual Email', 'owbn-chronicle-manager') . "<br>\n";
@@ -91,8 +106,10 @@ function owbn_render_user_info($key, $value, $meta)
     // Display Email
     echo "<div class=\"owbn-user-info-field\">\n";
     echo "<label>" . esc_html__('Display Email', 'owbn-chronicle-manager') . "<br>\n";
-    echo "<input type=\"email\" name=\"" . esc_attr($key) . "[display_email]\" value=\"" . esc_attr($display_email) . "\" class=\"regular-text\">\n";
-    echo "</label>\n</div>\n";
+    echo "<input type=\"email\" name=\"" . esc_attr($key) . "[display_email]\" value=\"" . esc_attr($display_email) . "\" class=\"regular-text\"" . $display_email_attrs . ">\n";
+    echo "</label>\n";
+    if ($cm_email_locked) echo $display_email_note;
+    echo "</div>\n";
 
     echo "</div>\n"; // End Row 2
 
