@@ -24,6 +24,10 @@ function owbn_user_has_any_entity_roles(WP_User $user): bool {
             $entity_prefixes[] = $entity_key . '/';
         }
     }
+    // Administrative coordinators (archivist, finance, HC, AHC, mediation, ...) hold
+    // exec/{slug} roles (see coordinator staff_role_map), not coordinator/{slug}.
+    // Recognize exec/ so they can edit their coordinator page like genre coordinators.
+    $entity_prefixes[] = 'exec/';
 
     foreach ($roles as $role) {
         foreach ($entity_prefixes as $prefix) {
