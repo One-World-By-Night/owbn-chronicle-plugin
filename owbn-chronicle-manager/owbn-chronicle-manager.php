@@ -51,6 +51,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/render/render-chronicle-box.p
 require_once plugin_dir_path(__FILE__) . 'includes/render/render-chronicle-full.php';
 
 require_once plugin_dir_path(__FILE__) . 'includes/admin/menu.php';
+require_once plugin_dir_path(__FILE__) . 'includes/admin/pending-changes-page.php';
 require_once plugin_dir_path(__FILE__) . 'includes/admin/cc-settings.php';
 require_once plugin_dir_path(__FILE__) . 'includes/admin/enqueue-scripts.php';
 require_once plugin_dir_path(__FILE__) . 'includes/editor/editor-init.php';

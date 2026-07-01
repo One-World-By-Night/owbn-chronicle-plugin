@@ -324,8 +324,16 @@ function owbn_handle_pending_changeset_action()
     // Clear the pending changeset
     delete_post_meta($post_id, '_owbn_pending_changes');
 
-    // Redirect back to the post edit screen
-    wp_safe_redirect(get_edit_post_link($post_id, 'raw'));
+    // Redirect: back to the central Pending Changes queue if the action came
+    // from there, otherwise to the post edit screen (per-post notice flow).
+    $redirect = get_edit_post_link($post_id, 'raw');
+    if (!empty($_POST['owbn_pending_redirect'])) {
+        $requested = esc_url_raw(wp_unslash($_POST['owbn_pending_redirect']));
+        if ($requested) {
+            $redirect = add_query_arg('owbn_pending_done', $action, $requested);
+        }
+    }
+    wp_safe_redirect($redirect);
     exit;
 }
 
