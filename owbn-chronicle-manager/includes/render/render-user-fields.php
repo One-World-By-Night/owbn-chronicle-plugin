@@ -92,7 +92,14 @@ function owbn_render_user_info($key, $value, $meta)
     // Row 2: Emails
     echo "<div class=\"owbn-user-info-row\">\n";
 
-    $display_email_attrs = $cm_email_locked ? ' readonly disabled' : '';
+    // readonly only -- NOT disabled. A disabled input is never included in
+    // form submission, which silently dropped cm_info[display_email] from
+    // every CM save (existing user or manually-typed new person alike),
+    // failing the required-field check in owbn_validate_entity_submission()
+    // and bouncing the whole cm_info field with "could not be saved" even
+    // though the rest of the post saved fine. readonly still locks it from
+    // editing while actually submitting the already-correct computed value.
+    $display_email_attrs = $cm_email_locked ? ' readonly' : '';
     $display_email_note  = $cm_email_locked
         ? '<p class="description">' . esc_html__('Locked to {slug}-cm@owbn.net (parent slug for satellites). Computed automatically.', 'owbn-chronicle-manager') . '</p>'
         : '';
