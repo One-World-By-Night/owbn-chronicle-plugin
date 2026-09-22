@@ -318,6 +318,69 @@ function owbn_get_user_accessible_slugs($post_type)
 }
 
 /**
+ * Slugs of child posts (e.g. satellites) the user reaches through a parent-access role.
+ *
+ * @param array  $config    Entity config.
+ * @param array  $roles     AccessSchema roles for the user.
+ * @param string $post_type WordPress post type name.
+ * @return string[]
+ */
+function owbn_entity_child_slugs_from_roles(array $config, array $roles, string $post_type): array
+{
+    $rule          = $config['parent_access'] ?? null;
+    $slug_meta_key = $config['slug_meta_key'] ?? '';
+    if (empty($rule['flag_field']) || empty($rule['parent_field']) || empty($rule['patterns']) || !$slug_meta_key) return [];
+
+    $parent_slugs = [];
+    foreach ((array) $rule['patterns'] as $pattern) {
+        $regex = '#^' . str_replace('\\{slug\\}', '([^/]+)', preg_quote($pattern, '#')) . '$#';
+        foreach ($roles as $role) {
+            if (is_string($role) && preg_match($regex, $role, $m)) {
+                $parent_slugs[] = $m[1];
+            }
+        }
+    }
+    if (empty($parent_slugs)) return [];
+
+    // Parents are stored as a post ID or, for remote chronicles, as a slug.
+    $parent_refs = [];
+    foreach (array_unique($parent_slugs) as $parent_slug) {
+        $parent_refs[] = $parent_slug;
+        $parent_ids = get_posts([
+            'post_type'        => $post_type,
+            'post_status'      => 'any',
+            'meta_key'         => $slug_meta_key,
+            'meta_value'       => $parent_slug,
+            'fields'           => 'ids',
+            'numberposts'      => 1,
+            'suppress_filters' => true,
+        ]);
+        foreach ($parent_ids as $parent_id) {
+            $parent_refs[] = (string) $parent_id;
+        }
+    }
+
+    $child_ids = get_posts([
+        'post_type'        => $post_type,
+        'post_status'      => 'any',
+        'fields'           => 'ids',
+        'numberposts'      => -1,
+        'suppress_filters' => true,
+        'meta_query'       => [
+            ['key' => $rule['flag_field'], 'value' => '1'],
+            ['key' => $rule['parent_field'], 'value' => $parent_refs, 'compare' => 'IN'],
+        ],
+    ]);
+
+    $slugs = [];
+    foreach ($child_ids as $child_id) {
+        $slug = get_post_meta($child_id, $slug_meta_key, true);
+        if ($slug) $slugs[] = $slug;
+    }
+    return $slugs;
+}
+
+/**
  * Generic slug extraction from AccessSchema roles for any entity type.
  *
  * Uses the entity config's access_patterns to extract slugs from role strings.
@@ -347,8 +410,10 @@ function owbn_extract_entity_slugs_from_roles($roles, $user_id, $post_type)
         }
     }
 
+    $slugs = array_merge($slugs, owbn_entity_child_slugs_from_roles($config, (array) $roles, $post_type));
+
     if (!empty($slugs)) {
-        return array_unique($slugs);
+        return array_values(array_unique($slugs));
     }
 
     // Fallback: meta lookup (only if no AccessSchema roles found)

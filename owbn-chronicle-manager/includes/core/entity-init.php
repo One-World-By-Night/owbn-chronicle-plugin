@@ -699,6 +699,10 @@ function owbn_entity_map_meta_cap($caps, $cap, $user_id, $args)
         }
     }
 
+    if (owbn_user_has_parent_access($config, $post_id, $user)) {
+        return ['read'];
+    }
+
     // Fallback: check staff_fields for direct user assignment.
     $staff_fields = $config['staff_fields'] ?? [];
     foreach ($staff_fields as $field_key) {
@@ -710,6 +714,65 @@ function owbn_entity_map_meta_cap($caps, $cap, $user_id, $args)
     }
 
     return ['do_not_allow'];
+}
+
+/**
+ * Role paths on a post's parent entity that also grant access to the post.
+ *
+ * Driven by the entity config's `parent_access` rule; empty when the post
+ * is not flagged as a child or has no resolvable parent.
+ *
+ * @param array $config  Entity config.
+ * @param int   $post_id Post ID.
+ * @return string[]
+ */
+function owbn_entity_parent_access_roles(array $config, int $post_id): array
+{
+    $rule = $config['parent_access'] ?? null;
+    if (empty($rule['flag_field']) || empty($rule['parent_field']) || empty($rule['patterns'])) return [];
+    if ((string) get_post_meta($post_id, $rule['flag_field'], true) !== '1') return [];
+
+    $parent = get_post_meta($post_id, $rule['parent_field'], true);
+    if (is_numeric($parent) && (int) $parent > 0) {
+        $parent_slug = get_post_meta((int) $parent, $config['slug_meta_key'] ?? '', true);
+    } else {
+        $parent_slug = sanitize_key((string) $parent);
+    }
+    if (empty($parent_slug)) return [];
+
+    $roles = [];
+    foreach ((array) $rule['patterns'] as $pattern) {
+        $roles[] = str_replace('{slug}', $parent_slug, $pattern);
+    }
+    return $roles;
+}
+
+/**
+ * Whether a user holds one of the post's parent-access roles.
+ *
+ * @param array   $config  Entity config.
+ * @param int     $post_id Post ID.
+ * @param WP_User $user    User being checked.
+ * @return bool
+ */
+function owbn_user_has_parent_access(array $config, int $post_id, WP_User $user): bool
+{
+    $parent_roles = owbn_entity_parent_access_roles($config, $post_id);
+    if (empty($parent_roles)) return false;
+
+    if (function_exists('owbn_get_cached_user_roles')) {
+        $cached_roles = owbn_get_cached_user_roles($user->ID, $user->user_email);
+        if (array_intersect($parent_roles, (array) $cached_roles)) return true;
+    }
+
+    if (function_exists('accessSchema_client_roles_match_pattern_from_email')) {
+        $client_id = defined('ASC_PREFIX') ? strtolower(str_replace('_', '-', ASC_PREFIX)) : 'ccs';
+        foreach ($parent_roles as $role) {
+            if (accessSchema_client_roles_match_pattern_from_email($user->user_email, $role, $client_id)) return true;
+        }
+    }
+
+    return false;
 }
 
 /**
@@ -769,6 +832,10 @@ function owbn_user_can_edit_entity(int $user_id, int $post_id): bool
                 }
             }
         }
+    }
+
+    if (owbn_user_has_parent_access($config, (int) $post_id, $user)) {
+        return true;
     }
 
     // Fallback: check staff_fields for direct user assignment.

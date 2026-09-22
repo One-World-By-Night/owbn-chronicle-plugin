@@ -56,6 +56,13 @@ owbn_register_entity_type([
         'chronicle/{slug}/staff',
     ],
 
+    // A satellite inherits its parent's CM, so the parent CM can edit the satellite.
+    'parent_access' => [
+        'flag_field'   => 'chronicle_satellite',
+        'parent_field' => 'chronicle_parent',
+        'patterns'     => ['chronicle/{slug}/cm'],
+    ],
+
     // Staff field → role path mapping for auto grant/revoke
     'staff_role_map' => [
         'hst_info'  => 'chronicle/{slug}/hst',
