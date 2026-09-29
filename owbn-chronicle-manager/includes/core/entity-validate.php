@@ -13,9 +13,9 @@
  *      Never causes an entire save to be silently dropped.
  *
  *   2. COMPLIANCE detection — entity-level policy checks like
- *      required_documents. Compliance gaps NEVER block a save. They are
- *      surfaced persistently via post meta (_owbn_*_compliance_gaps) and
- *      only block draft→publish transitions through the publication gate.
+ *      required_documents. Compliance gaps NEVER block a save, a publish or a
+ *      promotion. They are surfaced persistently via post meta
+ *      (_owbn_*_compliance_gaps) as a banner on the edit screen.
  *
  */
 
@@ -154,9 +154,8 @@ function owbn_validate_entity_submission(string $post_type, array $postarr): arr
  * Detect compliance gaps for an entity (required_documents policy).
  *
  * Compliance gaps are NOT save blockers. They represent policy deficiencies
- * that should be surfaced persistently and fixed at leisure by staff. The
- * only place a compliance gap blocks user action is at draft→publish
- * transition (the publication gate, below).
+ * that are surfaced persistently for staff to fix; they never block a save,
+ * a publish or a promotion.
  *
  * Returns a list of missing required doc titles. Empty array = fully compliant.
  *
@@ -278,90 +277,16 @@ function owbn_force_draft_on_entity_error(array $data, array $postarr): array
 
     $errors = owbn_validate_entity_submission($data['post_type'], $postarr);
 
-    // Publication gate — compliance check on draft→publish transitions.
-    // If a user is trying to move a non-compliant post to 'publish', bounce it
-    // back to 'draft' and record an error so they see why.
-    //
-    // Exemptions (gate does NOT fire):
-    //   - current user has manage_options (site admin override)
-    //   - for chronicles, target game_status is Probationary or Satellite
-    //     (docs only required once promoted to Full)
-    // Compliance gaps are still recorded in post meta either way.
-    $publication_gate_errors = [];
-    $is_publish_transition = false;
     $original_status = '';
     if (!empty($postarr['ID'])) {
         $original_post = get_post($postarr['ID']);
         $original_status = $original_post ? $original_post->post_status : '';
     }
-    $gate_applies =
-        ($data['post_status'] ?? '') === 'publish'
-        && $original_status !== 'publish'
-        && !empty($config['required_documents'])
-        && !current_user_can('manage_options');
 
-    if ($gate_applies && ($config['entity_key'] ?? '') === 'chronicle') {
-        $target_is_full = empty($postarr['chronicle_probationary']) && empty($postarr['chronicle_satellite']);
-        if (!$target_is_full) {
-            $gate_applies = false;
-        }
-    }
-
-    // Promotion gate: exec flips both booleans 1→0 on a published chronicle.
-    $is_promotion_gate = false;
-    if (
-        ! $gate_applies
-        && ($config['entity_key'] ?? '') === 'chronicle'
-        && ($data['post_status'] ?? '') === 'publish'
-        && $original_status === 'publish'
-        && ! empty($config['required_documents'])
-        && function_exists('owbn_is_admin_user') && owbn_is_admin_user()
-        && ! current_user_can('manage_options')
-        && ! empty($postarr['ID'])
-        && isset($_POST['owbn_chronicle_nonce'])
-    ) {
-        $old_prob = (string) get_post_meta((int) $postarr['ID'], 'chronicle_probationary', true);
-        $old_sat  = (string) get_post_meta((int) $postarr['ID'], 'chronicle_satellite', true);
-        $new_prob = (string) ($postarr['chronicle_probationary'] ?? '');
-        $new_sat  = (string) ($postarr['chronicle_satellite'] ?? '');
-        $was_non_full = ($old_prob === '1' || $old_sat === '1');
-        $now_full     = ($new_prob !== '1' && $new_sat !== '1');
-        if ($was_non_full && $now_full) {
-            $gate_applies = true;
-            $is_promotion_gate = true;
-        }
-    }
-
-    if ($gate_applies) {
-        $is_publish_transition = true;
-        $doc_links_submitted = owbn_safe_post_value('document_links', $postarr);
-        $doc_links_submitted = is_array($doc_links_submitted) ? $doc_links_submitted : null;
-        $fake_id = !empty($postarr['ID']) ? (int) $postarr['ID'] : 0;
-        // Use a detached evaluation that doesn't require the post_id to load from DB
-        $gaps = owbn_evaluate_compliance_from_doc_links(
-            $config['required_documents'] ?? [],
-            $doc_links_submitted ?? (
-                $fake_id ? (get_post_meta($fake_id, 'document_links', true) ?: []) : []
-            )
-        );
-        if (!empty($gaps)) {
-            foreach ($gaps as $title) {
-                $publication_gate_errors[] = 'publication_gate:' . $title;
-            }
-            // Skip list reverts the boolean flip; status stays publish.
-            if ($is_promotion_gate) {
-                $publication_gate_errors[] = 'chronicle_probationary';
-                $publication_gate_errors[] = 'chronicle_satellite';
-            }
-        }
-    }
-
-    $all_errors_for_notice = array_merge($errors, $publication_gate_errors);
-
-    if (!empty($all_errors_for_notice) && !empty($postarr['ID'])) {
+    if (!empty($errors) && !empty($postarr['ID'])) {
         // Persist per-field error list so save_post can skip those fields AND
         // so the metabox can render them with inline error markers on the next load.
-        set_transient("owbn_{$entity_key}_errors_{$postarr['ID']}", $all_errors_for_notice, 120);
+        set_transient("owbn_{$entity_key}_errors_{$postarr['ID']}", $errors, 120);
 
         // Persist the user's submitted values for error recovery on re-render.
         $submitted_values = owbn_capture_submitted_values($errors, $postarr);
@@ -374,45 +299,12 @@ function owbn_force_draft_on_entity_error(array $data, array $postarr): array
         }
     }
 
-    // Bounce to draft on draft→publish gate failure; promotion failures stay published.
-    if ($is_publish_transition && !empty($publication_gate_errors) && !$is_promotion_gate) {
-        $data['post_status'] = 'draft';
-    } elseif (!empty($errors) && $original_status !== 'publish') {
+    // A new or draft post with integrity errors stays a draft; a published post stays published.
+    if (!empty($errors) && $original_status !== 'publish') {
         $data['post_status'] = 'draft';
     }
 
     return $data;
-}
-
-/**
- * Evaluate compliance from a given document_links array against required titles.
- *
- * Pure function — no DB access. Used by the publication gate which needs to
- * evaluate the SUBMITTED doc links, not the DB state.
- *
- * @param array $required_docs
- * @param array $doc_links
- * @return array Missing titles.
- */
-function owbn_evaluate_compliance_from_doc_links(array $required_docs, array $doc_links): array
-{
-    $satisfied = [];
-    foreach ($doc_links as $doc) {
-        if (!is_array($doc)) continue;
-        $title   = trim((string) ($doc['title'] ?? ''));
-        $link    = trim((string) ($doc['link'] ?? ''));
-        $file_id = $doc['file_id'] ?? '';
-        if ($title !== '' && ($link !== '' || !empty($file_id))) {
-            $satisfied[] = $title;
-        }
-    }
-    $gaps = [];
-    foreach ($required_docs as $req_title) {
-        if (!in_array($req_title, $satisfied, true)) {
-            $gaps[] = $req_title;
-        }
-    }
-    return $gaps;
 }
 
 /**
