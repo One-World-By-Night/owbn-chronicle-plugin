@@ -239,8 +239,10 @@ function owbn_update_entity_compliance_meta(int $post_id, array $config): void
  *   - publish → stay publish. Per-field errors stored in a transient so the
  *     save handler skips just those fields. The post row still updates; every
  *     VALID field is saved.
- *   - draft/new → force post_status = 'draft' as before, but still record the
- *     per-field error list so the save handler skips invalid fields only.
+ *   - draft/new → force post_status = 'draft' and record the per-field error
+ *     list so the save handler skips invalid fields only. For a chronicle, only
+ *     an invalid slug forces draft; other errored fields are skipped and
+ *     flagged while the chronicle keeps the requested status.
  *
  * CRITICAL: this function NEVER sets the legacy `validation_blocked` transient.
  * No code path in entity-save.php should early-return on an entire save.
@@ -299,8 +301,13 @@ function owbn_force_draft_on_entity_error(array $data, array $postarr): array
         }
     }
 
-    // A new or draft post with integrity errors stays a draft; a published post stays published.
-    if (!empty($errors) && $original_status !== 'publish') {
+    // A new or draft post with integrity errors stays a draft; for a chronicle only an invalid
+    // slug keeps it a draft. A published post stays published. Errored fields are skipped either way.
+    $blocking_errors = $errors;
+    if (($config['entity_key'] ?? '') === 'chronicle') {
+        $blocking_errors = array_intersect($errors, [$config['slug_meta_key'] ?? 'chronicle_slug']);
+    }
+    if (!empty($blocking_errors) && $original_status !== 'publish') {
         $data['post_status'] = 'draft';
     }
 
