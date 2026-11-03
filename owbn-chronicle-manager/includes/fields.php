@@ -56,6 +56,31 @@ function owbn_get_chronicle_field_definitions()
                 'required' => true,
                 'description' => __('Where games happen — physical site, online (Discord/Zoom/etc.), or both.', 'owbn-chronicle-manager'),
             ],
+            'ooc_locations' => [
+                'label' => __('OOC Location', 'owbn-chronicle-manager'),
+                'type'  => 'ooc_location',
+                'description' => __('City, state and country the chronicle is based in. Shown in In Brief on the chronicle page and in the State and City columns of the chronicle list.', 'owbn-chronicle-manager'),
+                'fields' => [
+                    'country' => [
+                        'label' => __('Country', 'owbn-chronicle-manager'),
+                        'type'  => 'select',
+                        'options' => owbn_get_country_list(),
+                        'search'  => true, // enable Select2 search
+                    ],
+                    'region' => [
+                        'label' => __('State / Province / Region', 'owbn-chronicle-manager'),
+                        'type'  => 'text',
+                    ],
+                    'city' => [
+                        'label' => __('City / Municipality', 'owbn-chronicle-manager'),
+                        'type'  => 'text',
+                    ],
+                    'notes' => [
+                        'label' => __('Location Notes', 'owbn-chronicle-manager'),
+                        'type'  => 'wysiwyg',
+                    ],
+                ]
+            ],
             'timezone' => [
                 'label' => __('Timezone', 'owbn-chronicle-manager'),
                 'type'  => 'select',
