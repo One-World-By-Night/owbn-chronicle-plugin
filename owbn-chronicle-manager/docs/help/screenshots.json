@@ -49,7 +49,7 @@
 				}
 			},
 			{
-				"heading": "Staff seats",
+				"heading": "Change the staff",
 				"path": "/wp-admin/post.php?post=14&action=edit",
 				"account": "morgan",
 				"steps": [
