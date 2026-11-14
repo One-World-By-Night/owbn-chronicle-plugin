@@ -50,6 +50,11 @@ function owbn_render_select_field($key, $value, $meta, $disabled_attr = '')
         echo "<option value=\"" . esc_attr($option) . "\" " . selected($value, $option, false) . ">" . esc_html($option) . "</option>\n";
     }
 
+    // A saved value that is no longer one of the options stays selected.
+    if (is_scalar($value) && (string) $value !== '' && !in_array((string) $value, array_map('strval', $options), true)) {
+        echo "<option value=\"" . esc_attr($value) . "\" selected>" . esc_html($value) . "</option>\n";
+    }
+
     echo "</select>\n";
 }
 
@@ -67,6 +72,12 @@ function owbn_render_multi_select_field($key, $value, $meta)
     foreach ($options as $opt) {
         $is_selected = in_array($opt, $selected, true);
         echo "<option value=\"" . esc_attr($opt) . "\" " . selected($is_selected, true, false) . ">" . esc_html($opt) . "</option>\n";
+    }
+    // Saved values that are no longer among the options stay selected.
+    foreach ($selected as $kept) {
+        if (is_scalar($kept) && (string) $kept !== '' && !in_array($kept, $options, true)) {
+            echo "<option value=\"" . esc_attr($kept) . "\" selected>" . esc_html($kept) . "</option>\n";
+        }
     }
     echo "</select>\n";
     echo "<p class=\"description\">" . esc_html__('Select one or more options.', 'owbn-chronicle-manager') . "</p>\n";

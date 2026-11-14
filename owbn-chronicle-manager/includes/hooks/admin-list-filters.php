@@ -532,6 +532,11 @@ function owbn_list_view_map_meta_cap($caps, $cap, $user_id, $args)
         return ['read'];
     }
 
+    // Only the roles that add records may delete them
+    if ($cap === 'delete_post') {
+        return ['do_not_allow'];
+    }
+
     // Check cached accessible slugs
     $accessible = owbn_get_user_accessible_slugs($post->post_type);
     if ($accessible === null) {

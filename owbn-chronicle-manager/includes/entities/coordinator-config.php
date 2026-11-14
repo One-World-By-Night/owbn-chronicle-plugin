@@ -50,7 +50,7 @@ owbn_register_entity_type([
     'field_definitions' => 'owbn_get_coordinator_field_definitions',
 
     // Save behavior
-    'immutable_fields'  => [],
+    'immutable_fields'  => ['coordinator_slug'],
     'restricted_fields' => [
         'coordinator_slug',
         'coordinator_title',

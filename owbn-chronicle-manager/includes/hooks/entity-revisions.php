@@ -65,12 +65,31 @@ function owbn_restore_entity_revision_meta(int $post_id, int $revision_id): void
     $callable = $config['field_definitions'] ?? null;
     if (!is_callable($callable)) return;
 
+    // Fields a restore leaves as they are: set-once fields that have a value, and, for non-admins, the restricted
+    // and staff fields, which only admins change.
+    $is_admin = function_exists('owbn_is_admin_user') && owbn_is_admin_user();
+    $keep     = [];
+    foreach ($config['immutable_fields'] ?? [] as $key) {
+        if (!empty(get_post_meta($post_id, $key, true))) {
+            $keep[] = $key;
+        }
+    }
+    if (!$is_admin) {
+        $keep = array_merge($keep, $config['restricted_fields'] ?? [], $config['staff_fields'] ?? []);
+    }
+
+    $staff_before = [];
+    foreach ($config['staff_fields'] ?? [] as $key) {
+        $staff_before[$key] = get_post_meta($post_id, $key, true);
+    }
+
     $field_groups = call_user_func($callable);
     foreach ($field_groups as $fields) {
         foreach ($fields as $key => $meta) {
             if (!is_array($meta)) continue; // skip render-only hints
             $type = $meta['type'] ?? 'text';
             if ($type === 'readonly_history') continue;
+            if (in_array($key, $keep, true)) continue;
 
             $value = get_metadata('post', $revision_id, $key, true);
             if ($value !== '' && $value !== false) {
@@ -79,6 +98,11 @@ function owbn_restore_entity_revision_meta(int $post_id, int $revision_id): void
                 delete_post_meta($post_id, $key);
             }
         }
+    }
+
+    // An admin's restore can change who holds a staff seat; the accessSchema roles follow it.
+    if ($is_admin && function_exists('owbn_sync_staff_roles')) {
+        owbn_sync_staff_roles($post_id, $config, $staff_before);
     }
 }
 add_action('wp_restore_post_revision', 'owbn_restore_entity_revision_meta', 10, 2);

@@ -81,10 +81,8 @@ function owbn_save_entity_meta(int $post_id, WP_Post $post): void
     $is_admin = owbn_is_admin_user();
     $staff_user_dirty = false;
 
-    // Determine if pending changeset logic applies:
-    // Only for published posts edited by non-admins that have staff fields defined
-    $is_published  = ($post->post_status === 'publish');
-    $needs_pending = ($is_published && !$is_admin && !empty($staff_fields));
+    // Pending changeset logic applies to non-admin edits of any entity that has staff fields.
+    $needs_pending = (!$is_admin && !empty($staff_fields));
     $pending_values = [];
 
     // Loop all field definitions
@@ -172,13 +170,20 @@ function owbn_save_entity_meta(int $post_id, WP_Post $post): void
         // Notify about pending changeset
         owbn_send_change_notification($post_id, $config, $old_values, $pending_new, true);
 
-        return; // Do NOT call owbn_handle_entity_staff_change — post stays published
+        owbn_update_entity_compliance_meta($post_id, $config);
+
+        return; // Do NOT call owbn_handle_entity_staff_change; the staff fields keep their live values
     }
 
     // For admins or draft posts, use existing staff change handler
     if ($staff_user_dirty) {
-        // Admin save is authoritative — clear any pending changeset
+        // Admin save is authoritative — clear any pending changeset, giving back the roles it took away from
+        // people this save keeps
         if ($is_admin) {
+            $discarded = get_post_meta($post_id, '_owbn_pending_changes', true);
+            if (!empty($discarded['fields']) && is_array($discarded['fields'])) {
+                owbn_restore_staff_roles($post_id, $config, $discarded['fields']);
+            }
             delete_post_meta($post_id, '_owbn_pending_changes');
         }
         owbn_handle_entity_staff_change($post_id, $config);
@@ -395,8 +400,8 @@ function owbn_save_entity_field(int $post_id, string $key, array $meta, $raw, bo
 /**
  * Handle staff user changes for any entity type.
  *
- * Applies exclusive field rules, detects self-promotion, and sets
- * the post to draft if the change requires admin review.
+ * Clears an admin's pending changeset, applies the exclusive field rules, and flags a non-admin's
+ * change for the staff change notice.
  *
  * @param int   $post_id The post ID.
  * @param array $config  The entity type configuration array.
@@ -405,9 +410,7 @@ function owbn_save_entity_field(int $post_id, string $key, array $meta, $raw, bo
 function owbn_handle_entity_staff_change(int $post_id, array $config): void
 {
     $entity_key = $config['entity_key'];
-    $current_user = wp_get_current_user();
-    $current_user_id = (string) $current_user->ID;
-    $is_allowed = owbn_is_admin_user($current_user);
+    $is_allowed = owbn_is_admin_user(wp_get_current_user());
 
     // Admin save is authoritative — clear any pending changeset
     if ($is_allowed) {
@@ -428,20 +431,8 @@ function owbn_handle_entity_staff_change(int $post_id, array $config): void
         }
     }
 
-    // Self-promotion detection: check if current user assigned themselves to a staff field
-    $staff_fields = $config['staff_fields'] ?? [];
-    $self_promoted = false;
-
-    foreach ($staff_fields as $staff_field_key) {
-        $staff_meta = get_post_meta($post_id, $staff_field_key, true);
-        if (is_array($staff_meta) && isset($staff_meta['user']) && $staff_meta['user'] === $current_user_id) {
-            $self_promoted = true;
-            break;
-        }
-    }
-
-    // Flag for admin review but keep the post published — old data stays visible
-    if (!$is_allowed || $self_promoted) {
+    // Staff change notice for a non-admin save that reached this handler
+    if (!$is_allowed) {
         set_transient("owbn_{$entity_key}_dirty_notice_{$post_id}", true, 60);
     }
 }
@@ -900,6 +891,53 @@ function owbn_sync_staff_roles( int $post_id, array $config, array $old_values, 
                     if ( is_wp_error( $result ) ) {
                         error_log( "[OWBN CC] Role grant failed for {$user->user_email} / {$role_path}: " . $result->get_error_message() );
                     }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Grants the staff roles back to everyone a rejected pending change would have removed: each user still in a live
+ * staff field but missing from that field's pending value.
+ *
+ * @param int   $post_id        The post ID.
+ * @param array $config         Entity config.
+ * @param array $pending_fields The rejected change's staff field values, by field key.
+ */
+function owbn_restore_staff_roles( int $post_id, array $config, array $pending_fields ): void {
+    if ( ! function_exists( 'owc_asc_grant_role' ) ) {
+        return;
+    }
+
+    $staff_role_map = $config['staff_role_map'] ?? [];
+    if ( is_string( $staff_role_map ) && is_callable( $staff_role_map ) ) {
+        $staff_role_map = call_user_func( $staff_role_map, $post_id );
+    }
+    if ( empty( $staff_role_map ) || ! is_array( $staff_role_map ) ) {
+        return;
+    }
+
+    $slug = get_post_meta( $post_id, $config['slug_meta_key'], true );
+    if ( empty( $slug ) ) {
+        return;
+    }
+
+    foreach ( $pending_fields as $field_key => $pending_value ) {
+        if ( empty( $staff_role_map[ $field_key ] ) ) {
+            continue;
+        }
+        $role_path = str_replace( '{slug}', $slug, $staff_role_map[ $field_key ] );
+        $removed   = array_diff(
+            owbn_extract_user_ids( get_post_meta( $post_id, $field_key, true ) ),
+            owbn_extract_user_ids( $pending_value )
+        );
+        foreach ( $removed as $user_id ) {
+            $user = get_user_by( 'id', $user_id );
+            if ( $user && $user->user_email ) {
+                $result = owc_asc_grant_role( 'owbn-cc', $user->user_email, $role_path );
+                if ( is_wp_error( $result ) ) {
+                    error_log( "[OWBN CC] Role restore failed for {$user->user_email} / {$role_path}: " . $result->get_error_message() );
                 }
             }
         }

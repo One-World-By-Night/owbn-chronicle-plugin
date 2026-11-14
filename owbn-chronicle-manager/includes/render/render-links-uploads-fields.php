@@ -44,7 +44,7 @@ function owbn_render_document_links_field($key, $value, $meta)
             echo '<li>' . esc_html($t) . '</li>';
         }
         echo '</ul>';
-        echo '<small>' . esc_html__('Filling these will unblock publication. Other edits on this page save normally regardless.', 'owbn-chronicle-manager') . '</small>';
+        echo '<small>' . esc_html__('Give each one a link or an uploaded file. Other edits on this page save normally.', 'owbn-chronicle-manager') . '</small>';
         echo '</div>' . "\n";
     }
 

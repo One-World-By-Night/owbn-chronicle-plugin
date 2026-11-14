@@ -314,7 +314,17 @@ function owbn_render_entity_metabox($post)
             echo '<strong><span class="dashicons dashicons-clock" style="vertical-align: text-bottom;"></span> ';
             echo esc_html__('Pending Staff Changes', 'owbn-chronicle-manager');
             echo '</strong>';
-            echo '<br><small><em>' . esc_html__('Your staff changes are awaiting admin approval. Other field changes were saved.', 'owbn-chronicle-manager') . '</em></small>';
+            $submitted_by = get_userdata($pending['submitted_by'] ?? 0);
+            if ($submitted_by && (int) $submitted_by->ID === (int) $user_id) {
+                $pending_note = __('Your staff changes are awaiting admin approval. Other field changes were saved.', 'owbn-chronicle-manager');
+            } else {
+                $pending_note = sprintf(
+                    /* translators: %s: name of the person who submitted the staff changes */
+                    __('Staff changes from %s are awaiting admin approval.', 'owbn-chronicle-manager'),
+                    $submitted_by ? $submitted_by->display_name : __('another editor', 'owbn-chronicle-manager')
+                );
+            }
+            echo '<br><small><em>' . esc_html($pending_note) . '</em></small>';
             echo '</div>' . "\n";
         }
     }
@@ -658,6 +668,11 @@ function owbn_entity_map_meta_cap($caps, $cap, $user_id, $args)
     $user = get_userdata($user_id);
     if (!$user instanceof WP_User) return ['do_not_allow'];
 
+    // Only the roles that add records may delete them.
+    if ($cap === 'delete_post') {
+        return owbn_user_is_admin_role($user) ? ['read'] : ['do_not_allow'];
+    }
+
     // Administrators and exec_team always have access.
     if (array_intersect($user->roles, ['administrator', 'exec_team'])) {
         return ['read'];
@@ -986,6 +1001,36 @@ add_action('admin_menu', function () {
         remove_meta_box('authordiv', $pt, 'advanced');
     }
 });
+
+// Status lock: once a chronicle or coordinator exists, only site admins, the Exec team and the Web team change its
+// status or its visibility.
+add_filter('wp_insert_post_data', function ($data, $postarr) {
+    if (empty($postarr['ID']) || !owbn_is_entity_post_type($data['post_type'] ?? '')) {
+        return $data;
+    }
+    $user = wp_get_current_user();
+    if (!$user->ID || owbn_user_is_admin_role($user)) {
+        return $data;
+    }
+    $existing = get_post((int) $postarr['ID']);
+    if (!$existing || $existing->post_type !== $data['post_type'] || 'auto-draft' === $existing->post_status) {
+        return $data;
+    }
+    $data['post_status']   = $existing->post_status;
+    $data['post_password'] = $existing->post_password;
+    return $data;
+}, 20, 2);
+
+// The status and visibility controls are hidden from everyone the status lock applies to.
+$owbn_entity_status_lock_css = function () {
+    $screen = get_current_screen();
+    if (!$screen || !owbn_is_entity_post_type((string) $screen->post_type) || owbn_user_is_admin_role(wp_get_current_user())) {
+        return;
+    }
+    echo '<style>#misc-publishing-actions .edit-post-status, #misc-publishing-actions .edit-visibility, .inline-edit-row .inline-edit-status { display: none !important; }</style>';
+};
+add_action('admin_head-post.php', $owbn_entity_status_lock_css);
+add_action('admin_head-edit.php', $owbn_entity_status_lock_css);
 
 // Chronicle Name lock: only site admins can rename a chronicle once it has
 // been saved. Defence in depth — server-side filter reverts any unauthorized

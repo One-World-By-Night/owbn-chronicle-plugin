@@ -14,7 +14,7 @@ function owbn_get_chronicle_field_definitions()
                 'min_length' => 3,
                 'max_length' => 6,
                 'required' => true,
-                'description' => __('3–6 character ID used in URLs and as a stable handle (e.g. "mckn"). Locked once saved.', 'owbn-chronicle-manager'),
+                'description' => __('2 to 8 lowercase letters and numbers, used in URLs and as a stable handle (e.g. "mckn"). Locked once saved.', 'owbn-chronicle-manager'),
             ],
             'chronicle_probationary' => [
                 'label' => __('Probationary?', 'owbn-chronicle-manager'),
@@ -150,7 +150,7 @@ function owbn_get_chronicle_field_definitions()
                 'label' => __('HST Info', 'owbn-chronicle-manager'),
                 'type' => 'user_info',
                 'required' => true,
-                'description' => __('Head Storyteller. Pick the WP user — name and email pull from their profile.', 'owbn-chronicle-manager'),
+                'description' => __('Head Storyteller. Pick their account under User, then fill in the name and both emails.', 'owbn-chronicle-manager'),
             ],
             'cm_info' => [
                 'label' => __('CM Info', 'owbn-chronicle-manager'),
@@ -476,7 +476,7 @@ function owbn_get_coordinator_field_definitions()
             'coord_info' => [
                 'label' => __('Coordinator', 'owbn-chronicle-manager'),
                 'type'  => 'user_info',
-                'description' => __('The current coordinator. Pick the WP user — name and email pull from their profile.', 'owbn-chronicle-manager'),
+                'description' => __('The current coordinator. Pick their account under User, then fill in the name and both emails.', 'owbn-chronicle-manager'),
             ],
         ],
         'Staff' => [

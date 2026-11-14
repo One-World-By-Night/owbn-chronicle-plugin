@@ -1,0 +1,25 @@
+{
+	"id": "owbn-cc",
+	"site": "https://support.owbn.net",
+	"category": { "slug": "owbn-cc", "name": "OWBN C&C Manager" },
+	"slugPrefix": "owbn-cc-",
+	"guides": {
+		"overview": "what-is-the-chronicle-coordinator-manager"
+	},
+	"redirects": {
+		"creating-a-new-chronicle": "owbn-cc-chronicles",
+		"managing-your-chronicle": "owbn-cc-chronicle-edit",
+		"managing-coordinators": "owbn-cc-coordinator-edit",
+		"how-other-sites-access-chronicle-coordinator-data": "owbn-cc-settings",
+		"troubleshooting-chronicle-coordinator-manager": "owbn-cc-troubleshooting"
+	},
+	"screens": {
+		"page:owbn-cc": "settings",
+		"page:owbn-cc-pending": "pending-changes",
+		"page:owbn-cc-hst-ast": "hst-ast-report",
+		"edit:owbn_chronicle": "chronicles",
+		"post:owbn_chronicle": "chronicle-edit",
+		"edit:owbn_coordinator": "coordinators",
+		"post:owbn_coordinator": "coordinator-edit"
+	}
+}

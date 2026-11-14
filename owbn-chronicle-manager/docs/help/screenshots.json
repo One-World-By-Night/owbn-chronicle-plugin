@@ -1,0 +1,141 @@
+{
+	"site": "http://localhost:8923",
+	"viewport": {
+		"width": 1280,
+		"height": 900
+	},
+	"accounts": {
+		"archie": "Dana Whitfield, site admin",
+		"morgan": "Morgan Reyes, HST of Tides of Ash",
+		"sam": "Sam Okafor, Sabbat Coordinator"
+	},
+	"notes": "Captured from the help sandbox (~/owbn/_localwp-oat/help) after seed-cc-shots.php: made-up people, chronicles and offices. C&C Manager's screens are English-only, so the Portuguese pages reuse these images with Portuguese alt text.",
+	"pages": {
+		"chronicles": [
+			{
+				"heading": "The screen",
+				"path": "/wp-admin/edit.php?post_type=owbn_chronicle",
+				"account": "archie",
+				"alt": {
+					"en": "Chronicles: Add New Chronicle, the All, Published and Decommissioned filters, and the chronicles with their Compliance badges, OK or a number missing.",
+					"pt_BR": "Chronicles: Add New Chronicle, os filtros All, Published e Decommissioned, e as crônicas com os selos de Compliance, OK ou quantos faltam."
+				}
+			}
+		],
+		"chronicle-edit": [
+			{
+				"heading": "The screen",
+				"path": "/wp-admin/post.php?post=14&action=edit",
+				"account": "morgan",
+				"height": 1100,
+				"alt": {
+					"en": "Editing Tides of Ash as its HST: the name, the LOCAL bar, the greyed-out Chronicle Slug, Probationary and Satellite, the five tabs and the Description editor.",
+					"pt_BR": "Editando Tides of Ash como HST: o nome, a barra LOCAL, Chronicle Slug, Probationary e Satellite em cinza, as cinco abas e o editor de Description."
+				}
+			},
+			{
+				"heading": "Staff seats",
+				"path": "/wp-admin/post.php?post=14&action=edit",
+				"account": "morgan",
+				"steps": [
+					{
+						"click": "button[data-owbn-tab=\"1\"]"
+					}
+				],
+				"crop": "tr:has(> th > label[for=\"hst_info\"])",
+				"alt": {
+					"en": "HST Info: User, Display Name, Actual Email and Display Email, under the hint to pick the account and fill in the name and both emails.",
+					"pt_BR": "HST Info: User, Display Name, Actual Email e Display Email, sob a dica de escolher a conta e preencher o nome e os dois emails."
+				}
+			},
+			{
+				"heading": "Staff seats",
+				"path": "/wp-admin/post.php?post=14&action=edit",
+				"account": "morgan",
+				"steps": [
+					{
+						"click": "button[data-owbn-tab=\"1\"]"
+					}
+				],
+				"crop": "tr:has(> th > label[for=\"ast_list\"])",
+				"alt": {
+					"en": "AST Info: an AST with User and Remove, Display Name, Role, Actual Email and Display Email, and Add.",
+					"pt_BR": "AST Info: um AST com User e Remove, Display Name, Role, Actual Email e Display Email, e Add."
+				}
+			}
+		],
+		"coordinators": [
+			{
+				"heading": "The screen",
+				"path": "/wp-admin/edit.php?post_type=owbn_coordinator",
+				"account": "archie",
+				"alt": {
+					"en": "Coordinators: Add New Coordinator, the All and Published filters, and the offices.",
+					"pt_BR": "Coordinators: Add New Coordinator, os filtros All e Published, e os escritórios."
+				}
+			}
+		],
+		"coordinator-edit": [
+			{
+				"heading": "The screen",
+				"path": "/wp-admin/post.php?post=24&action=edit",
+				"account": "sam",
+				"height": 1100,
+				"alt": {
+					"en": "Editing the Sabbat Coordinator office as its coordinator: four tabs, Description, Staff, History and Links, with the office's description, Hosting Chronicle and term dates.",
+					"pt_BR": "Editando o escritório Sabbat Coordinator como coordenador: quatro abas, Description, Staff, History e Links, com a descrição do escritório, Hosting Chronicle e as datas do mandato."
+				}
+			},
+			{
+				"heading": "Sub-coordinators",
+				"path": "/wp-admin/post.php?post=24&action=edit",
+				"account": "sam",
+				"steps": [
+					{
+						"click": "button[data-owbn-tab=\"1\"]"
+					}
+				],
+				"crop": "#owbn_coordinator_fields",
+				"height": 700,
+				"alt": {
+					"en": "The Staff tab: its instructions, then a sub-coordinator with User and Remove, Display Name, Role, Actual Email and Display Email, and Add.",
+					"pt_BR": "A aba Staff: as instruções e um subcoordenador com User e Remove, Display Name, Role, Actual Email e Display Email, e Add."
+				}
+			}
+		],
+		"pending-changes": [
+			{
+				"heading": "The screen",
+				"path": "/wp-admin/admin.php?page=owbn-cc-pending",
+				"account": "archie",
+				"alt": {
+					"en": "Pending Staff Changes: two change sets, one on Glass Orchard flagged Self-promotion detected, each with its Field and Pending Value and the Approve and Reject buttons.",
+					"pt_BR": "Pending Staff Changes: dois conjuntos de mudanças, um em Glass Orchard marcado Self-promotion detected, cada um com Field e Pending Value e os botões Approve e Reject."
+				}
+			}
+		],
+		"hst-ast-report": [
+			{
+				"heading": "The screen",
+				"path": "/wp-admin/admin.php?page=owbn-cc-hst-ast",
+				"account": "archie",
+				"alt": {
+					"en": "The HST & AST Report: the count line, the filter box, Only chronicles with a missing name or email, Export CSV, and a row per chronicle with its HST and staff emails, a missing one marked No email.",
+					"pt_BR": "O HST & AST Report: a linha de contagem, a caixa de filtro, Only chronicles with a missing name or email, Export CSV e uma linha por crônica com os emails do HST e da staff, um que falta marcado No email."
+				}
+			}
+		],
+		"settings": [
+			{
+				"heading": "The screen",
+				"path": "/wp-admin/admin.php?page=owbn-cc",
+				"account": "archie",
+				"height": 1300,
+				"alt": {
+					"en": "C&C Plugin Settings: Enable Chronicle management, Enable Coordinator management, and the Available Genres and Available Regions lists.",
+					"pt_BR": "C&C Plugin Settings: Enable Chronicle management, Enable Coordinator management e as listas Available Genres e Available Regions."
+				}
+			}
+		]
+	}
+}

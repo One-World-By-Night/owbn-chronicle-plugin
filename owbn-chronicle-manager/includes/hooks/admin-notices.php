@@ -128,10 +128,14 @@ function owbn_admin_notice_entity_pending_submitted()
             esc_html($singular)
         );
         echo '</strong><br>';
-        printf(
-            esc_html__('Non-staff field changes were saved immediately. The %s remains published.', 'owbn-chronicle-manager'),
-            esc_html(strtolower($singular))
-        );
+        if ($post->post_status === 'publish') {
+            printf(
+                esc_html__('Non-staff field changes were saved immediately. The %s remains published.', 'owbn-chronicle-manager'),
+                esc_html(strtolower($singular))
+            );
+        } else {
+            echo esc_html__('Non-staff field changes were saved immediately.', 'owbn-chronicle-manager');
+        }
         echo '</p></div>';
         delete_transient("owbn_{$entity_key}_pending_notice_{$post_id}");
     }
@@ -318,6 +322,10 @@ function owbn_handle_pending_changeset_action()
 
         set_transient("owbn_{$entity_key}_pending_approved_{$post_id}", true, 60);
     } else {
+        // Give back the roles the change took away when it was submitted.
+        if (function_exists('owbn_restore_staff_roles')) {
+            owbn_restore_staff_roles($post_id, $config, $pending['fields']);
+        }
         set_transient("owbn_{$entity_key}_pending_rejected_{$post_id}", true, 60);
     }
 
