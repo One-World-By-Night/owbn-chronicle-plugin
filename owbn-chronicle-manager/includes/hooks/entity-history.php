@@ -103,7 +103,12 @@ function owbn_archive_chronicle_staff_on_change(int $post_id, WP_Post $post): vo
         }
 
         update_post_meta($post_id, $prev_key, $current);
-        update_post_meta($post_id, "_owbn_prev_{$field}_start", $today);
+
+        // A holder's start date moves only when the holder changes or none is recorded yet.
+        $start_key = "_owbn_prev_{$field}_start";
+        if ($prev_user !== $curr_user || !get_post_meta($post_id, $start_key, true)) {
+            update_post_meta($post_id, $start_key, $today);
+        }
     }
 
     // Check AST list (ast_group field).
