@@ -56,6 +56,12 @@ function owbn_get_chronicle_field_definitions()
                 'required' => true,
                 'description' => __('Where games happen — physical site, online (Discord/Zoom/etc.), or both.', 'owbn-chronicle-manager'),
             ],
+            'primary_language' => [
+                'label' => __('Language', 'owbn-chronicle-manager'),
+                'type' => 'select',
+                'options' => ['English', 'Portuguese', 'Spanish', 'French', 'Other'],
+                'description' => __('The language games are run in. Find a Game on the OWbN website filters by it.', 'owbn-chronicle-manager'),
+            ],
             'ooc_locations' => [
                 'label' => __('OOC Location', 'owbn-chronicle-manager'),
                 'type'  => 'ooc_location',

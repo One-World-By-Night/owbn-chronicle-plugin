@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: OWBN Chronicle & Coordinator Manager 2.12.4\n"
+"Project-Id-Version: OWBN Chronicle & Coordinator Manager 2.18.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/owbn-chronicle-manager\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-04-02T23:48:27+00:00\n"
+"POT-Creation-Date: 2026-11-15T03:00:47+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: owbn-chronicle-manager\n"
@@ -103,6 +103,77 @@ msgstr ""
 msgid "No"
 msgstr ""
 
+#: includes/admin/hst-ast-report.php:42
+#: includes/admin/hst-ast-report.php:43
+#: includes/admin/hst-ast-report.php:256
+msgid "HST & AST Report"
+msgstr ""
+
+#: includes/admin/hst-ast-report.php:168
+msgid "No name"
+msgstr ""
+
+#: includes/admin/hst-ast-report.php:171
+msgid "No email"
+msgstr ""
+
+#: includes/admin/hst-ast-report.php:223
+msgid "You do not have permission to export this report."
+msgstr ""
+
+#: includes/admin/hst-ast-report.php:251
+#: includes/admin/pending-changes-page.php:56
+msgid "You do not have permission to view this page."
+msgstr ""
+
+#: includes/admin/hst-ast-report.php:259
+msgid "No active chronicles on this site."
+msgstr ""
+
+#: includes/admin/hst-ast-report.php:272
+msgid "Export CSV"
+msgstr ""
+
+#. translators: 1: chronicle count, 2: chronicles with a missing name or email
+#: includes/admin/hst-ast-report.php:277
+#, php-format
+msgid "%1$d active chronicles. %2$d have an HST or AST with no name or no email address."
+msgstr ""
+
+#: includes/admin/hst-ast-report.php:283
+msgid "Filter the list"
+msgstr ""
+
+#: includes/admin/hst-ast-report.php:284
+msgid "Filter by chronicle, name or email"
+msgstr ""
+
+#: includes/admin/hst-ast-report.php:285
+msgid "Only chronicles with a missing name or email"
+msgstr ""
+
+#: includes/admin/hst-ast-report.php:290
+msgid "Chronicle"
+msgstr ""
+
+#: includes/admin/hst-ast-report.php:291
+msgid "HST (email)"
+msgstr ""
+
+#: includes/admin/hst-ast-report.php:292
+msgid "Staff (emails)"
+msgstr ""
+
+#: includes/admin/hst-ast-report.php:293
+#: includes/fields.php:216
+#: includes/fields.php:553
+msgid "Last Updated"
+msgstr ""
+
+#: includes/admin/hst-ast-report.php:313
+msgid "None listed"
+msgstr ""
+
 #: includes/admin/menu.php:19
 #: includes/admin/menu.php:20
 msgid "OWBN C&C"
@@ -116,52 +187,151 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: includes/core/entity-init.php:29
+#: includes/admin/menu.php:42
+msgid "Pending Changes"
+msgstr ""
+
+#: includes/admin/menu.php:51
+#: includes/admin/pending-changes-page.php:53
+#: includes/core/entity-init.php:294
+#: includes/core/entity-init.php:315
+msgid "Pending Staff Changes"
+msgstr ""
+
+#: includes/admin/pending-changes-page.php:64
+msgid "Changes approved and applied."
+msgstr ""
+
+#: includes/admin/pending-changes-page.php:65
+msgid "Changes rejected and discarded."
+msgstr ""
+
+#: includes/admin/pending-changes-page.php:87
+msgid "No pending staff changes. Nothing to review."
+msgstr ""
+
+#: includes/admin/pending-changes-page.php:92
+#, php-format
+msgid "%d change set(s) awaiting approval."
+msgstr ""
+
+#: includes/admin/pending-changes-page.php:110
+msgid "Entity"
+msgstr ""
+
+#: includes/admin/pending-changes-page.php:125
+#: includes/hooks/admin-notices.php:182
+msgid "Unknown user"
+msgstr ""
+
+#: includes/admin/pending-changes-page.php:133
+#, php-format
+msgid "Submitted by %1$s%2$s"
+msgstr ""
+
+#: includes/admin/pending-changes-page.php:135
+#, php-format
+msgid "on %s"
+msgstr ""
+
+#: includes/admin/pending-changes-page.php:138
+#: includes/core/entity-init.php:303
+msgid "Self-promotion detected"
+msgstr ""
+
+#: includes/admin/pending-changes-page.php:143
+#: includes/hooks/admin-notices.php:210
+msgid "Field"
+msgstr ""
+
+#: includes/admin/pending-changes-page.php:144
+#: includes/hooks/admin-notices.php:211
+msgid "Pending Value"
+msgstr ""
+
+#: includes/admin/pending-changes-page.php:157
+msgid "Approve"
+msgstr ""
+
+#: includes/admin/pending-changes-page.php:159
+msgid "Reject and discard these changes?"
+msgstr ""
+
+#: includes/admin/pending-changes-page.php:160
+msgid "Reject"
+msgstr ""
+
+#: includes/core/entity-init.php:28
+msgid "Invalid or duplicate slug. Your other edits were saved; this field was not."
+msgstr ""
+
+#: includes/core/entity-init.php:30
+msgid "User, display name, and display email are all required. Your other edits were saved; this field was not."
+msgstr ""
+
+#: includes/core/entity-init.php:32
+msgid "Please choose a value. Your other edits were saved; this field was not."
+msgstr ""
+
+#: includes/core/entity-init.php:34
+msgid "This field is required. Your other edits were saved; this field was not."
+msgstr ""
+
+#: includes/core/entity-init.php:54
 msgid "Add New"
 msgstr ""
 
 #. translators: %s: entity singular name
-#: includes/core/entity-init.php:168
+#: includes/core/entity-init.php:196
 #, php-format
 msgid "You do not have permission to edit this %s."
 msgstr ""
 
-#: includes/core/entity-init.php:197
+#: includes/core/entity-init.php:241
+msgid "Required documents missing"
+msgstr ""
+
+#: includes/core/entity-init.php:243
+msgid "This chronicle is missing URLs or uploads for the following required documents. Add them in the Document Links section below. Your other edits are still being saved normally."
+msgstr ""
+
+#: includes/core/entity-init.php:260
 msgid "REMOTE"
 msgstr ""
 
-#: includes/core/entity-init.php:206
+#: includes/core/entity-init.php:269
 msgid "LOCAL"
 msgstr ""
 
-#: includes/core/entity-init.php:227
+#: includes/core/entity-init.php:290
 msgid "Unknown"
 msgstr ""
 
-#: includes/core/entity-init.php:231
-#: includes/core/entity-init.php:252
-msgid "Pending Staff Changes"
-msgstr ""
-
-#: includes/core/entity-init.php:235
+#: includes/core/entity-init.php:298
 #, php-format
 msgid "Submitted by %s on %s"
 msgstr ""
 
-#: includes/core/entity-init.php:240
-msgid "Self-promotion detected"
-msgstr ""
-
-#: includes/core/entity-init.php:244
+#: includes/core/entity-init.php:307
 msgid "Fields:"
 msgstr ""
 
-#: includes/core/entity-init.php:246
+#: includes/core/entity-init.php:309
 msgid "Use the Approve/Reject buttons above to act on these changes."
 msgstr ""
 
-#: includes/core/entity-init.php:254
+#: includes/core/entity-init.php:319
 msgid "Your staff changes are awaiting admin approval. Other field changes were saved."
+msgstr ""
+
+#. translators: %s: name of the person who submitted the staff changes
+#: includes/core/entity-init.php:323
+#, php-format
+msgid "Staff changes from %s are awaiting admin approval."
+msgstr ""
+
+#: includes/core/entity-init.php:324
+msgid "another editor"
 msgstr ""
 
 #: includes/core/post-statuses.php:14
@@ -182,456 +352,641 @@ msgstr[1] ""
 msgid "Decommissioned"
 msgstr ""
 
-#: includes/fields.php:9
+#: includes/fields.php:12
 msgid "Chronicle Slug"
 msgstr ""
 
-#: includes/fields.php:15
+#: includes/fields.php:17
+msgid "2 to 8 lowercase letters and numbers, used in URLs and as a stable handle (e.g. \"mckn\"). Locked once saved."
+msgstr ""
+
+#: includes/fields.php:20
 msgid "Probationary?"
 msgstr ""
 
-#: includes/fields.php:16
+#: includes/fields.php:22
+msgid "Set by admin, the Web Coord, or the Membership Coord. Chronicles can't unflag themselves."
+msgstr ""
+
+#: includes/fields.php:25
 msgid "Satellite?"
 msgstr ""
 
-#: includes/fields.php:18
+#: includes/fields.php:27
+msgid "Check if this is a satellite of another chronicle. Pick the parent below."
+msgstr ""
+
+#: includes/fields.php:30
 msgid "Parent Chronicle"
 msgstr ""
 
-#: includes/fields.php:23
-#: includes/fields.php:78
+#: includes/fields.php:33
+msgid "Only used when Satellite is checked. Parents must be full (non-probationary) chronicles — only admin, the Web Coord, or the Membership Coord can promote a chronicle to full."
+msgstr ""
+
+#: includes/fields.php:41
+msgid "Tell players what your chronicle is about — setting, themes, what makes it unique. Shown on the public chronicle page."
+msgstr ""
+
+#: includes/fields.php:46
+#: includes/fields.php:132
+#: includes/fields.php:151
 msgid "Genres"
 msgstr ""
 
-#: includes/fields.php:29
+#: includes/fields.php:50
+msgid "All genres run at this chronicle. Pick as many as apply."
+msgstr ""
+
+#: includes/fields.php:53
 msgid "Game Type"
 msgstr ""
 
-#: includes/fields.php:34
-msgid "Premise"
+#: includes/fields.php:57
+msgid "Where games happen — physical site, online (Discord/Zoom/etc.), or both."
 msgstr ""
 
-#: includes/fields.php:35
-msgid "Game Theme"
+#: includes/fields.php:60
+msgid "Language"
 msgstr ""
 
-#: includes/fields.php:36
-msgid "Game Mood"
+#: includes/fields.php:63
+msgid "The language games are run in. Find a Game on the OWbN website filters by it."
 msgstr ""
 
-#: includes/fields.php:37
-msgid "Information for Travellers"
+#: includes/fields.php:66
+msgid "OOC Location"
 msgstr ""
 
-#: includes/fields.php:39
-msgid "Active Players"
+#: includes/fields.php:68
+msgid "City, state and country the chronicle is based in. Shown in In Brief on the chronicle page and in the State and City columns of the chronicle list."
 msgstr ""
 
-#: includes/fields.php:44
-msgid "Session List"
-msgstr ""
-
-#: includes/fields.php:48
-msgid "Session Type"
-msgstr ""
-
-#: includes/fields.php:54
-msgid "Frequency"
-msgstr ""
-
-#: includes/fields.php:59
-msgid "Day"
-msgstr ""
-
-#: includes/fields.php:65
-msgid "Check-in Time"
-msgstr ""
-
-#: includes/fields.php:69
-msgid "Start Time"
-msgstr ""
-
-#: includes/fields.php:74
-msgid "Game Date Notes"
-msgstr ""
-
-#: includes/fields.php:84
-#: includes/fields.php:362
-msgid "Website URL"
-msgstr ""
-
-#: includes/fields.php:88
-msgid "HST Selection Method"
-msgstr ""
-
-#: includes/fields.php:93
-msgid "CM Selection Method"
-msgstr ""
-
-#: includes/fields.php:98
-msgid "AST Selection Method"
-msgstr ""
-
-#: includes/fields.php:103
-msgid "HST Info"
-msgstr ""
-
-#: includes/fields.php:108
-msgid "CM Info"
-msgstr ""
-
-#: includes/fields.php:113
-msgid "AST List"
-msgstr ""
-
-#: includes/fields.php:117
-#: includes/fields.php:396
-#: includes/render/render-user-fields.php:53
-#: includes/render/render-user-fields.php:160
-msgid "User"
-msgstr ""
-
-#: includes/fields.php:121
-#: includes/fields.php:400
-#: includes/render/render-user-fields.php:75
-#: includes/render/render-user-fields.php:183
-msgid "Display Name"
-msgstr ""
-
-#: includes/fields.php:125
-#: includes/fields.php:408
-#: includes/render/render-user-fields.php:87
-#: includes/render/render-user-fields.php:191
-msgid "Actual Email"
-msgstr ""
-
-#: includes/fields.php:129
-#: includes/fields.php:412
-#: includes/render/render-user-fields.php:93
-#: includes/render/render-user-fields.php:195
-msgid "Display Email"
-msgstr ""
-
-#: includes/fields.php:133
-#: includes/fields.php:330
-#: includes/render/render-user-fields.php:187
-msgid "Role"
-msgstr ""
-
-#: includes/fields.php:139
-msgid "Admin Contact"
-msgstr ""
-
-#: includes/fields.php:145
-msgid "OOC Locations"
-msgstr ""
-
-#: includes/fields.php:149
-#: includes/fields.php:186
+#: includes/fields.php:71
+#: includes/fields.php:246
 msgid "Country"
 msgstr ""
 
-#: includes/fields.php:155
-#: includes/fields.php:192
+#: includes/fields.php:77
+#: includes/fields.php:252
 msgid "State / Province / Region"
 msgstr ""
 
-#: includes/fields.php:159
-#: includes/fields.php:196
+#: includes/fields.php:81
+#: includes/fields.php:256
 msgid "City / Municipality"
 msgstr ""
 
-#: includes/fields.php:163
+#: includes/fields.php:85
 msgid "Location Notes"
 msgstr ""
 
-#: includes/fields.php:169
-msgid "Game Sites"
+#: includes/fields.php:91
+msgid "Timezone"
+msgstr ""
+
+#: includes/fields.php:94
+msgid "Used to convert session times to each viewer's local time on the dashboard calendar."
+msgstr ""
+
+#: includes/fields.php:97
+msgid "Session List"
+msgstr ""
+
+#: includes/fields.php:99
+msgid "Recurring game nights. Add one row per regular session. One-time events go in One-Off Events below."
+msgstr ""
+
+#: includes/fields.php:102
+msgid "Session Type"
+msgstr ""
+
+#: includes/fields.php:108
+msgid "Frequency"
+msgstr ""
+
+#: includes/fields.php:113
+msgid "Day"
+msgstr ""
+
+#: includes/fields.php:119
+msgid "Check-in Time"
+msgstr ""
+
+#: includes/fields.php:123
+#: includes/fields.php:149
+msgid "Start Time"
+msgstr ""
+
+#: includes/fields.php:128
+msgid "Game Date Notes"
+msgstr ""
+
+#: includes/fields.php:137
+msgid "Start Date (for \"Every Other\")"
+msgstr ""
+
+#: includes/fields.php:139
+msgid "Required when frequency is \"Every Other\". Anchors the bi-weekly schedule."
+msgstr ""
+
+#: includes/fields.php:144
+msgid "One-Off Events"
+msgstr ""
+
+#: includes/fields.php:146
+msgid "Special events that don't fit the normal schedule — single-night games, conventions, crossovers."
+msgstr ""
+
+#: includes/fields.php:148
+msgid "Date"
+msgstr ""
+
+#: includes/fields.php:150
+msgid "Event Title"
+msgstr ""
+
+#: includes/fields.php:152
+msgid "Notes"
+msgstr ""
+
+#: includes/fields.php:156
+msgid "HST Info"
+msgstr ""
+
+#: includes/fields.php:159
+msgid "Head Storyteller. Pick their account under User, then fill in the name and both emails."
+msgstr ""
+
+#: includes/fields.php:162
+msgid "CM Info"
+msgstr ""
+
+#: includes/fields.php:165
+msgid "Chronicle Manager. Required unless this is a satellite chronicle (which inherits the parent's CM)."
+msgstr ""
+
+#: includes/fields.php:168
+msgid "AST Info"
+msgstr ""
+
+#: includes/fields.php:170
+msgid "Assistant Storytellers. Add one row per AST. Granting roles here also grants them in the system."
 msgstr ""
 
 #: includes/fields.php:173
-msgid "Site Name"
+#: includes/fields.php:501
+#: includes/render/render-user-fields.php:63
+#: includes/render/render-user-fields.php:184
+msgid "User"
 msgstr ""
 
-#: includes/fields.php:178
-msgid "Online?"
+#: includes/fields.php:177
+#: includes/fields.php:505
+#: includes/render/render-user-fields.php:85
+#: includes/render/render-user-fields.php:207
+msgid "Display Name"
 msgstr ""
 
-#: includes/fields.php:182
-msgid "Online URL"
+#: includes/fields.php:181
+#: includes/fields.php:513
+#: includes/render/render-user-fields.php:109
+#: includes/render/render-user-fields.php:215
+msgid "Actual Email"
 msgstr ""
 
-#: includes/fields.php:200
-msgid "Street Address (optional)"
+#: includes/fields.php:185
+#: includes/fields.php:517
+#: includes/render/render-user-fields.php:115
+#: includes/render/render-user-fields.php:219
+msgid "Display Email"
 msgstr ""
 
-#: includes/fields.php:204
-msgid "Game Site Notes"
+#: includes/fields.php:189
+#: includes/fields.php:410
+#: includes/render/render-user-fields.php:211
+msgid "Role"
 msgstr ""
 
-#: includes/fields.php:212
-#: includes/fields.php:432
+#: includes/fields.php:198
+#: includes/fields.php:537
 msgid "Document Links"
 msgstr ""
 
-#: includes/fields.php:216
-#: includes/fields.php:436
+#: includes/fields.php:200
+msgid "Public docs for the chronicle: house rules, character apps, FAQs. Link out or upload a file."
+msgstr ""
+
+#: includes/fields.php:203
+#: includes/fields.php:541
 msgid "Title"
 msgstr ""
 
-#: includes/fields.php:221
+#: includes/fields.php:208
 msgid "External URL (if no upload)"
 msgstr ""
 
-#: includes/fields.php:225
+#: includes/fields.php:212
 msgid "Upload File (optional)"
 msgstr ""
 
-#: includes/fields.php:229
-#: includes/fields.php:448
-msgid "Last Updated"
+#: includes/fields.php:222
+msgid "Active Players"
 msgstr ""
 
-#: includes/fields.php:235
-msgid "Social Media URLs"
+#: includes/fields.php:225
+msgid "Rough size of the active player base. Self-reported."
 msgstr ""
 
-#: includes/fields.php:239
-msgid "Platform"
+#: includes/fields.php:228
+msgid "Game Sites"
 msgstr ""
 
-#: includes/fields.php:259
-msgid "Profile URL"
+#: includes/fields.php:230
+msgid "Where games happen — physical venue address or the online room. Add one row per site."
 msgstr ""
 
-#: includes/fields.php:266
-#: includes/fields.php:454
-msgid "Staff Lists"
+#: includes/fields.php:233
+msgid "Site Name"
+msgstr ""
+
+#: includes/fields.php:238
+msgid "Online?"
+msgstr ""
+
+#: includes/fields.php:242
+msgid "Online URL"
+msgstr ""
+
+#: includes/fields.php:260
+msgid "Street Address (optional)"
+msgstr ""
+
+#: includes/fields.php:264
+msgid "Game Site Notes"
 msgstr ""
 
 #: includes/fields.php:270
-#: includes/fields.php:289
-#: includes/fields.php:458
-#: includes/fields.php:476
-msgid "List Name"
+#: includes/fields.php:464
+msgid "Website URL"
+msgstr ""
+
+#: includes/fields.php:272
+msgid "Main public website for the chronicle, if there is one."
 msgstr ""
 
 #: includes/fields.php:275
-#: includes/fields.php:462
-msgid "Email Address"
+msgid "Social Media URLs"
 msgstr ""
 
-#: includes/fields.php:279
-#: includes/fields.php:466
-msgid "Description"
+#: includes/fields.php:277
+msgid "Discord servers, Facebook groups, etc. Add one entry per platform."
 msgstr ""
 
-#: includes/fields.php:285
-#: includes/fields.php:472
-msgid "Player Lists"
+#: includes/fields.php:280
+msgid "Platform"
 msgstr ""
 
-#: includes/fields.php:293
-#: includes/fields.php:480
-msgid "Access"
-msgstr ""
-
-#: includes/fields.php:298
-#: includes/fields.php:485
-msgid "Address"
-msgstr ""
-
-#: includes/fields.php:302
-#: includes/fields.php:489
-msgid "IC/OOC"
-msgstr ""
-
-#: includes/fields.php:307
-#: includes/fields.php:494
-msgid "Moderator Email"
+#: includes/fields.php:301
+msgid "Profile URL"
 msgstr ""
 
 #: includes/fields.php:311
-#: includes/fields.php:498
-msgid "Sign Up URL"
+msgid "Premise"
+msgstr ""
+
+#: includes/fields.php:313
+msgid "The chronicle's setting and storyline pitch — what new players read first."
+msgstr ""
+
+#: includes/fields.php:316
+msgid "Information for Travellers"
 msgstr ""
 
 #: includes/fields.php:318
-msgid "Start Date"
+msgid "General info for visiting players — site details, how to submit characters, anything they need to know."
 msgstr ""
 
-#: includes/fields.php:320
-msgid "Region"
+#: includes/fields.php:321
+msgid "Staff Lists"
 msgstr ""
 
-#: includes/fields.php:327
-msgid "Previous Staff"
+#: includes/fields.php:323
+msgid "Public-facing staff distribution lists — hst@, staff@, etc."
+msgstr ""
+
+#: includes/fields.php:326
+#: includes/fields.php:346
+#: includes/fields.php:563
+#: includes/fields.php:600
+msgid "List Name"
 msgstr ""
 
 #: includes/fields.php:331
-#: includes/fields.php:423
-msgid "Name"
+#: includes/fields.php:567
+msgid "Email Address"
 msgstr ""
 
-#: includes/fields.php:332
-#: includes/fields.php:424
-msgid "Email"
+#: includes/fields.php:335
+#: includes/fields.php:571
+#: includes/fields.php:589
+msgid "Description"
 msgstr ""
 
-#: includes/fields.php:333
-msgid "Start"
+#: includes/fields.php:341
+#: includes/fields.php:595
+msgid "Player Lists"
 msgstr ""
 
-#: includes/fields.php:334
-msgid "End"
-msgstr ""
-
-#: includes/fields.php:346
-msgid "Coordinator Slug"
+#: includes/fields.php:343
+#: includes/fields.php:597
+msgid "Player communication lists or channels. Mark each IC vs OOC, and set Access — Public means anyone can join, Private means a moderator has to approve them."
 msgstr ""
 
 #: includes/fields.php:350
-msgid "Office Title"
+#: includes/fields.php:604
+msgid "Access"
 msgstr ""
 
-#: includes/fields.php:354
-msgid "Term Start Date"
+#: includes/fields.php:355
+#: includes/fields.php:609
+msgid "Address"
 msgstr ""
 
-#: includes/fields.php:358
-msgid "Term End Date"
+#: includes/fields.php:359
+#: includes/fields.php:613
+msgid "IC/OOC"
 msgstr ""
 
-#: includes/fields.php:366
-msgid "Office Description"
+#: includes/fields.php:364
+#: includes/fields.php:618
+msgid "Moderator Email"
 msgstr ""
 
-#: includes/fields.php:370
-msgid "Appointment"
+#: includes/fields.php:368
+#: includes/fields.php:622
+msgid "Sign Up URL"
 msgstr ""
 
-#: includes/fields.php:375
-msgid "Type"
+#: includes/fields.php:377
+msgid "HST Selection Method"
 msgstr ""
 
 #: includes/fields.php:380
-msgid "Hosting Chronicle"
+msgid "How the HST is chosen at this chronicle."
+msgstr ""
+
+#: includes/fields.php:383
+msgid "CM Selection Method"
 msgstr ""
 
 #: includes/fields.php:386
-msgid "Coordinator"
+msgid "How the CM is chosen."
+msgstr ""
+
+#: includes/fields.php:389
+msgid "AST Selection Method"
 msgstr ""
 
 #: includes/fields.php:392
-msgid "Sub-Coordinators"
+msgid "How ASTs are chosen."
 msgstr ""
 
-#: includes/fields.php:404
-msgid "Role/Title"
+#: includes/fields.php:395
+msgid "Start Date"
 msgstr ""
 
-#: includes/fields.php:420
-msgid "Previous Coordinators"
+#: includes/fields.php:397
+msgid "Date the chronicle first opened."
 msgstr ""
 
-#: includes/fields.php:425
-msgid "Term Start"
+#: includes/fields.php:400
+msgid "Region"
 msgstr ""
 
-#: includes/fields.php:426
-msgid "Term End"
+#: includes/fields.php:403
+msgid "Geographic region — bookkeeping only."
+msgstr ""
+
+#: includes/fields.php:406
+msgid "Previous Staff"
+msgstr ""
+
+#: includes/fields.php:408
+msgid "Read-only log of past staff. Updated automatically when staff change."
+msgstr ""
+
+#: includes/fields.php:411
+#: includes/fields.php:528
+msgid "Name"
+msgstr ""
+
+#: includes/fields.php:412
+#: includes/fields.php:529
+msgid "Email"
+msgstr ""
+
+#: includes/fields.php:413
+msgid "Start"
+msgstr ""
+
+#: includes/fields.php:414
+msgid "End"
+msgstr ""
+
+#: includes/fields.php:430
+msgid "Coordinator Slug"
+msgstr ""
+
+#: includes/fields.php:432
+msgid "Short ID for this office, used in URLs (e.g. \"sabbat\", \"treasurer\"). Lowercase letters, numbers, dashes only. Locked once saved."
+msgstr ""
+
+#: includes/fields.php:435
+msgid "Office Title"
+msgstr ""
+
+#: includes/fields.php:437
+msgid "Display name of the office, e.g. \"Sabbat Coordinator\" or \"Coordinator of Operations\"."
 msgstr ""
 
 #: includes/fields.php:440
+msgid "Appointment"
+msgstr ""
+
+#: includes/fields.php:443
+msgid "How the coordinator gets the seat — elected by chronicles, or appointed by the Head Coordinator."
+msgstr ""
+
+#: includes/fields.php:446
+msgid "Type"
+msgstr ""
+
+#: includes/fields.php:449
+msgid "Set by admin or the Web Coord. Determines how the office is categorized."
+msgstr ""
+
+#: includes/fields.php:456
+msgid "This section is public facing. Please use this space to communicate office hours, R&U approval procedure, and any other details you wish about your Office."
+msgstr ""
+
+#: includes/fields.php:459
+msgid "Hosting Chronicle"
+msgstr ""
+
+#: includes/fields.php:461
+msgid "Required for Genre and Clan coordinators — the chronicle hosting this office. Leave blank for Administrative coordinators."
+msgstr ""
+
+#: includes/fields.php:466
+msgid "Office website, if any."
+msgstr ""
+
+#: includes/fields.php:469
+msgid "Term Start Date"
+msgstr ""
+
+#: includes/fields.php:471
+msgid "When the current coordinator's term started."
+msgstr ""
+
+#: includes/fields.php:474
+msgid "Term End Date"
+msgstr ""
+
+#: includes/fields.php:476
+msgid "When the current term ends. Update on re-election or appointment."
+msgstr ""
+
+#: includes/fields.php:483
+msgid "Coordinator"
+msgstr ""
+
+#: includes/fields.php:485
+msgid "The current coordinator. Pick their account under User, then fill in the name and both emails."
+msgstr ""
+
+#: includes/fields.php:489
+msgid "Sub-Coordinator or Office Staff. Add one row per person. If the person does not have an account, please leave the User Section blank and advise the person to create an account on the website. The Account and the Sub-coord role can be connected later, once the account has been made.<br><br>Actual Email is private and only seen by the Coordinator and Coordinator Staff.<br><br>Display Name and Display Email are public facing — please talk to your staff about what they prefer to be public facing.<br><br>Role is an optional space to describe the person's job in your Office. This can be left blank if you do not assign specific jobs."
+msgstr ""
+
+#: includes/fields.php:497
+msgid "Sub-Coordinators"
+msgstr ""
+
+#: includes/fields.php:509
+msgid "Role/Title"
+msgstr ""
+
+#: includes/fields.php:525
+msgid "Previous Coordinators"
+msgstr ""
+
+#: includes/fields.php:530
+msgid "Term Start"
+msgstr ""
+
+#: includes/fields.php:531
+msgid "Term End"
+msgstr ""
+
+#: includes/fields.php:545
 msgid "External URL"
 msgstr ""
 
-#: includes/fields.php:444
+#: includes/fields.php:549
 msgid "Upload File"
 msgstr ""
 
-#: includes/hooks/admin-list-filters.php:558
+#: includes/fields.php:559
+msgid "Email Lists"
+msgstr ""
+
+#: includes/fields.php:577
+msgid "Discord Lists"
+msgstr ""
+
+#: includes/fields.php:581
+msgid "Discord Channel Name"
+msgstr ""
+
+#: includes/fields.php:585
+msgid "Discord Channel URL"
+msgstr ""
+
+#: includes/hooks/admin-list-filters.php:632
 #, php-format
 msgid "View &#8220;%s&#8221;"
 msgstr ""
 
-#: includes/hooks/admin-list-filters.php:559
+#: includes/hooks/admin-list-filters.php:633
 msgid "View"
 msgstr ""
 
-#: includes/hooks/admin-list-filters.php:636
+#: includes/hooks/admin-list-filters.php:710
 #, php-format
 msgid "Showing only %s you have access to."
 msgstr ""
 
-#: includes/hooks/admin-notices.php:29
-#, php-format
-msgid "Required document: %s (URL or upload needed)"
+#: includes/hooks/admin-notices.php:52
+msgid "Some fields could not be saved. All other edits WERE saved. Please fix these and resubmit:"
 msgstr ""
 
-#: includes/hooks/admin-notices.php:41
-msgid "Please fix the following required fields:"
+#: includes/hooks/admin-notices.php:63
+msgid "This chronicle cannot be published until every required document has a URL or upload. It was reverted to draft. Add the missing URLs below and try again."
 msgstr ""
 
-#: includes/hooks/admin-notices.php:71
+#: includes/hooks/admin-notices.php:93
 #, php-format
 msgid "%s Staff changes require authentication from Exec or Web Teams."
 msgstr ""
 
-#: includes/hooks/admin-notices.php:75
+#: includes/hooks/admin-notices.php:97
 msgid "Upon validation, this change will be published."
 msgstr ""
 
-#: includes/hooks/admin-notices.php:105
+#: includes/hooks/admin-notices.php:127
 #, php-format
 msgid "%s staff changes have been submitted and are pending admin approval."
 msgstr ""
 
-#: includes/hooks/admin-notices.php:110
+#: includes/hooks/admin-notices.php:133
 #, php-format
 msgid "Non-staff field changes were saved immediately. The %s remains published."
 msgstr ""
 
-#: includes/hooks/admin-notices.php:156
-msgid "Unknown user"
+#: includes/hooks/admin-notices.php:137
+msgid "Non-staff field changes were saved immediately."
 msgstr ""
 
-#: includes/hooks/admin-notices.php:163
+#: includes/hooks/admin-notices.php:189
 #, php-format
 msgid "Pending %s Staff Changes Require Approval"
 msgstr ""
 
-#: includes/hooks/admin-notices.php:170
+#: includes/hooks/admin-notices.php:196
 #, php-format
 msgid "Submitted by %s on %s."
 msgstr ""
 
-#: includes/hooks/admin-notices.php:176
+#: includes/hooks/admin-notices.php:202
 msgid "(Self-promotion detected)"
 msgstr ""
 
-#: includes/hooks/admin-notices.php:184
-msgid "Field"
-msgstr ""
-
-#: includes/hooks/admin-notices.php:185
-msgid "Pending Value"
-msgstr ""
-
-#: includes/hooks/admin-notices.php:211
+#: includes/hooks/admin-notices.php:237
 msgid "Approve Changes"
 msgstr ""
 
-#: includes/hooks/admin-notices.php:214
+#: includes/hooks/admin-notices.php:240
 msgid "Reject Changes"
 msgstr ""
 
-#: includes/hooks/admin-notices.php:332
+#: includes/hooks/admin-notices.php:370
 #, php-format
 msgid "%s staff changes have been approved and applied."
 msgstr ""
 
-#: includes/hooks/admin-notices.php:343
+#: includes/hooks/admin-notices.php:381
 #, php-format
 msgid "%s staff changes have been rejected. The previous values remain."
 msgstr ""
@@ -640,7 +995,108 @@ msgstr ""
 msgid "You do not have permission to create new items."
 msgstr ""
 
-#: includes/render/render-links-uploads-fields.php:159
+#: includes/hooks/compliance.php:44
+#: includes/hooks/compliance.php:48
+msgid "Compliance"
+msgstr ""
+
+#: includes/hooks/compliance.php:68
+#, php-format
+msgid "Missing: %s"
+msgstr ""
+
+#. translators: %d: number of missing required documents
+#: includes/hooks/compliance.php:74
+#, php-format
+msgid "%d missing"
+msgid_plural "%d missing"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/hooks/compliance.php:79
+msgid "All required documents present"
+msgstr ""
+
+#: includes/hooks/compliance.php:80
+msgid "OK"
+msgstr ""
+
+#: includes/hooks/compliance.php:101
+msgid "OWBN — Entities Needing Required Documents"
+msgstr ""
+
+#: includes/hooks/compliance.php:115
+msgid "No entity types with required documents are configured."
+msgstr ""
+
+#: includes/hooks/compliance.php:142
+msgid "All published entries are compliant."
+msgstr ""
+
+#. translators: %d: count of non-compliant entities
+#: includes/hooks/compliance.php:149
+#, php-format
+msgid "%d entry missing required documents:"
+msgid_plural "%d entries missing required documents:"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of additional non-compliant entries
+#: includes/hooks/compliance.php:169
+#, php-format
+msgid "(+%d more not shown)"
+msgstr ""
+
+#: includes/hooks/compliance.php:176
+msgid "Everything is compliant. "
+msgstr ""
+
+#: includes/hooks/dues-status-box.php:21
+msgid "OWBN Dues"
+msgstr ""
+
+#: includes/hooks/dues-status-box.php:71
+msgid "Save the chronicle slug first."
+msgstr ""
+
+#: includes/hooks/dues-status-box.php:77
+msgid "Dues status is unavailable right now."
+msgstr ""
+
+#: includes/hooks/dues-status-box.php:84
+msgid "Paid through:"
+msgstr ""
+
+#: includes/hooks/dues-status-box.php:88
+msgid "No dues paid on record."
+msgstr ""
+
+#: includes/hooks/dues-status-box.php:94
+#, php-format
+msgid "Not current for %d."
+msgstr ""
+
+#: includes/hooks/dues-status-box.php:101
+msgid "Last payment:"
+msgstr ""
+
+#: includes/render/render-links-uploads-fields.php:41
+msgid "Required documents missing a URL or upload:"
+msgstr ""
+
+#: includes/render/render-links-uploads-fields.php:47
+msgid "Give each one a link or an uploaded file. Other edits on this page save normally."
+msgstr ""
+
+#: includes/render/render-links-uploads-fields.php:81
+msgid "(required — needs URL or upload)"
+msgstr ""
+
+#: includes/render/render-links-uploads-fields.php:82
+msgid "(required)"
+msgstr ""
+
+#: includes/render/render-links-uploads-fields.php:195
 msgid "Social Link"
 msgstr ""
 
@@ -653,10 +1109,10 @@ msgid "(Online Only)"
 msgstr ""
 
 #: includes/render/render-location-fields.php:104
-#: includes/render/render-metabox-fields.php:38
-#: includes/render/render-metabox-fields.php:260
-#: includes/render/render-user-fields.php:55
-#: includes/render/render-user-fields.php:162
+#: includes/render/render-metabox-fields.php:47
+#: includes/render/render-metabox-fields.php:280
+#: includes/render/render-user-fields.php:65
+#: includes/render/render-user-fields.php:186
 msgid "— Select —"
 msgstr ""
 
@@ -668,33 +1124,78 @@ msgstr ""
 msgid "Allowed: lowercase letters and numbers, 2–8 characters."
 msgstr ""
 
-#: includes/render/render-metabox-fields.php:63
+#: includes/render/render-metabox-fields.php:83
 msgid "Select one or more options."
 msgstr ""
 
-#: includes/render/render-metabox-fields.php:196
+#: includes/render/render-metabox-fields.php:216
 msgid "No history recorded."
 msgstr ""
 
-#: includes/render/render-metabox-fields.php:278
+#: includes/render/render-metabox-fields.php:298
 msgid "Only applicable to Satellite Chronicles."
 msgstr ""
 
-#: includes/render/render-metabox-fields.php:282
+#: includes/render/render-metabox-fields.php:302
 msgid "Only Satellite Chronicles have parents."
 msgstr ""
 
-#: includes/render/render-user-fields.php:56
-#: includes/render/render-user-fields.php:163
+#: includes/render/render-one-off-fields.php:10
+#: includes/render/render-session-fields.php:15
+#, php-format
+msgid "Times below are in %s"
+msgstr ""
+
+#: includes/render/render-one-off-fields.php:11
+msgid "Set Chronicle Timezone above so event times can be labeled."
+msgstr ""
+
+#: includes/render/render-one-off-fields.php:27
+#: includes/render/render-one-off-fields.php:53
+msgid "New Event"
+msgstr ""
+
+#: includes/render/render-one-off-fields.php:28
+msgid "past"
+msgstr ""
+
+#: includes/render/render-one-off-fields.php:30
+#: includes/render/render-one-off-fields.php:54
+msgid "Toggle"
+msgstr ""
+
+#: includes/render/render-one-off-fields.php:45
+#: includes/render/render-one-off-fields.php:67
+msgid "Remove"
+msgstr ""
+
+#: includes/render/render-one-off-fields.php:70
+msgid "Add Event"
+msgstr ""
+
+#: includes/render/render-one-off-fields.php:72
+msgid "Show Past Events"
+msgstr ""
+
+#: includes/render/render-session-fields.php:16
+msgid "Set Chronicle Timezone above so session times can be labeled."
+msgstr ""
+
+#: includes/render/render-user-fields.php:66
+#: includes/render/render-user-fields.php:187
 msgid "[New User]"
 msgstr ""
 
-#: includes/render/render-user-fields.php:60
-#: includes/render/render-user-fields.php:166
+#: includes/render/render-user-fields.php:70
+#: includes/render/render-user-fields.php:190
 #, php-format
 msgid "[User ID: %s - Not Found]"
 msgstr ""
 
-#: includes/render/render-user-fields.php:103
+#: includes/render/render-user-fields.php:104
+msgid "Locked to {slug}-cm@owbn.net (parent slug for satellites). Computed automatically."
+msgstr ""
+
+#: includes/render/render-user-fields.php:127
 msgid "Satellite Chronicles are represented on council by their parent chronicle."
 msgstr ""

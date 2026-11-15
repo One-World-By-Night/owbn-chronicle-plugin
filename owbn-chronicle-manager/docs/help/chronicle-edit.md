@@ -23,11 +23,11 @@ wp-admin on chronicles.owbn.net → **OWBN C&C** → **All Chronicles** → clic
 - Five tabs. A tab holding a field that didn't save shows ⚠.
   - **Description** - what the chronicle is about, shown on its public page.
   - **Game, Schedule & Staff**
-    - **Genres**, **Game Type** (In-Person, Virtual or Hybrid), **OOC Location** and **Timezone**.
+    - **Genres**, **Game Type** (In-Person, Virtual or Hybrid), **Language** (the language games are run in; Find a Game on the OWbN website filters by it), **OOC Location** and **Timezone**.
     - **Session List** - each regular game or meetup: what it is, how often, the day, check-in and start time. **Every Other** also needs a start date.
     - **One-Off Events** - single dates outside the schedule.
     - **HST Info**, **CM Info** and **AST Info** - the staff, see below.
-  - **Documents, Players & Sites** - **Document Links**, **Active Players**, **Game Sites**, **Website URL** and **Social Media URLs**. Document Links always holds a row each for House Rules, Disciplinary Policy and Accessibility Policy.
+  - **Documents, Players & Sites** - **Document Links**, **Active Players**, **Game Sites**, **Website URL** and **Social Media URLs**. Document Links always holds a row each for House Rules, Disciplinary Policy and Accessibility Policy. For a game site that's online, tick **Online?** and give its **Online URL**: the OWbN website then shows the platform next to Virtual (Discord, Zoom, Google Meet, Teams, Roll20 or Foundry), never the address.
   - **Premise, Travel & Lists** - **Premise**, **Information for Travellers**, **Staff Lists** and **Player Lists**.
   - **Administrative** - how the HST, CM and ASTs are chosen; **Start Date** and **Region**, which only site admins change; and **Previous Staff**, a read-only log of everyone who has left a staff seat.
 - Down the side: **Publish**, with **Update**; **OWBN Dues**, the year the chronicle's dues are paid through and its last payment; and **Revisions**.
