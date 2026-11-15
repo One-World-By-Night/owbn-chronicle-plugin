@@ -23,11 +23,11 @@ wp-admin em chronicles.owbn.net → **OWBN C&C** → **All Chronicles** → cliq
 - Cinco abas. Uma aba com um campo que não foi salvo mostra ⚠.
   - **Description** - do que trata a crônica, mostrado na página pública dela.
   - **Game, Schedule & Staff**
-    - **Genres**, **Game Type** (In-Person, Virtual ou Hybrid), **OOC Location** e **Timezone**.
+    - **Genres**, **Game Type** (In-Person, Virtual ou Hybrid), **Language** (o idioma em que os jogos acontecem; o Find a Game do site da OWbN filtra por ele), **OOC Location** e **Timezone**.
     - **Session List** - cada jogo ou encontro regular: o que é, com que frequência, o dia, o horário de check-in e o de início. **Every Other** pede também uma data de início.
     - **One-Off Events** - datas avulsas, fora da agenda.
     - **HST Info**, **CM Info** e **AST Info** - a staff, veja abaixo.
-  - **Documents, Players & Sites** - **Document Links**, **Active Players**, **Game Sites**, **Website URL** e **Social Media URLs**. Document Links sempre tem uma linha para House Rules, uma para Disciplinary Policy e uma para Accessibility Policy.
+  - **Documents, Players & Sites** - **Document Links**, **Active Players**, **Game Sites**, **Website URL** e **Social Media URLs**. Document Links sempre tem uma linha para House Rules, uma para Disciplinary Policy e uma para Accessibility Policy. Num local de jogo online, marque **Online?** e preencha **Online URL**: o site da OWbN mostra então a plataforma ao lado de Virtual (Discord, Zoom, Google Meet, Teams, Roll20 ou Foundry), nunca o endereço.
   - **Premise, Travel & Lists** - **Premise**, **Information for Travellers**, **Staff Lists** e **Player Lists**.
   - **Administrative** - como o HST, o CM e os ASTs são escolhidos; **Start Date** e **Region**, que só os administradores do site mudam; e **Previous Staff**, um registro só de leitura de todos que deixaram um posto da staff.
 - Na lateral: **Publish**, com **Update**; **OWBN Dues**, o ano até o qual a anuidade da crônica está paga e o último pagamento; e **Revisions**.

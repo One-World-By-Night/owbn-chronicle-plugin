@@ -2,7 +2,7 @@
 
 The organizational directory for One World by Night. Manages chronicle and coordinator records as structured WordPress content.
 
-Version: 2.17.1
+Version: 2.18.0
 Deployed to: council.owbn.net, chronicles.owbn.net (network-activated on both)
 
 ## What It Does
@@ -32,6 +32,11 @@ Staff role sync is bidirectional -- updating a chronicle's HST field grants that
 - Network-activated on WordPress multisite
 
 ## Changelog
+
+### 2.18.0
+
+- New **Language** field on a chronicle (Game, Schedule & Staff tab): English, Portuguese, Spanish, French or Other, the language games are run in. Find a Game on the OWbN website filters by it once owbn-core 1.13.0 carries it in the chronicle list.
+- Help (English and Portuguese) for the field, and for marking a game site online so the website can name its platform.
 
 ### 2.16.2
 
