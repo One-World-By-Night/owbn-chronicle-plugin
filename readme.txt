@@ -36,7 +36,7 @@ Staff role sync is bidirectional -- updating a chronicle's HST field grants that
 ### 2.18.0
 
 - New **Language** field on a chronicle (Game, Schedule & Staff tab): English, Portuguese, Spanish, French or Other, the language games are run in. Find a Game on the OWbN website filters by it once owbn-core 1.13.0 carries it in the chronicle list.
-- Help (English and Portuguese) for the field, and for marking a game site online so the website can name its platform.
+- Help (English and Portuguese) for the field.
 
 ### 2.16.2
 
