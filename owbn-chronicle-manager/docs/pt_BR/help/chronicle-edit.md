@@ -27,7 +27,7 @@ wp-admin em chronicles.owbn.net → **OWBN C&C** → **All Chronicles** → cliq
     - **Session List** - cada jogo ou encontro regular: o que é, com que frequência, o dia, o horário de check-in e o de início. **Every Other** pede também uma data de início.
     - **One-Off Events** - datas avulsas, fora da agenda.
     - **HST Info**, **CM Info** e **AST Info** - a staff, veja abaixo.
-  - **Documents, Players & Sites** - **Document Links**, **Active Players**, **Game Sites**, **Website URL** e **Social Media URLs**. Document Links sempre tem uma linha para House Rules, uma para Disciplinary Policy e uma para Accessibility Policy. Num local de jogo online, marque **Online?** e preencha **Online URL**: o site da OWbN mostra então a plataforma ao lado de Virtual (Discord, Zoom, Google Meet, Teams, Roll20 ou Foundry), nunca o endereço.
+  - **Documents, Players & Sites** - **Document Links**, **Active Players**, **Game Sites**, **Website URL** e **Social Media URLs**. Document Links sempre tem uma linha para House Rules, uma para Disciplinary Policy e uma para Accessibility Policy.
   - **Premise, Travel & Lists** - **Premise**, **Information for Travellers**, **Staff Lists** e **Player Lists**.
   - **Administrative** - como o HST, o CM e os ASTs são escolhidos; **Start Date** e **Region**, que só os administradores do site mudam; e **Previous Staff**, um registro só de leitura de todos que deixaram um posto da staff.
 - Na lateral: **Publish**, com **Update**; **OWBN Dues**, o ano até o qual a anuidade da crônica está paga e o último pagamento; e **Revisions**.
