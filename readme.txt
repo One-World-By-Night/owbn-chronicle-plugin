@@ -2,7 +2,7 @@
 
 The organizational directory for One World by Night. Manages chronicle and coordinator records as structured WordPress content.
 
-Version: 2.18.0
+Version: 2.18.1
 Deployed to: council.owbn.net, chronicles.owbn.net (network-activated on both)
 
 ## What It Does
@@ -32,6 +32,11 @@ Staff role sync is bidirectional -- updating a chronicle's HST field grants that
 - Network-activated on WordPress multisite
 
 ## Changelog
+
+### 2.18.1
+
+- The **OWBN Dues** box on the chronicle edit screen shows a payment that has arrived and waits for finance to confirm (year, date received), instead of "No dues paid on record". It refreshes within a minute while dues are unpaid or pending, and every 15 minutes once paid.
+- Help (English and Portuguese) for the box.
 
 ### 2.18.0
 

@@ -30,7 +30,7 @@ wp-admin em chronicles.owbn.net → **OWBN C&C** → **All Chronicles** → cliq
   - **Documents, Players & Sites** - **Document Links**, **Active Players**, **Game Sites**, **Website URL** e **Social Media URLs**. Document Links sempre tem uma linha para House Rules, uma para Disciplinary Policy e uma para Accessibility Policy.
   - **Premise, Travel & Lists** - **Premise**, **Information for Travellers**, **Staff Lists** e **Player Lists**.
   - **Administrative** - como o HST, o CM e os ASTs são escolhidos; **Start Date** e **Region**, que só os administradores do site mudam; e **Previous Staff**, um registro só de leitura de todos que deixaram um posto da staff.
-- Na lateral: **Publish**, com **Update**; **OWBN Dues**, o ano até o qual a anuidade da crônica está paga e o último pagamento; e **Revisions**.
+- Na lateral: **Publish**, com **Update**; **OWBN Dues**, o ano até o qual a anuidade da crônica está paga, um pagamento que chegou e espera a confirmação da tesouraria, e o último pagamento; e **Revisions**.
 
 ### Postos da staff
 
@@ -83,6 +83,7 @@ Escolher uma conta não preenche os nomes nem os emails; digite-os. O Display Em
 - **Um campo está em cinza.** É um que só um administrador do site muda.
 - **A sua mudança de staff não apareceu.** Ela está esperando aprovação; a barra **Pending Staff Changes** avisa.
 - **OWBN Dues diz "Dues status is unavailable right now."** Este site não alcançou council.owbn.net. Tente de novo mais tarde.
+- **OWBN Dues diz "Payment received, pending confirmation".** O pagamento da crônica chegou. A tesouraria da OWBN o confirma, e então a caixa mostra **Paid through**. Não há nada a fazer. Se você pagou há um minuto e ainda vê "No dues paid on record", recarregue a página.
 
 ## Relacionados
 

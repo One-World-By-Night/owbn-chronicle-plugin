@@ -30,7 +30,7 @@ wp-admin on chronicles.owbn.net → **OWBN C&C** → **All Chronicles** → clic
   - **Documents, Players & Sites** - **Document Links**, **Active Players**, **Game Sites**, **Website URL** and **Social Media URLs**. Document Links always holds a row each for House Rules, Disciplinary Policy and Accessibility Policy.
   - **Premise, Travel & Lists** - **Premise**, **Information for Travellers**, **Staff Lists** and **Player Lists**.
   - **Administrative** - how the HST, CM and ASTs are chosen; **Start Date** and **Region**, which only site admins change; and **Previous Staff**, a read-only log of everyone who has left a staff seat.
-- Down the side: **Publish**, with **Update**; **OWBN Dues**, the year the chronicle's dues are paid through and its last payment; and **Revisions**.
+- Down the side: **Publish**, with **Update**; **OWBN Dues**, the year the chronicle's dues are paid through, a payment that has arrived and waits for finance to confirm, and its last payment; and **Revisions**.
 
 ### Staff seats
 
@@ -83,6 +83,7 @@ Picking an account doesn't fill in the names or emails; type them. The CM's Disp
 - **A field is greyed out.** It's one only a site admin changes.
 - **Your staff change didn't appear.** It's waiting for approval; the **Pending Staff Changes** bar says so.
 - **OWBN Dues says "Dues status is unavailable right now."** This site couldn't reach council.owbn.net. Try again later.
+- **OWBN Dues says "Payment received, pending confirmation".** The chronicle's payment arrived. OWBN finance confirms it, and the box then shows **Paid through**. There is nothing for you to do. If you paid a minute ago and still see "No dues paid on record", reload the page.
 
 ## Related
 
