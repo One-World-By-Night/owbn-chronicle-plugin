@@ -30,7 +30,7 @@ wp-admin em chronicles.owbn.net → **OWBN C&C** → **All Chronicles** → cliq
   - **Documents, Players & Sites** - **Document Links**, **Active Players**, **Game Sites**, **Website URL** e **Social Media URLs**. Document Links sempre tem uma linha para House Rules, uma para Disciplinary Policy e uma para Accessibility Policy.
   - **Premise, Travel & Lists** - **Premise**, **Information for Travellers**, **Staff Lists** e **Player Lists**.
   - **Administrative** - como o HST, o CM e os ASTs são escolhidos; **Start Date** e **Region**, que só os administradores do site mudam; e **Previous Staff**, um registro só de leitura de todos que deixaram um posto da staff.
-- Na lateral: **Publish**, com **Update**; **OWBN Dues**, o ano até o qual a anuidade da crônica está paga, um pagamento que chegou e espera a confirmação da tesouraria, e o último pagamento; e **Revisions**.
+- Na lateral: **Publish**, com **Update**; **OWBN Dues**, o ano até o qual a anuidade da crônica está paga, um pagamento que chegou e espera a confirmação da tesouraria, a situação do ano atual e dos dois seguintes ("Paid" é paga, "Waived" é dispensada, "Payment pending" é pagamento pendente de confirmação, "Partly paid" é paga em parte, "Unpaid" é não paga e "Not paid yet" é ainda não paga), e o último pagamento; e **Revisions**.
 
 ### Postos da staff
 

@@ -30,7 +30,7 @@ wp-admin on chronicles.owbn.net → **OWBN C&C** → **All Chronicles** → clic
   - **Documents, Players & Sites** - **Document Links**, **Active Players**, **Game Sites**, **Website URL** and **Social Media URLs**. Document Links always holds a row each for House Rules, Disciplinary Policy and Accessibility Policy.
   - **Premise, Travel & Lists** - **Premise**, **Information for Travellers**, **Staff Lists** and **Player Lists**.
   - **Administrative** - how the HST, CM and ASTs are chosen; **Start Date** and **Region**, which only site admins change; and **Previous Staff**, a read-only log of everyone who has left a staff seat.
-- Down the side: **Publish**, with **Update**; **OWBN Dues**, the year the chronicle's dues are paid through, a payment that has arrived and waits for finance to confirm, and its last payment; and **Revisions**.
+- Down the side: **Publish**, with **Update**; **OWBN Dues**, the year the chronicle's dues are paid through, a payment that has arrived and waits for finance to confirm, the status of the current year and the next two (Paid, Waived, Payment pending, Partly paid, Unpaid or Not paid yet), and its last payment; and **Revisions**.
 
 ### Staff seats
 
