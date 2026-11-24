@@ -2,7 +2,7 @@
 
 The organizational directory for One World by Night. Manages chronicle and coordinator records as structured WordPress content.
 
-Version: 2.19.0
+Version: 2.19.1
 Deployed to: council.owbn.net, chronicles.owbn.net (network-activated on both)
 
 ## What It Does
@@ -32,6 +32,11 @@ Staff role sync is bidirectional -- updating a chronicle's HST field grants that
 - Network-activated on WordPress multisite
 
 ## Changelog
+
+### 2.19.1
+
+- A chronicle's own address (`/chronicles/zod/`) and a coordinator's (`/coordinators/<name>/`) now send the visitor to the detail page (`/chronicle-detail/?slug=zod`) instead of showing an unstyled list of every field, with a stray `__header__` heading and an "Unhandled field type" line. WordPress hands out the own address as the permalink, so the admin "View" link, search and the sitemap all led there. The redirect is permanent, runs after the sign-in handler so `?auth=sso` links still sign the visitor in, and leaves drafts, previews and embeds alone.
+- The "View" link on the chronicle and coordinator lists finds the detail page by its slug when the Detail Page setting is empty.
 
 ### 2.19.0
 

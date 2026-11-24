@@ -641,7 +641,9 @@ function owbn_modify_row_actions($actions, $post)
  * Get the frontend view URL for an entity post.
  *
  * Uses entity config to look up the slug meta key and entity_key to
- * determine which owbn-client option holds the detail page ID.
+ * determine which owbn-client option holds the detail page ID. When that
+ * option is empty, the published page whose slug is "{entity_key}-detail"
+ * is used, the same page owbn-entities gives its detail template to.
  *
  * @param WP_Post $post The post object.
  * @return string|null The frontend URL, or null if unavailable.
@@ -662,15 +664,19 @@ function owbn_get_frontend_view_url($post)
     if (!$slug_meta_key || !$entity_key) return null;
 
     $slug = get_post_meta($post->ID, $slug_meta_key, true);
+    if (!$slug) return null;
 
     // owbn-client uses option names like 'chronicles_detail_page', 'coordinators_detail_page'
-    $page_id = get_option(owc_option_name("{$plural}_detail_page"), 0);
+    $page_id = (int) get_option(owc_option_name("{$plural}_detail_page"), 0);
 
-    if ($page_id && $slug) {
-        return add_query_arg('slug', $slug, get_permalink($page_id));
+    if (!$page_id) {
+        $detail_page = get_page_by_path("{$entity_key}-detail");
+        $page_id     = $detail_page ? (int) $detail_page->ID : 0;
     }
 
-    return null;
+    if (!$page_id || get_post_status($page_id) !== 'publish') return null;
+
+    return add_query_arg('slug', $slug, get_permalink($page_id));
 }
 
 add_action('admin_menu', 'owbn_hide_default_menus_for_non_admins', 999);

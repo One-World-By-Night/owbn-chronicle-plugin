@@ -950,6 +950,34 @@ function owbn_entity_template_include($template)
     return $template;
 }
 
+/**
+ * Send a published entity's own URL (/chronicles/{slug}/) to its detail page.
+ *
+ * Runs after the sign-in handler (priority 10), so a ?auth=sso link still
+ * signs the visitor in first. Drafts, previews and embeds keep the plain view,
+ * and so does an entity with no published detail page.
+ */
+function owbn_redirect_entity_single_to_detail()
+{
+    if (is_preview() || is_embed() || is_feed()) return;
+
+    foreach (owbn_get_entity_post_types() as $post_type) {
+        if (!is_singular($post_type)) continue;
+        if (!owbn_is_entity_enabled($post_type)) return;
+
+        $post = get_queried_object();
+        if (!$post instanceof WP_Post || $post->post_status !== 'publish') return;
+        if (!function_exists('owbn_get_frontend_view_url')) return;
+
+        $url = owbn_get_frontend_view_url($post);
+        if ($url) {
+            wp_safe_redirect($url, 301, 'OWBN Chronicle Manager');
+            exit;
+        }
+        return;
+    }
+}
+
 function owbn_add_entity_enctype()
 {
     global $post;
@@ -981,6 +1009,7 @@ add_filter('map_meta_cap', 'owbn_entity_map_meta_cap', 10, 4);
 add_filter('post_type_link', 'owbn_custom_entity_permalink', 10, 2);
 add_action('init', 'owbn_custom_entity_rewrite_rules');
 add_filter('template_include', 'owbn_entity_template_include');
+add_action('template_redirect', 'owbn_redirect_entity_single_to_detail', 20);
 add_action('post_edit_form_tag', 'owbn_add_entity_enctype');
 
 // ── Chronicle / Coordinator admin UI tweaks ─────────────────────────────
